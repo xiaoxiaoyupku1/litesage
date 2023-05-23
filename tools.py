@@ -24,7 +24,4 @@ def run_layout(gdsfile):
     assert os.path.isfile(apppath), 'cannot find {}'.format(str(app))
     cmd = "{} -e {}".format(apppath, gdsfile)
     # print(cmd)
-    os.system(cmd)
-
-
-# run_layout('.\\examples\\layout\\reference.gds')
+    os.popen(cmd)
