@@ -58,10 +58,13 @@ class Ui_MainWindow(object):
         self.actionG = QAction(QIcon("g.png"), "&", self)
         self.actionG.setObjectName(u"actionG")
         self.actionG.triggered.connect(self.showSchematic)
+        self.actionW = QAction(QIcon("w.png"), "&", self)
+        self.actionW.setObjectName(u"actionW")
+        self.actionW.triggered.connect(self.showW)
 
         self.actionShowWave = QAction(text='Show')
         self.actionShowWave.triggered.connect(self.showwave)
-        self.actionShowWave.setCheckable(True)
+        # self.actionShowWave.setCheckable(True)
 
         self.actionShowLayout = QAction(text='Open')
         self.actionShowLayout.triggered.connect(self.showlayout)
@@ -99,6 +102,7 @@ class Ui_MainWindow(object):
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionR)
         self.menuEdit.addAction(self.actionG)
+        self.menuEdit.addAction(self.actionW)
 
         self.menuWave.addAction(self.actionShowWave)
         self.menuLayout.addAction(self.actionShowLayout)
@@ -108,9 +112,11 @@ class Ui_MainWindow(object):
         QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.actionR.setText(QCoreApplication.translate("MainWindow", u"R", None))
-        self.actionG.setText(QCoreApplication.translate("MainWindow", u"G", None))
+        title = 'FOOHU EDA - Schematic Editor'
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", title, None))
+        self.actionR.setText(QCoreApplication.translate("MainWindow", u"Resistor", None))
+        self.actionG.setText(QCoreApplication.translate("MainWindow", u"Ground", None))
+        self.actionW.setText(QCoreApplication.translate("MainWindow", u"Wire", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
         self.menuWave.setTitle(QCoreApplication.translate("MainWindow", u"Wave", None))
@@ -136,18 +142,28 @@ class Ui_MainWindow(object):
         self.symbol = "R"
 
     def painR(self,position):
-        lines=[[0.000000,375.000000,0.000000,300.000000], [0.000000,300.000000,-62.500000,281.250000], [-62.500000,281.250000,62.500000,243.750000], [62.500000,243.750000,-62.500000,206.250000], [-62.500000,206.250000,62.500000,168.750000], [62.500000,168.750000,-62.500000,131.250000], [-62.500000,131.250000,62.500000,93.750000], [62.500000,93.750000,0.000000,75.000000], [0.000000,75.000000,0.000000,0.000000]]
-
+        lines=[[0.000000,375.000000,0.000000,300.000000], 
+               [0.000000,300.000000,-62.500000,281.250000], 
+               [-62.500000,281.250000,62.500000,243.750000], 
+               [62.500000,243.750000,-62.500000,206.250000], 
+               [-62.500000,206.250000,62.500000,168.750000], 
+               [62.500000,168.750000,-62.500000,131.250000], 
+               [-62.500000,131.250000,62.500000,93.750000], 
+               [62.500000,93.750000,0.000000,75.000000], 
+               [0.000000,75.000000,0.000000,0.000000]]
 
         painter = QPainter(self.canvas)
         for line in lines:
             line = [ l /10  for l in line]
-            line = [line[0]+position.x(),line[1]+position.y(),line[2]+position.x(),line[3]+position.y()]
+            line = [line[0]+position.x(), line[1]+position.y(),
+                    line[2]+position.x(), line[3]+position.y()]
             painter.drawLine(*line)
 
         painter.end()
         self.label.setPixmap(self.canvas)
      
+    def showW(self):
+        pass
 
     def showwave(self, s):
         #wavefile parse
@@ -186,14 +202,14 @@ class Ui_MainWindow(object):
         self.waveform_window.show()
 
     def doshowwave(self,index):
-        print(index.text())
-        value_index = self.signames.index(index.text())
+        signame = index.text()
+        value_index = self.signames.index(signame)
         series = QLineSeries()
         series.appendNp(np.array(self.values[0]), np.array(self.values[value_index]))
 
         self.chart.removeAllSeries()
         self.chart.addSeries(series)
-
+        self.chart.setTitle(signame)
         self.chart.createDefaultAxes()
 
     def showlayout(self):
@@ -205,6 +221,8 @@ class WaveformWindow(QWidget):
         super().__init__()
         self.layout = None
         self.label = QLabel("Waveform Viewer")
+        self.setWindowTitle('FOOHU EDA - Waveform Viewer')
+        self.resize(900, 500)
 
     def update(self, layout):
         self.layout = layout
