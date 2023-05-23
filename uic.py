@@ -1,5 +1,6 @@
 
 
+from typing import Optional
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt,QItemSelectionModel, QRectF)
@@ -10,13 +11,11 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform, QStandardItemModel, QStandardItem)
 from PySide6.QtWidgets import (QApplication, QGraphicsView, QMainWindow, QMenu, QLabel, QGraphicsLineItem,
     QMenuBar, QSizePolicy, QStatusBar, QWidget, QGridLayout, QListView, QListWidget, QGraphicsScene,QGraphicsView)
-
 from PySide6.QtCharts import QChart, QChartView, QLineSeries,QXYSeries,QValueAxis, QLogValueAxis
-
-
 from PySide6.QtCore import QPointF
 
 from wavefile import *
+from tools import run_layout
 
 import numpy as np
 
@@ -47,6 +46,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(494, 354)
         
         self.MainWindow = MainWindow
+        self.waveform_window = None
 
         self.symbol = "NA"
         self.label = None
@@ -59,9 +59,12 @@ class Ui_MainWindow(object):
         self.actionG.setObjectName(u"actionG")
         self.actionG.triggered.connect(self.showSchematic)
 
-        self.actionShowWave = QAction(text='show')
+        self.actionShowWave = QAction(text='Show')
         self.actionShowWave.triggered.connect(self.showwave)
         self.actionShowWave.setCheckable(True)
+
+        self.actionShowLayout = QAction(text='Open')
+        self.actionShowLayout.triggered.connect(self.showlayout)
 
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
@@ -84,17 +87,21 @@ class Ui_MainWindow(object):
         self.menuEdit.setObjectName(u"menuEdit")
         self.menuWave = QMenu(self.menuBar)
         self.menuWave.setObjectName(u"menuWave")
+        self.menuLayout = QMenu(self.menuBar)
+        self.menuLayout.setObjectName(u"menuLayout")
         MainWindow.setMenuBar(self.menuBar)
 
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
         self.menuBar.addAction(self.menuWave.menuAction())
+        self.menuBar.addAction(self.menuLayout.menuAction())
         self.menuFile.addSeparator()
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionR)
         self.menuEdit.addAction(self.actionG)
 
         self.menuWave.addAction(self.actionShowWave)
+        self.menuLayout.addAction(self.actionShowLayout)
 
         self.retranslateUi(MainWindow)
 
@@ -107,6 +114,7 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
         self.menuWave.setTitle(QCoreApplication.translate("MainWindow", u"Wave", None))
+        self.menuLayout.setTitle(QCoreApplication.translate("MainWindow", u"Layout", None))
 
     def showSchematic(self,s):
         if self.scene is None:
@@ -141,12 +149,9 @@ class Ui_MainWindow(object):
         self.label.setPixmap(self.canvas)
      
 
-
-    
     def showwave(self, s):
-
         #wavefile parse
-        wavefile = 'waveform.tr0'
+        wavefile = '.\\examples\\wave\\waveform.tr0'
         handler = get_wavefile_handler(wavefile)
         handler.parseWavefile()
 
@@ -157,13 +162,10 @@ class Ui_MainWindow(object):
 
         #listview
         self.list_view = QListWidget()
-
         self.list_view.addItems(self.signames[1:])
         self.list_view.currentItemChanged.connect(self.doshowwave)
 
         #chartview
-
-
         self.chart = QChart()
         self.chart.legend().hide()
         self.chart.setTitle("Wave")
@@ -171,14 +173,17 @@ class Ui_MainWindow(object):
         self.chart_view = QChartView(self.chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
 
-
         self.main_layout = QGridLayout(self.waveWidet)
         self.main_layout.addWidget(self.list_view, 1, 0)
         self.main_layout.addWidget(self.chart_view, 1, 1)
         self.main_layout.setColumnStretch(1, 1)
         self.main_layout.setColumnStretch(0, 0)
 
-        self.MainWindow.setCentralWidget(self.waveWidet)
+        if self.waveform_window is not None:
+            self.waveform_window.destroy()
+        self.waveform_window = WaveformWindow()
+        self.waveform_window.update(self.main_layout)
+        self.waveform_window.show()
 
     def doshowwave(self,index):
         print(index.text())
@@ -190,3 +195,17 @@ class Ui_MainWindow(object):
         self.chart.addSeries(series)
 
         self.chart.createDefaultAxes()
+
+    def showlayout(self):
+        run_layout('.\\examples\\layout\\reference.gds')
+
+
+class WaveformWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.layout = None
+        self.label = QLabel("Waveform Viewer")
+
+    def update(self, layout):
+        self.layout = layout
+        self.setLayout(layout)
