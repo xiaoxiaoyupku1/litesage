@@ -23,20 +23,44 @@ class ScheScene(QGraphicsScene):
     def __init__(self):
         super().__init__()
         self.symbol = 'NA'
+        self.wireStartPos = None
+        self.wireEndPos = None
 
     def mousePressEvent(self, event) -> None:
         if self.symbol == 'RR':
+            self.wireStartPos = None
             self.painRR(event)
+        elif self.symbol == 'WW':
+            self.painWW(event)
 
-    def painRR(self,event):
-        lines=[[0.000000,375.000000,0.000000,300.000000], [0.000000,300.000000,-62.500000,281.250000], [-62.500000,281.250000,62.500000,243.750000], [62.500000,243.750000,-62.500000,206.250000], [-62.500000,206.250000,62.500000,168.750000], [62.500000,168.750000,-62.500000,131.250000], [-62.500000,131.250000,62.500000,93.750000], [62.500000,93.750000,0.000000,75.000000], [0.000000,75.000000,0.000000,0.000000]]
+    def painRR(self, event):
+        lines=[[0.000000,375.000000,0.000000,300.000000], 
+               [0.000000,300.000000,-62.500000,281.250000], 
+               [-62.500000,281.250000,62.500000,243.750000], 
+               [62.500000,243.750000,-62.500000,206.250000],
+               [-62.500000,206.250000,62.500000,168.750000], 
+               [62.500000,168.750000,-62.500000,131.250000], 
+               [-62.500000,131.250000,62.500000,93.750000], 
+               [62.500000,93.750000,0.000000,75.000000], 
+               [0.000000,75.000000,0.000000,0.000000]]
         for line in lines:
             line = [l/10 for l in line]
             line = QGraphicsLineItem(*line)
             self.addItem(line)
             line.setPos(event.scenePos())
 
-
+    def painWW(self, event):
+        click = event.scenePos()
+        clickX, clickY = click.x(), click.y()
+        if self.wireStartPos is None:
+            self.wireStartPos = [clickX, clickY]
+        else:
+            self.wireEndPos = [clickX, clickY]
+            line = self.wireStartPos + self.wireEndPos
+            line = QGraphicsLineItem(*line)
+            self.addItem(line)
+            self.wireStartPos = self.wireEndPos
+            self.wireEndPos = None
 
 
 class Ui_MainWindow(object):
@@ -128,9 +152,7 @@ class Ui_MainWindow(object):
             self.scene.setSceneRect(QRectF(0, 0, 500, 500))
             self.view = QGraphicsView(self.scene)
             self.MainWindow.setCentralWidget(self.view)
-
         self.scene.symbol = 'RR'
-
 
     def showR(self,s):
         if self.label is None:
@@ -141,29 +163,34 @@ class Ui_MainWindow(object):
             self.MainWindow.setCentralWidget(self.label)
         self.symbol = "R"
 
-    def painR(self,position):
-        lines=[[0.000000,375.000000,0.000000,300.000000], 
-               [0.000000,300.000000,-62.500000,281.250000], 
-               [-62.500000,281.250000,62.500000,243.750000], 
-               [62.500000,243.750000,-62.500000,206.250000], 
-               [-62.500000,206.250000,62.500000,168.750000], 
-               [62.500000,168.750000,-62.500000,131.250000], 
-               [-62.500000,131.250000,62.500000,93.750000], 
-               [62.500000,93.750000,0.000000,75.000000], 
-               [0.000000,75.000000,0.000000,0.000000]]
+    # def painR(self,position):
+    #     lines=[[0.000000,375.000000,0.000000,300.000000], 
+    #            [0.000000,300.000000,-62.500000,281.250000], 
+    #            [-62.500000,281.250000,62.500000,243.750000], 
+    #            [62.500000,243.750000,-62.500000,206.250000], 
+    #            [-62.500000,206.250000,62.500000,168.750000], 
+    #            [62.500000,168.750000,-62.500000,131.250000], 
+    #            [-62.500000,131.250000,62.500000,93.750000], 
+    #            [62.500000,93.750000,0.000000,75.000000], 
+    #            [0.000000,75.000000,0.000000,0.000000]]
 
-        painter = QPainter(self.canvas)
-        for line in lines:
-            line = [ l /10  for l in line]
-            line = [line[0]+position.x(), line[1]+position.y(),
-                    line[2]+position.x(), line[3]+position.y()]
-            painter.drawLine(*line)
+    #     painter = QPainter(self.canvas)
+    #     for line in lines:
+    #         line = [ l /10  for l in line]
+    #         line = [line[0]+position.x(), line[1]+position.y(),
+    #                 line[2]+position.x(), line[3]+position.y()]
+    #         painter.drawLine(*line)
 
-        painter.end()
-        self.label.setPixmap(self.canvas)
+    #     painter.end()
+    #     self.label.setPixmap(self.canvas)
      
-    def showW(self):
-        pass
+    def showW(self, position):
+        if self.scene is None:
+            self.scene = ScheScene()
+            self.scene.setSceneRect(QRectF(0, 0, 500, 500))
+            self.view = QGraphicsView(self.scene)
+            self.MainWindow.setCentralWidget(self.view)
+        self.scene.symbol = 'WW'
 
     def showwave(self, s):
         #wavefile parse
