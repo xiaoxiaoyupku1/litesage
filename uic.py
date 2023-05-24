@@ -84,12 +84,15 @@ class Ui_MainWindow(object):
 
         self.actionR = QAction(QIcon("r.png"), "&", self)
         self.actionR.setObjectName(u"actionR")
+        self.actionR.setShortcut(QKeySequence('r'))
         self.actionR.triggered.connect(self.showR)
         self.actionG = QAction(QIcon("g.png"), "&", self)
         self.actionG.setObjectName(u"actionG")
+        self.actionG.setShortcut(QKeySequence('g'))
         self.actionG.triggered.connect(self.showSchematic)
         self.actionW = QAction(QIcon("w.png"), "&", self)
         self.actionW.setObjectName(u"actionW")
+        self.actionW.setShortcut(QKeySequence('w'))
         self.actionW.triggered.connect(self.showW)
 
         self.actionShowWave = QAction(text='Show')
