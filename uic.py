@@ -55,7 +55,12 @@ class ScheScene(QGraphicsScene):
         if self.wireStartPos is None:
             self.wireStartPos = [clickX, clickY]
         else:
-            self.wireEndPos = [clickX, clickY]
+            diffX = abs(clickX - self.wireStartPos[0])
+            diffY = abs(clickY - self.wireStartPos[1])
+            if diffX <= diffY:
+                self.wireEndPos = [self.wireStartPos[0], clickY]
+            else:
+                self.wireEndPos = [clickX, self.wireStartPos[1]]
             line = self.wireStartPos + self.wireEndPos
             line = QGraphicsLineItem(*line)
             line.setPen(QColor('blue'))
