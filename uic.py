@@ -56,16 +56,15 @@ class ScheScene(QGraphicsScene):
             pass
         else:
             if self.symbol == 'R':
-                self.wireStartPos = None
                 self.painR(event)
             elif self.symbol == 'G':
-                self.wireStartPos = None
                 self.painG(event)
             elif self.symbol == 'V':
-                self.wireStartPos = None
                 self.painV(event)
             elif self.symbol == 'WW':
                 self.painWW(event)
+            elif self.symbol == 'P':
+                self.painP(event)
             elif self.symbol == 'RECT':
                 self.painRect(event)
 
@@ -151,7 +150,11 @@ class ScheScene(QGraphicsScene):
 
     def painV(self, event):
         self.cursorSymbol = []
-        lines = [[0.000000,175.000000,0.000000,137.500000],[18.750000,156.250000,-18.750000,156.250000],[0.000000,125.000000,0.000000,0.000000],[0.000000,250.000000,0.000000,375.000000],[18.750000,218.750000,-18.750000,218.750000]]
+        lines = [[0.000000,175.000000,0.000000,137.500000],
+                 [18.750000,156.250000,-18.750000,156.250000],
+                 [0.000000,125.000000,0.000000,0.000000],
+                 [0.000000,250.000000,0.000000,375.000000],
+                 [18.750000,218.750000,-18.750000,218.750000]]
         for line in lines:
             line = [l/scale for l in line]
             line = Line(*line)
@@ -182,12 +185,32 @@ class ScheScene(QGraphicsScene):
 
         self.symbols.append(self.cursorSymbol)
 
+    def painP(self, event):
+        self.cursorSymbol = []
+        points = [[87.500000, 0.000000],
+                  [31.250000, 56.250000],
+                  [-31.250000, 56.250000],
+                  [-87.500000, 0.000000],
+                  [-31.250000, -56.250000],
+                  [31.250000, -56.250000]]
+        polygonf = QPolygonF()
+        for point in points:
+            polygonf.append(QPointF(point[0]/scale, point[1]/scale))
+        iopin = Polygonf(polygonf)
+        iopin.setPen(QPen('red'))
+        iopin.setBrush(QColor('red'))
+        self.addItem(iopin)
+        self.cursorSymbol.append(iopin)
+        iopin.setPos(event.scenePos())
+
     def cleanCursorSymbol(self):
         if self.cursorSymbol is not None:
             for item in self.cursorSymbol:
                 self.removeItem(item)
             self.cursorSymbol=None
         self.symbol = 'NA'
+        self.wireStartPos = None
+        self.rectStartPos = None
 
     def painWW(self, event):
         click = event.scenePos()
@@ -223,7 +246,7 @@ class ScheScene(QGraphicsScene):
         rect = QGraphicsRectItem(startX, startY, width, height)
         pen = QPen()
         pen.setWidth(8)
-        pen.setColor('red')
+        pen.setColor('green')
         rect.setPen(pen)
         self.addItem(rect)
         self.rectStartPos = None
@@ -261,6 +284,11 @@ class Ui_MainWindow(object):
         self.actionW.setObjectName(u"actionW")
         self.actionW.setShortcut(QKeySequence('w'))
         self.actionW.triggered.connect(self.showW)
+
+        self.actionP = QAction(QIcon("img/p.png"), "&", self)
+        self.actionP.setObjectName(u"actionP")
+        self.actionP.setShortcut(QKeySequence('p'))
+        self.actionP.triggered.connect(self.showP)
 
         self.actionRect = QAction(QIcon("img/rect.png"), "&", self)
         self.actionRect.setObjectName(u"actionRect")
@@ -313,6 +341,7 @@ class Ui_MainWindow(object):
         self.menuEdit.addAction(self.actionG)
         self.menuEdit.addAction(self.actionV)
         self.menuEdit.addAction(self.actionW)
+        self.menuEdit.addAction(self.actionP)
         self.menuEdit.addAction(self.actionRect)
         self.menuEdit.addAction(self.actionDEL)
 
@@ -330,6 +359,7 @@ class Ui_MainWindow(object):
         self.actionG.setText(QCoreApplication.translate("MainWindow", u"Ground", None))
         self.actionV.setText(QCoreApplication.translate("MainWindow", u"VoltageSource", None))
         self.actionW.setText(QCoreApplication.translate("MainWindow", u"Wire", None))
+        self.actionP.setText(QCoreApplication.translate("MainWindow", u"Pin", None))
         self.actionRect.setText(QCoreApplication.translate("MainWindow", u"Rectangle", None))
         self.actionDEL.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
@@ -365,7 +395,6 @@ class Ui_MainWindow(object):
             if not item_in_a_symbol:
                 self.scene.removeItem(item)
 
-
     def showG(self,s):
         if self.scene is None:
             self.createScene()
@@ -384,6 +413,12 @@ class Ui_MainWindow(object):
             self.createScene()
         self.scene.cleanCursorSymbol()
         self.scene.symbol = 'WW'
+
+    def showP(self, s):
+        if self.scene is None:
+            self.createScene()
+        self.scene.cleanCursorSymbol()
+        self.scene.symbol = 'P'
     
     def showRect(self, position):
         if self.scene is None:
