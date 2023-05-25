@@ -47,6 +47,7 @@ class ScheScene(QGraphicsScene):
         self.symbol = 'NA'
         self.doDel = False
         self.cursorSymbol=None
+        self.widgetMouseMove = None
         self.symbols = []
         self.wireStartPos = None
         self.rectStartPos = None
@@ -61,8 +62,8 @@ class ScheScene(QGraphicsScene):
                 self.painG(event)
             elif self.symbol == 'V':
                 self.painV(event)
-            elif self.symbol == 'WW':
-                self.painWW(event)
+            elif self.symbol == 'W':
+                self.painW(event)
             elif self.symbol == 'P':
                 self.painP(event)
             elif self.symbol == 'RECT':
@@ -79,13 +80,16 @@ class ScheScene(QGraphicsScene):
                 self.painG(event)
             elif self.symbol == 'V':
                 self.painV(event)
+            elif self.symbol == 'P':
+                self.painP(event)
+            elif self.symbol == 'W':
+                self.painW(event, mode='move')
+            elif self.symbol == 'RECT':
+                self.painRect(event, mode='move')
         else:
             for item in self.cursorSymbol:
                 item.setPos(event.scenePos())
 
-    def mouseReleaseEvent(self, event):
-        if self.symbol == 'RECT':
-            self.painRect(event)
 
     def painR(self, event):
         self.cursorSymbol = []
@@ -203,6 +207,8 @@ class ScheScene(QGraphicsScene):
         self.cursorSymbol.append(iopin)
         iopin.setPos(event.scenePos())
 
+        self.symbols.append(self.cursorSymbol)
+
     def cleanCursorSymbol(self):
         if self.cursorSymbol is not None:
             for item in self.cursorSymbol:
@@ -212,44 +218,64 @@ class ScheScene(QGraphicsScene):
         self.wireStartPos = None
         self.rectStartPos = None
 
-    def painWW(self, event):
-        click = event.scenePos()
-        clickX, clickY = click.x(), click.y()
+    def painW(self, event, mode=None):
+        # mode: 'press', 'move'
+        curPos = event.scenePos()
+        curX, curY = curPos.x(), curPos.y()
+
+        if self.widgetMouseMove is not None:
+            self.removeItem(self.widgetMouseMove)
+
         if self.wireStartPos is None:
-            self.wireStartPos = [clickX, clickY]
-        else:
-            diffX = abs(clickX - self.wireStartPos[0])
-            diffY = abs(clickY - self.wireStartPos[1])
-            if diffX <= diffY:
-                endPos = [self.wireStartPos[0], clickY]
-            else:
-                endPos = [clickX, self.wireStartPos[1]]
-            line = self.wireStartPos + endPos
-            line = Line(*line)
-            line.setPen(QColor('blue'))
-            self.addItem(line)
-            self.wireStartPos = endPos
-
-    def painRect(self, event):
-        click = event.scenePos()
-        clickX, clickY = click.x(), click.y()
-
-        if self.rectStartPos is None:
-            self.rectStartPos = [clickX, clickY]
+            if mode != 'move':
+                self.wireStartPos = [curX, curY]
             return
 
-        width = abs(clickX - self.rectStartPos[0])
-        height = abs(clickY - self.rectStartPos[1])
-        startX = min(clickX, self.rectStartPos[0])
-        startY = min(clickY, self.rectStartPos[1])
+        diffX = abs(curX - self.wireStartPos[0])
+        diffY = abs(curY - self.wireStartPos[1])
+        if diffX <= diffY:
+            endPos = [self.wireStartPos[0], curY]
+        else:
+            endPos = [curX, self.wireStartPos[1]]
+        line = self.wireStartPos + endPos
+        line = Line(*line)
+        line.setPen(QColor('blue'))
+        self.addItem(line)
+
+        if mode == 'move':
+            self.widgetMouseMove = line
+        else:
+            self.wireStartPos = endPos
+
+    def painRect(self, event, mode=None):
+        # mode: 'press', 'move'
+        curPos = event.scenePos()
+        curX, curY = curPos.x(), curPos.y()
+
+        if self.widgetMouseMove is not None:
+            self.removeItem(self.widgetMouseMove)
+
+        if self.rectStartPos is None: 
+            if mode != 'move':
+                self.rectStartPos = [curX, curY]
+            return
+        
         # leftTop is (0, 0)
+        width = abs(curX - self.rectStartPos[0])
+        height = abs(curY - self.rectStartPos[1])
+        startX = min(curX, self.rectStartPos[0])
+        startY = min(curY, self.rectStartPos[1])
         rect = QGraphicsRectItem(startX, startY, width, height)
         pen = QPen()
         pen.setWidth(8)
         pen.setColor('green')
         rect.setPen(pen)
         self.addItem(rect)
-        self.rectStartPos = None
+
+        if mode == 'move' :
+            self.widgetMouseMove = rect
+        else:
+            self.rectStartPos = None
 
 
 class Ui_MainWindow(object):
@@ -412,7 +438,7 @@ class Ui_MainWindow(object):
         if self.scene is None:
             self.createScene()
         self.scene.cleanCursorSymbol()
-        self.scene.symbol = 'WW'
+        self.scene.symbol = 'W'
 
     def showP(self, s):
         if self.scene is None:
