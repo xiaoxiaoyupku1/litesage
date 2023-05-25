@@ -4,13 +4,13 @@ from typing import Optional
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt,QItemSelectionModel, QRectF)
-from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient, QPen,
     QCursor, QFont, QFontDatabase, QGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform, QStandardItemModel, QStandardItem)
 from PySide6.QtWidgets import (QApplication, QGraphicsView, QMainWindow, QMenu, QLabel, QGraphicsLineItem,
-    QMenuBar, QSizePolicy, QStatusBar, QWidget, QGridLayout, QListView, QListWidget, QGraphicsScene,QGraphicsView)
+    QGraphicsRectItem, QMenuBar, QSizePolicy, QStatusBar, QWidget, QGridLayout, QListView, QListWidget, QGraphicsScene,QGraphicsView)
 from PySide6.QtCharts import QChart, QChartView, QLineSeries,QXYSeries,QValueAxis, QLogValueAxis
 from PySide6.QtCore import QPointF
 
@@ -24,14 +24,21 @@ class ScheScene(QGraphicsScene):
         super().__init__()
         self.symbol = 'NA'
         self.wireStartPos = None
-        self.wireEndPos = None
+        self.rectStartPos = None
 
     def mousePressEvent(self, event) -> None:
+        pos = event.scenePos()
         if self.symbol == 'RR':
             self.wireStartPos = None
             self.painRR(event)
         elif self.symbol == 'WW':
             self.painWW(event)
+        elif self.symbol == 'RECT':
+            self.painRect(event)
+
+    def mouseReleaseEvent(self, event):
+        if self.symbol == 'RECT':
+            self.painRect(event)
 
     def painRR(self, event):
         lines=[[0.000000,375.000000,0.000000,300.000000], 
@@ -58,15 +65,35 @@ class ScheScene(QGraphicsScene):
             diffX = abs(clickX - self.wireStartPos[0])
             diffY = abs(clickY - self.wireStartPos[1])
             if diffX <= diffY:
-                self.wireEndPos = [self.wireStartPos[0], clickY]
+                endPos = [self.wireStartPos[0], clickY]
             else:
-                self.wireEndPos = [clickX, self.wireStartPos[1]]
-            line = self.wireStartPos + self.wireEndPos
+                endPos = [clickX, self.wireStartPos[1]]
+            line = self.wireStartPos + endPos
             line = QGraphicsLineItem(*line)
             line.setPen(QColor('blue'))
             self.addItem(line)
-            self.wireStartPos = self.wireEndPos
-            self.wireEndPos = None
+            self.wireStartPos = endPos
+
+    def painRect(self, event):
+        click = event.scenePos()
+        clickX, clickY = click.x(), click.y()
+
+        if self.rectStartPos is None:
+            self.rectStartPos = [clickX, clickY]
+            return
+
+        width = abs(clickX - self.rectStartPos[0])
+        height = abs(clickY - self.rectStartPos[1])
+        startX = min(clickX, self.rectStartPos[0])
+        startY = min(clickY, self.rectStartPos[1])
+        # leftTop is (0, 0)
+        rect = QGraphicsRectItem(startX, startY, width, height)
+        pen = QPen()
+        pen.setWidth(8)
+        pen.setColor('red')
+        rect.setPen(pen)
+        self.addItem(rect)
+        self.rectStartPos = None
 
 
 class Ui_MainWindow(object):
@@ -86,14 +113,21 @@ class Ui_MainWindow(object):
         self.actionR.setObjectName(u"actionR")
         self.actionR.setShortcut(QKeySequence('r'))
         self.actionR.triggered.connect(self.showR)
+
         self.actionG = QAction(QIcon("g.png"), "&", self)
         self.actionG.setObjectName(u"actionG")
         self.actionG.setShortcut(QKeySequence('g'))
         self.actionG.triggered.connect(self.showSchematic)
+
         self.actionW = QAction(QIcon("w.png"), "&", self)
         self.actionW.setObjectName(u"actionW")
         self.actionW.setShortcut(QKeySequence('w'))
         self.actionW.triggered.connect(self.showW)
+
+        self.actionRect = QAction(QIcon("rect.png"), "&", self)
+        self.actionRect.setObjectName(u"actionRect")
+        self.actionRect.setShortcut(QKeySequence('t'))
+        self.actionRect.triggered.connect(self.showRect)
 
         self.actionShowWave = QAction(text='Show')
         self.actionShowWave.triggered.connect(self.showwave)
@@ -136,6 +170,7 @@ class Ui_MainWindow(object):
         self.menuEdit.addAction(self.actionR)
         self.menuEdit.addAction(self.actionG)
         self.menuEdit.addAction(self.actionW)
+        self.menuEdit.addAction(self.actionRect)
 
         self.menuWave.addAction(self.actionShowWave)
         self.menuLayout.addAction(self.actionShowLayout)
@@ -150,12 +185,13 @@ class Ui_MainWindow(object):
         self.actionR.setText(QCoreApplication.translate("MainWindow", u"Resistor", None))
         self.actionG.setText(QCoreApplication.translate("MainWindow", u"Ground", None))
         self.actionW.setText(QCoreApplication.translate("MainWindow", u"Wire", None))
+        self.actionRect.setText(QCoreApplication.translate("MainWindow", u"Rectangle", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
         self.menuWave.setTitle(QCoreApplication.translate("MainWindow", u"Wave", None))
         self.menuLayout.setTitle(QCoreApplication.translate("MainWindow", u"Layout", None))
 
-    def showSchematic(self,s):
+    def showSchematic(self, s):
         if self.scene is None:
             self.scene = ScheScene()
             self.scene.setSceneRect(QRectF(0, 0, 500, 500))
@@ -172,27 +208,6 @@ class Ui_MainWindow(object):
             self.MainWindow.setCentralWidget(self.label)
         self.symbol = "R"
 
-    # def painR(self,position):
-    #     lines=[[0.000000,375.000000,0.000000,300.000000], 
-    #            [0.000000,300.000000,-62.500000,281.250000], 
-    #            [-62.500000,281.250000,62.500000,243.750000], 
-    #            [62.500000,243.750000,-62.500000,206.250000], 
-    #            [-62.500000,206.250000,62.500000,168.750000], 
-    #            [62.500000,168.750000,-62.500000,131.250000], 
-    #            [-62.500000,131.250000,62.500000,93.750000], 
-    #            [62.500000,93.750000,0.000000,75.000000], 
-    #            [0.000000,75.000000,0.000000,0.000000]]
-
-    #     painter = QPainter(self.canvas)
-    #     for line in lines:
-    #         line = [ l /10  for l in line]
-    #         line = [line[0]+position.x(), line[1]+position.y(),
-    #                 line[2]+position.x(), line[3]+position.y()]
-    #         painter.drawLine(*line)
-
-    #     painter.end()
-    #     self.label.setPixmap(self.canvas)
-     
     def showW(self, position):
         if self.scene is None:
             self.scene = ScheScene()
@@ -200,6 +215,10 @@ class Ui_MainWindow(object):
             self.view = QGraphicsView(self.scene)
             self.MainWindow.setCentralWidget(self.view)
         self.scene.symbol = 'WW'
+
+    def showRect(self, position):
+        self.showSchematic(position)
+        self.scene.symbol = 'RECT'
 
     def showwave(self, s):
         #wavefile parse
