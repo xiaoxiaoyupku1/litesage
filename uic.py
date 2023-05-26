@@ -705,6 +705,7 @@ class Ui_MainWindow(object):
 
         self.chart_view = QChartView(self.chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
+        self.chart_view.setRubberBand(QChartView.RectangleRubberBand)
 
         self.main_layout = QGridLayout(self.waveWidet)
         self.main_layout.addWidget(self.list_view, 1, 0)
