@@ -44,6 +44,40 @@ class Rect(QGraphicsRectItem):
         QGraphicsRectItem.__init__(self, *args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
+
+class ScheView(QGraphicsView):
+    def __init__(self, *args, **kwargs):
+        QGraphicsView.__init__(self, *args, **kwargs)
+
+    def wheelEvent(self, event) -> None:
+        # Only zoom/dezoom if CTRL is pressed
+        if event.modifiers() == Qt.ControlModifier:
+            zoomInFactor = 1.25
+            zoomOutFactor = 1 / zoomInFactor
+
+            # Save the scene pos
+            oldPos = event.scenePosition()
+
+            # Zoom
+            if event.angleDelta().y() > 0:
+                zoomFactor = zoomInFactor
+            else:
+                zoomFactor = zoomOutFactor
+            self.scale(zoomFactor, zoomFactor)
+
+            # Get the new position
+            newPos = event.scenePosition()
+
+            # Move scene to old position
+            delta = newPos - oldPos
+            self.translate(delta.x(), delta.y())
+        # Move scrollbar
+        else:
+            QGraphicsView.wheelEvent(self, event)
+
+        self.update()
+
+
 class ScheScene(QGraphicsScene):
     def __init__(self):
         super().__init__()
@@ -517,7 +551,7 @@ class Ui_MainWindow(object):
     def createScene(self):
         self.scene = ScheScene()
         self.scene.setSceneRect(QRectF(0, 0, 500, 500))
-        self.view = QGraphicsView(self.scene)
+        self.view = ScheView(self.scene)
         self.view.setMouseTracking(True)
         self.MainWindow.setCentralWidget(self.view)
 
