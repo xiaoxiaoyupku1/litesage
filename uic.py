@@ -10,7 +10,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform, QStandardItemModel, QStandardItem, QPolygonF)
 from PySide6.QtWidgets import (QApplication, QGraphicsView, QMainWindow, QMenu, QLabel, QGraphicsLineItem, QGraphicsRectItem, QGraphicsPolygonItem, QGraphicsEllipseItem,
-    QMenuBar, QSizePolicy, QStatusBar, QWidget, QGridLayout, QListView, QListWidget, QGraphicsScene,QGraphicsView,QGraphicsTextItem,QGraphicsItem, QFileDialog,QDialog)
+    QMenuBar, QSizePolicy, QStatusBar, QWidget, QGridLayout, QListView, QListWidget, QGraphicsScene,QGraphicsView,QGraphicsTextItem,QGraphicsItem, 
+    QFileDialog, QDialog, QInputDialog, QLineEdit)
 from PySide6.QtCharts import QChart, QChartView, QLineSeries,QXYSeries,QValueAxis, QLogValueAxis
 from PySide6.QtCore import QPointF
 
@@ -99,6 +100,8 @@ class ScheScene(QGraphicsScene):
                 self.painRect(event)
             elif self.symbol == 'Design':
                 self.painDesign(event)
+            elif self.symbol == 'S':
+                self.painS(event)
 
         return super().mousePressEvent(event)
 
@@ -120,6 +123,8 @@ class ScheScene(QGraphicsScene):
                 self.painRect(event, mode='move')
             elif self.symbol == 'Design':
                 self.painDesign(event)
+            elif self.symbol == 'S':
+                self.painS(event)
         else:
             #print("115")
             #print(self.cursorSymbol[0])
@@ -352,6 +357,25 @@ class ScheScene(QGraphicsScene):
         else:
             self.rectStartPos = None
             self.rect = rect
+    
+    def painS(self, event):
+        self.cursorSymbol = []
+        text, ok = QInputDialog.getText(None, 
+                                        'SPICE Analysis', 
+                                        'Simulation command:',
+                                        QLineEdit.Normal,
+                                        '.dc temp -5 50 1')
+        if not ok or len(text.strip()) == 0:
+            return
+        item = QGraphicsTextItem(text)
+        item.setDefaultTextColor('darkblue')
+        font = item.font()
+        font.setPixelSize(50)
+        item.setFont(font)
+        item.setPos(event.scenePos())
+        self.addItem(item)
+        self.cursorSymbol.append(item)
+        self.symbols.append(self.cursorSymbol)
 
 
 class Ui_MainWindow(object):
@@ -405,6 +429,11 @@ class Ui_MainWindow(object):
         self.actionRect.setShortcut(QKeySequence('t'))
         self.actionRect.triggered.connect(self.showRect)
 
+        self.actionS = QAction(QIcon("img/s.png"), "&", self)
+        self.actionS.setObjectName(u"actionS")
+        self.actionS.setShortcut(QKeySequence('s'))
+        self.actionS.triggered.connect(self.showS)
+
         """
         self.actionDEL = QAction(QIcon("img/del.png"), "&", self)
         self.actionDEL.setObjectName(u"actionDEL")
@@ -457,6 +486,7 @@ class Ui_MainWindow(object):
         self.menuEdit.addAction(self.actionW)
         self.menuEdit.addAction(self.actionP)
         self.menuEdit.addAction(self.actionRect)
+        self.menuEdit.addAction(self.actionS)
         #self.menuEdit.addAction(self.actionDEL)
 
         self.menuWave.addAction(self.actionShowWave)
@@ -475,6 +505,7 @@ class Ui_MainWindow(object):
         self.actionW.setText(QCoreApplication.translate("MainWindow", u"Wire", None))
         self.actionP.setText(QCoreApplication.translate("MainWindow", u"Pin", None))
         self.actionRect.setText(QCoreApplication.translate("MainWindow", u"Rectangle", None))
+        self.actionS.setText(QCoreApplication.translate("MainWindow", u"SimCommand", None))
         self.actionSave.setText(QCoreApplication.translate("MainWindow", u"Save Design", None))
         self.actionLoad.setText(QCoreApplication.translate("MainWindow", u"Load Design", None))
         #self.actionDEL.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
@@ -610,6 +641,12 @@ class Ui_MainWindow(object):
             self.createScene()
         self.scene.cleanCursorSymbol()
         self.scene.symbol = "RECT"
+
+    def showS(self, position):
+        if self.scene is None:
+            self.createScene()
+        self.scene.cleanCursorSymbol()
+        self.scene.symbol = 'S'
 
     def showwave(self, s):
         #wavefile parse
