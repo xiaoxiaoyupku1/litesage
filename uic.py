@@ -91,6 +91,11 @@ class ScheScene(QGraphicsScene):
                 item.setPos(event.scenePos())
 
 
+    def mouseDoubleClickEvent(self, event) -> None:
+        if self.symbol == 'W':
+            self.wireStartPos = None
+
+
     def painR(self, event):
         self.cursorSymbol = []
         self.cursorSymbolType='R'
