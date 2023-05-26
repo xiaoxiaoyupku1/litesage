@@ -3,14 +3,14 @@
 from typing import Optional
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect, Signal,
-    QSize, QTime, QUrl, Qt,QItemSelectionModel, QRectF)
+    QSize, QTime, QUrl, Qt,QItemSelectionModel, QRectF, QDataStream, QFile,QIODevice)
 from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QCursor, QFont, QFontDatabase, QGradient, QPen,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform, QStandardItemModel, QStandardItem, QPolygonF)
 from PySide6.QtWidgets import (QApplication, QGraphicsView, QMainWindow, QMenu, QLabel, QGraphicsLineItem, QGraphicsRectItem, QGraphicsPolygonItem, QGraphicsEllipseItem,
-    QMenuBar, QSizePolicy, QStatusBar, QWidget, QGridLayout, QListView, QListWidget, QGraphicsScene,QGraphicsView,QGraphicsTextItem,QGraphicsItem)
+    QMenuBar, QSizePolicy, QStatusBar, QWidget, QGridLayout, QListView, QListWidget, QGraphicsScene,QGraphicsView,QGraphicsTextItem,QGraphicsItem, QFileDialog,QDialog)
 from PySide6.QtCharts import QChart, QChartView, QLineSeries,QXYSeries,QValueAxis, QLogValueAxis
 from PySide6.QtCore import QPointF
 
@@ -18,10 +18,12 @@ from wavefile import *
 from tools import run_layout
 
 import numpy as np
+import pickle
 
 scale=5
+MIME_TYPES = ["text/plain"]
 
-class Polygonf(QGraphicsPolygonItem):
+class Polygon(QGraphicsPolygonItem):
     def __init__(self, *args, **kwargs):
         QGraphicsPolygonItem.__init__(self, *args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -51,16 +53,43 @@ class ScheScene(QGraphicsScene):
         self.symbols = []
         self.wireStartPos = None
         self.rectStartPos = None
+        self.rect = None
+        self.design = []
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key_Escape:
+            self.cleanCursorSymbol()
+        elif event.key() == Qt.Key_Delete:
+            self.delSymbol()
+
+    def delSymbol(self):
+        self.cleanCursorSymbol()
+
+        for item in self.selectedItems():
+            item_in_a_symbol = False
+            for symbol in self.symbols:
+                if item in symbol:
+                    item_in_a_symbol = True
+                    for i in symbol:
+                        self.removeItem(i)
+            if not item_in_a_symbol:
+                self.removeItem(item)
+
     
     def mousePressEvent(self, event) -> None:
         if self.doDel:
             pass
         else:
             if self.symbol == 'R':
+                self.wireStartPos = None
                 self.painR(event)
+                #print("85")
+                #print(self.cursorSymbol[0])
             elif self.symbol == 'G':
+                self.wireStartPos = None
                 self.painG(event)
             elif self.symbol == 'V':
+                self.wireStartPos = None
                 self.painV(event)
             elif self.symbol == 'W':
                 self.painW(event)
@@ -68,12 +97,15 @@ class ScheScene(QGraphicsScene):
                 self.painP(event)
             elif self.symbol == 'RECT':
                 self.painRect(event)
+            elif self.symbol == 'Design':
+                self.painDesign(event)
 
         return super().mousePressEvent(event)
 
 
     def mouseMoveEvent(self, event) -> None:
         if self.cursorSymbol is None:
+            #print(self.cursorSymbol)
             if self.symbol == 'R':
                 self.painR(event)
             elif self.symbol == 'G':
@@ -86,19 +118,57 @@ class ScheScene(QGraphicsScene):
                 self.painW(event, mode='move')
             elif self.symbol == 'RECT':
                 self.painRect(event, mode='move')
+            elif self.symbol == 'Design':
+                self.painDesign(event)
         else:
+            #print("115")
+            #print(self.cursorSymbol[0])
             for item in self.cursorSymbol:
                 item.setPos(event.scenePos())
 
+        return super().mouseMoveEvent(event)
 
-    def mouseDoubleClickEvent(self, event) -> None:
+    def mouseDoubleClickEvent(self, event):
         if self.symbol == 'W':
             self.wireStartPos = None
 
+    def painDesign(self, event):
+        self.cursorSymbol = []
+        for item_def in self.design:
+            item_def = item_def.rstrip()
+            name, parameters = item_def.split(':')
+            if name == 'Line':
+                ps = [float(p) for p in parameters.split(',')]
+                item = Line(*ps)
+            elif name == 'Rect':
+                ps = [float(p) for p in parameters.split(',')]
+                item = Rect(*ps)
+            elif name == 'Polygon':
+                points = parameters.split(';')
+                polygonf = QPolygonF()
+                for point in points:
+                    point_array = [float(i) for i in point.split(',')]
+                    polygonf.append(QPointF(*point_array))
+                item = Polygon(polygonf)
+            elif name == 'Cycle':
+                ps = [float(p) for p in parameters.split(',')]
+                item = Cycle(*ps)
+            elif name == 'RECT':
+                ps = [float(p) for p in parameters.split(',')]
+                item = Rect(*ps)
+                pen = QPen()
+                pen.setWidth(8)
+                pen.setColor('green')
+                item.setPen(pen)
+
+            self.addItem(item)
+            self.cursorSymbol.append(item)
+            item.setPos(event.scenePos())
+
+        self.symbols.append(self.cursorSymbol)
 
     def painR(self, event):
         self.cursorSymbol = []
-        self.cursorSymbolType='R'
         lines=[[0.000000,375.000000,0.000000,300.000000], 
                [0.000000,300.000000,-62.500000,281.250000], 
                [-62.500000,281.250000,62.500000,243.750000], 
@@ -139,7 +209,7 @@ class ScheScene(QGraphicsScene):
         polygonf = QPolygonF()
         for point in points:
             polygonf.append(QPointF(point[0]/scale,point[1]/scale))
-        ground = Polygonf(polygonf)
+        ground = Polygon(polygonf)
         self.addItem(ground)
         self.cursorSymbol.append(ground)
         ground.setPos(event.scenePos())
@@ -205,7 +275,7 @@ class ScheScene(QGraphicsScene):
         polygonf = QPolygonF()
         for point in points:
             polygonf.append(QPointF(point[0]/scale, point[1]/scale))
-        iopin = Polygonf(polygonf)
+        iopin = Polygon(polygonf)
         iopin.setPen(QPen('red'))
         iopin.setBrush(QColor('red'))
         self.addItem(iopin)
@@ -281,6 +351,7 @@ class ScheScene(QGraphicsScene):
             self.widgetMouseMove = rect
         else:
             self.rectStartPos = None
+            self.rect = rect
 
 
 class Ui_MainWindow(object):
@@ -295,6 +366,14 @@ class Ui_MainWindow(object):
         self.symbol = "NA"
         self.label = None
         self.scene = None
+
+        self.actionSave = QAction(QIcon("img/save.png"),"&",self)
+        self.actionSave.setObjectName(u"actionSave")
+        self.actionSave.triggered.connect(self.saveDesign)
+
+        self.actionLoad = QAction(QIcon("img/load.png"),"&",self)
+        self.actionLoad.setObjectName(u"actionLoad")
+        self.actionLoad.triggered.connect(self.loadDesign)
 
         self.actionR = QAction(QIcon("img/r.png"), "&", self)
         self.actionR.setObjectName(u"actionR")
@@ -326,10 +405,12 @@ class Ui_MainWindow(object):
         self.actionRect.setShortcut(QKeySequence('t'))
         self.actionRect.triggered.connect(self.showRect)
 
+        """
         self.actionDEL = QAction(QIcon("img/del.png"), "&", self)
         self.actionDEL.setObjectName(u"actionDEL")
         self.actionDEL.setShortcut(QKeySequence('Del'))
         self.actionDEL.triggered.connect(self.delSymbol)
+        """
 
         self.actionShowWave = QAction(text='Show')
         self.actionShowWave.triggered.connect(self.showwave)
@@ -367,6 +448,8 @@ class Ui_MainWindow(object):
         self.menuBar.addAction(self.menuWave.menuAction())
         self.menuBar.addAction(self.menuLayout.menuAction())
         self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionSave)
+        self.menuFile.addAction(self.actionLoad)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionR)
         self.menuEdit.addAction(self.actionG)
@@ -374,7 +457,7 @@ class Ui_MainWindow(object):
         self.menuEdit.addAction(self.actionW)
         self.menuEdit.addAction(self.actionP)
         self.menuEdit.addAction(self.actionRect)
-        self.menuEdit.addAction(self.actionDEL)
+        #self.menuEdit.addAction(self.actionDEL)
 
         self.menuWave.addAction(self.actionShowWave)
         self.menuLayout.addAction(self.actionShowLayout)
@@ -392,7 +475,9 @@ class Ui_MainWindow(object):
         self.actionW.setText(QCoreApplication.translate("MainWindow", u"Wire", None))
         self.actionP.setText(QCoreApplication.translate("MainWindow", u"Pin", None))
         self.actionRect.setText(QCoreApplication.translate("MainWindow", u"Rectangle", None))
-        self.actionDEL.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
+        self.actionSave.setText(QCoreApplication.translate("MainWindow", u"Save Design", None))
+        self.actionLoad.setText(QCoreApplication.translate("MainWindow", u"Load Design", None))
+        #self.actionDEL.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
         self.menuWave.setTitle(QCoreApplication.translate("MainWindow", u"Wave", None))
@@ -405,6 +490,87 @@ class Ui_MainWindow(object):
         self.view.setMouseTracking(True)
         self.MainWindow.setCentralWidget(self.view)
 
+
+    def saveDesign(self, s):
+        if self.scene is not None and self.scene.rect is not None:
+            file_dialog = QFileDialog(self, "Save as...")
+            file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+            file_dialog.setMimeTypeFilters(MIME_TYPES)
+            if file_dialog.exec() != QDialog.Accepted:
+                return False
+            fn = file_dialog.selectedFiles()[0]
+
+            items = self.scene.rect.collidingItems()
+            rect = self.scene.rect.rect()
+            center_x = rect.x() + rect.width()/2
+            center_y = rect.y() + rect.height()/2
+            with open(fn,'w') as OUT:
+                OUT.write("RECT:")
+                OUT.write(','.join([str(i) for i in [rect.x()-center_x,rect.y()-center_y,rect.width(),rect.height()]]))
+                OUT.write('\n')
+                for item in items:
+                    out_str = ''
+                    if type(item) is Line:
+                        item_x = item.pos().x()
+                        item_y = item.pos().y()
+                        line = item.line()
+                        out_str = "Line:"
+                        out_str += ','.join([str(p) for p in [line.x1() + item_x - center_x, 
+                                                              line.y1() + item_y - center_y, 
+                                                              line.x2() + item_x - center_x, 
+                                                              line.y2() + item_y - center_y]])
+                        OUT.write(out_str)
+                        OUT.write('\n')
+                    elif type(item) is Rect:
+                        item_x = item.pos().x()
+                        item_y = item.pos().y()
+                        out_str  = "Rect:" +  str(item.rect().x() + item_x - center_x) 
+                        out_str += ',' 
+                        out_str += str(item.rect().y() + item_y - center_y) 
+                        out_str += ',' 
+                        out_str += str(item.rect().width())
+                        out_str += ',' 
+                        out_str += str(item.rect().height())
+                        OUT.write(out_str)
+                        OUT.write('\n')
+                    elif type(item) is Polygon:
+                        item_x = item.pos().x()
+                        item_y = item.pos().y()
+                        out_str = "Polygon:"
+                        outs=[]
+                        for point in item.polygon().toList():
+                            point_str = str(point.x() + item_x - center_x) + ',' + str(point.y() + item_y - center_y)
+                            outs.append(point_str)
+                        out_str += ';'.join(outs)
+                        OUT.write(out_str)
+                        OUT.write('\n')
+                    elif type(item) is Cycle:
+                        rect = item.rect()
+                        out_str = "Cycle:"
+                        outs = [str(rect.x() + item.x() - center_x), str(rect.y()+item.y()-center_y), str(rect.width()),str(rect.height())]
+                        out_str += ','.join(outs)
+                        OUT.write(out_str)
+                        OUT.write('\n')
+
+    def loadDesign(self, s):
+        if self.scene is None:
+            self.createScene()
+
+        self.scene.cleanCursorSymbol()
+
+
+        file_dialog = QFileDialog(self, "Load from...")
+        file_dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        file_dialog.setMimeTypeFilters(MIME_TYPES)
+        if file_dialog.exec() != QDialog.Accepted:
+            return False
+        fn = file_dialog.selectedFiles()[0]
+
+        self.scene.symbol = 'Design'
+
+        with open(fn, 'r') as IN:
+            self.scene.design = IN.readlines()
+
     def showR(self,s):
         if self.scene is None:
             self.createScene()
@@ -412,19 +578,7 @@ class Ui_MainWindow(object):
         self.scene.cleanCursorSymbol()
         self.scene.symbol = 'R'
 
-    def delSymbol(self,s):
-        if self.scene is not None:
-            self.scene.cleanCursorSymbol()
 
-        for item in self.scene.selectedItems():
-            item_in_a_symbol = False
-            for symbol in self.scene.symbols:
-                if item in symbol:
-                    item_in_a_symbol = True
-                    for i in symbol:
-                        self.scene.removeItem(i)
-            if not item_in_a_symbol:
-                self.scene.removeItem(item)
 
     def showG(self,s):
         if self.scene is None:
