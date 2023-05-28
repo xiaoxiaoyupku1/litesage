@@ -11,7 +11,7 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform, QStandardItemModel, QStandardItem, QPolygonF)
 from PySide6.QtWidgets import (QApplication, QGraphicsView, QMainWindow, QMenu, QLabel, QGraphicsLineItem, QGraphicsRectItem, QGraphicsPolygonItem, QGraphicsEllipseItem,
     QMenuBar, QSizePolicy, QStatusBar, QWidget, QGridLayout, QListView, QListWidget, QGraphicsScene,QGraphicsView,QGraphicsTextItem,QGraphicsItem, 
-    QFileDialog, QDialog, QInputDialog, QLineEdit)
+    QFileDialog, QDialog, QDialogButtonBox, QInputDialog, QLineEdit, QVBoxLayout, QFormLayout)
 from PySide6.QtCharts import QChart, QChartView, QLineSeries,QXYSeries,QValueAxis, QLogValueAxis
 from PySide6.QtCore import QPointF
 
@@ -19,7 +19,7 @@ from wavefile import *
 from tools import run_layout
 
 import numpy as np
-import pickle
+import re
 
 scale=5
 MIME_TYPES = ["text/plain"]
@@ -44,7 +44,39 @@ class Rect(QGraphicsRectItem):
         QGraphicsRectItem.__init__(self, *args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
+class ParameterDialog(QDialog):
+    def __init__(self, parent=None, item=None):
+        super().__init__(parent)
+        self.setWindowTitle("Enter Paramters")
+        formLayout = QFormLayout()
+        text = item.toPlainText()
+        current_name, current_value = re.split('\s+', text.strip())
+        self.name = QLineEdit(current_name)
+        self.value = QLineEdit(current_value)
+        formLayout.addRow("Name:", self.name)
+        formLayout.addRow("Value:", self.value)
+        QBtn = QDialogButtonBox()
+        QBtn.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        QBtn.accepted.connect(self.accept)
+        QBtn.rejected.connect(self.reject)
+        layout = QVBoxLayout()
+        layout.addLayout(formLayout)
+        layout.addWidget(QBtn)
+        self.setLayout(layout)
 
+class Parameter(QGraphicsTextItem):
+    def __init__(self, *args, **kwargs):
+        QGraphicsTextItem.__init__(self, *args, **kwargs)
+        self.posx = 0
+        self.posy = 0
+
+    def contextMenuEvent(self, event) -> None:
+        dialog = ParameterDialog(parent=None, item=self)
+        if dialog.exec():
+            self.setPlainText('    '+dialog.name.text()+'\n\n'+'    '+dialog.value.text())
+        else:
+            pass
+        return super().contextMenuEvent(event)
 class ScheView(QGraphicsView):
     def __init__(self, *args, **kwargs):
         QGraphicsView.__init__(self, *args, **kwargs)
@@ -118,8 +150,6 @@ class ScheScene(QGraphicsScene):
             if self.symbol == 'R':
                 self.wireStartPos = None
                 self.painR(event)
-                #print("85")
-                #print(self.cursorSymbol[0])
             elif self.symbol == 'G':
                 self.wireStartPos = None
                 self.painG(event)
@@ -160,10 +190,11 @@ class ScheScene(QGraphicsScene):
             elif self.symbol == 'S':
                 self.painS(event)
         else:
-            #print("115")
-            #print(self.cursorSymbol[0])
             for item in self.cursorSymbol:
-                item.setPos(event.scenePos())
+                if type(item) is not Parameter:
+                    item.setPos(event.scenePos())
+                else: 
+                    item.setPos(event.scenePos().x() + float(item.posx), event.scenePos().y() + float(item.posy))
 
         return super().mouseMoveEvent(event)
 
@@ -182,13 +213,16 @@ class ScheScene(QGraphicsScene):
             elif name == 'Rect':
                 ps = [float(p) for p in parameters.split(',')]
                 item = Rect(*ps)
-            elif name == 'Polygon':
+            elif name == 'Polygon' or name == "Pin":
                 points = parameters.split(';')
                 polygonf = QPolygonF()
                 for point in points:
                     point_array = [float(i) for i in point.split(',')]
                     polygonf.append(QPointF(*point_array))
                 item = Polygon(polygonf)
+                if name == "Pin":
+                    item.setPen(QPen('red'))
+                    item.setBrush(QColor('red'))
             elif name == 'Cycle':
                 ps = [float(p) for p in parameters.split(',')]
                 item = Cycle(*ps)
@@ -199,10 +233,24 @@ class ScheScene(QGraphicsScene):
                 pen.setWidth(8)
                 pen.setColor('green')
                 item.setPen(pen)
+            elif name == 'Wire':
+                ps = [float(p) for p in parameters.split(',')]
+                item = Line(*ps)
+                item.setPen(QColor('blue'))
+            elif name == 'Parameter':
+                n, v, x, y = parameters.split(',')
+                item = Parameter('    ' + n + '\n\n    ' + v)
+                item.posx = x
+                item.posy = y
+
+
 
             self.addItem(item)
             self.cursorSymbol.append(item)
-            item.setPos(event.scenePos())
+            if type(item) is not Parameter:
+                item.setPos(event.scenePos())
+            else: 
+                item.setPos(event.scenePos().x() + float(item.posx), event.scenePos().y() + float(item.posy))
 
         self.symbols.append(self.cursorSymbol)
 
@@ -232,12 +280,11 @@ class ScheScene(QGraphicsScene):
         self.cursorSymbol.append(pin2)
         pin2.setPos(event.scenePos())
 
-        name = QGraphicsTextItem('    R1')
+        name = Parameter('    R1\n\n    R')
         self.addItem(name)
         self.cursorSymbol.append(name)
-        #x = event.scenePos().x()
-        #y = event.scenePos().y()
         name.setPos(event.scenePos())
+
 
         self.symbols.append(self.cursorSymbol)
 
@@ -294,11 +341,9 @@ class ScheScene(QGraphicsScene):
         self.cursorSymbol.append(pin2)
         pin2.setPos(event.scenePos())
 
-        name = QGraphicsTextItem('    V1')
+        name = Parameter('    V1\n\n    V')
         self.addItem(name)
         self.cursorSymbol.append(name)
-        #x = event.scenePos().x()
-        #y = event.scenePos().y()
         name.setPos(event.scenePos())
 
         self.symbols.append(self.cursorSymbol)
@@ -360,6 +405,7 @@ class ScheScene(QGraphicsScene):
             self.widgetMouseMove = line
         else:
             self.wireStartPos = endPos
+            self.widgetMouseMove = None
 
     def painRect(self, event, mode=None):
         # mode: 'press', 'move'
@@ -391,6 +437,7 @@ class ScheScene(QGraphicsScene):
         else:
             self.rectStartPos = None
             self.rect = rect
+            self.widgetMouseMove = None
     
     def painS(self, event):
         self.cursorSymbol = []
@@ -576,16 +623,22 @@ class Ui_MainWindow(object):
                 for item in items:
                     out_str = ''
                     if type(item) is Line:
-                        item_x = item.pos().x()
-                        item_y = item.pos().y()
-                        line = item.line()
-                        out_str = "Line:"
-                        out_str += ','.join([str(p) for p in [line.x1() + item_x - center_x, 
-                                                              line.y1() + item_y - center_y, 
-                                                              line.x2() + item_x - center_x, 
-                                                              line.y2() + item_y - center_y]])
-                        OUT.write(out_str)
-                        OUT.write('\n')
+                        if item.pen().color() == Qt.blue:
+                            line = item.line()
+                            OUT.write("Wire:")
+                            OUT.write(','.join([str(i) for i in [line.x1()-center_x,line.y1()-center_y,line.x2() - center_x, line.y2() - center_y]]))
+                            OUT.write('\n')
+                        else:
+                            item_x = item.pos().x()
+                            item_y = item.pos().y()
+                            line = item.line()
+                            out_str = "Line:"
+                            out_str += ','.join([str(p) for p in [line.x1() + item_x - center_x, 
+                                                                line.y1() + item_y - center_y, 
+                                                                line.x2() + item_x - center_x, 
+                                                                line.y2() + item_y - center_y]])
+                            OUT.write(out_str)
+                            OUT.write('\n')
                     elif type(item) is Rect:
                         item_x = item.pos().x()
                         item_y = item.pos().y()
@@ -599,9 +652,12 @@ class Ui_MainWindow(object):
                         OUT.write(out_str)
                         OUT.write('\n')
                     elif type(item) is Polygon:
+                        if item.pen().color() == Qt.red:
+                            out_str = "Pin:"
+                        else:
+                            out_str = "Polygon:"
                         item_x = item.pos().x()
                         item_y = item.pos().y()
-                        out_str = "Polygon:"
                         outs=[]
                         for point in item.polygon().toList():
                             point_str = str(point.x() + item_x - center_x) + ',' + str(point.y() + item_y - center_y)
@@ -616,6 +672,15 @@ class Ui_MainWindow(object):
                         out_str += ','.join(outs)
                         OUT.write(out_str)
                         OUT.write('\n')
+                    elif type(item) is Parameter:
+                        text = item.toPlainText()
+                        current_name, current_value = re.split('\s+', text.strip())
+                        out_str = "Parameter:"
+                        out_str += current_name + ','+ current_value + ','
+                        out_str += str(item.x() - center_x) + ',' + str(item.y() - center_y)
+                        OUT.write(out_str)
+                        OUT.write('\n')
+
 
     def loadDesign(self, s):
         if self.scene is None:
