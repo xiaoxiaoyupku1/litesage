@@ -6,7 +6,7 @@ from PySide6.QtGui import (
     QAction, QIcon, QKeySequence
 )
 
-from src.wave import FoohuEdaWaveWindow
+from src.waveform import FoohuEdaWaveWindow
 from src.layout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
