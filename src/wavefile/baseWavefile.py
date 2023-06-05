@@ -3,9 +3,9 @@ import numpy as np
 from pathlib import Path
 import multiprocessing
 
-from utils import NamedVal
-from utils import calcTopDiff
-from utils import plotname_to_plotnamestr
+from src.wavefile.utils import NamedVal
+from src.wavefile.utils import calcTopDiff
+from src.wavefile.utils import plotname_to_plotnamestr
 
 def _checkWavePlot(file1, file2, plotname, top=1):
     file1_fullpath = os.path.abspath(file1)
@@ -18,9 +18,9 @@ def _checkWavePlot(file1, file2, plotname, top=1):
     from src.wavefile.wavefile import get_wavefile_handler
     # write import here to avoid cyclic import
     wave1 = get_wavefile_handler(file1)
-    wave1.parseWavefile()
+    wave1.parseWaveFile()
     wave2 = get_wavefile_handler(file2)
-    wave2.parseWavefile()
+    wave2.parseWaveFile()
     matching, *arg = wave2.checkWavePlot(wave1, plotname, top)
     print("+", end="", flush=True)
     return matching, arg
@@ -48,7 +48,7 @@ class WavefileHandler():
 
 
     ## open api for wavefile handling
-    def get_signames(self, plotname=None):
+    def getSigNames(self, plotname=None):
         if plotname is None:
             assert len(self.plotdata_list) == 1, "wavefile {} has {} plots: {}, please specify the plot name to get_data".format(
                     self.wavefile, len(self.plotnames), ",".join(self.plotnames))
@@ -300,7 +300,7 @@ class WavefileHandler():
                     sigfile = self.get_sigfile(signame, plotname)
                     from src.wavefile.wavefile import get_wavefile_handler
                     sigfilehandler = get_wavefile_handler(sigfile)
-                    sigfilehandler.parseWavefile()
+                    sigfilehandler.parseWaveFile()
                     assert sigfilehandler.large_file is False
                     sigval = sigfilehandler.getSigVals(plotname, signame)
                     return sigval
@@ -546,13 +546,13 @@ class WavefileHandler():
                     sighandle1 = get_wavefile_handler(sigfile1)
                     assert sighandle1.large_file is False, \
                             "{} should be small wavefile".format(sighandle1.wavefile)
-                    sighandle1.parseWavefile()
+                    sighandle1.parseWaveFile()
                 if other.large_file:
                     sigfile0 = other.get_sigfile(signame, plotname)
                     sighandle0 = get_wavefile_handler(sigfile0)
                     assert sighandle0.large_file is False, \
                             "{} should be small wavefile".format(sighandle0.wavefile)
-                    sighandle0.parseWavefile()
+                    sighandle0.parseWaveFile()
                 _matching, *args = sighandle1.checkWavePlot(sighandle0, plotname, top)
                 debugPrint("_matching = {}".format(_matching))
                 debugPrint("args = {}".format(args))

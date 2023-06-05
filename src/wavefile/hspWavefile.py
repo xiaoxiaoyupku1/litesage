@@ -2,7 +2,7 @@ import os
 import struct
 import numpy as np
 
-from baseWavefile import WavefileHandler
+from src.wavefile.baseWavefile import WavefileHandler
 
 class HspiceWavefileHandler(WavefileHandler):
     def __init__(self, wavefile, debug=0):
@@ -11,15 +11,15 @@ class HspiceWavefileHandler(WavefileHandler):
         self.signames = []
         self.num_cnt_list = []
 
-    def parseWavefile(self):
+    def parseWaveFile(self):
         fp = open(self.wavefile, 'rb')
-        valid = self.parseWavefileHeader(fp)
+        valid = self.parseWaveFileHeader(fp)
         if not valid:
             print("  ****warning**** wavefile header not valid: {}".format(self.wavefile))
             return
 
         self.generate_sigfiles()
-        self.parseWavefileData(fp)
+        self.parseWaveFileData(fp)
         plotdata = {
                 "plotname": self.plotname,
                 "signames": self.signames,
@@ -32,7 +32,7 @@ class HspiceWavefileHandler(WavefileHandler):
         fp.close()
 
 
-    def _parseWavefileHeaderLine(self, header):
+    def _parseWaveFileHeaderLine(self, header):
         header = header.strip()
         assert header.endswith("$&%#")
         header = header[:-4].strip()
@@ -235,7 +235,7 @@ class HspiceTxtWavefileHandler(HspiceWavefileHandler):
         self.mode = "txt"
 
 
-    def parseWavefileHeader(self, fp):
+    def parseWaveFileHeader(self, fp):
         header = ""
         while True:
             c = struct.unpack('c', fp.read(1))[0].decode("utf-8")
@@ -245,11 +245,11 @@ class HspiceTxtWavefileHandler(HspiceWavefileHandler):
             if header.endswith("$&%#"):
                 break
         assert header.endswith("$&%#")
-        self._parseWavefileHeaderLine(header)
+        self._parseWaveFileHeaderLine(header)
         return True
 
 
-    def parseWavefileData(self, fp):
+    def parseWaveFileData(self, fp):
         """
         txt format wavefile format example:
 
@@ -317,7 +317,7 @@ class HspiceIc0WavefileHandler(HspiceWavefileHandler):
         self.nodeset_or_ic = ""
 
 
-    def parseWavefileHeader(self, fp):
+    def parseWaveFileHeader(self, fp):
         fp.seek(0, 0)
         while True:
             line = fp.readline().decode("utf-8")
@@ -339,7 +339,7 @@ class HspiceIc0WavefileHandler(HspiceWavefileHandler):
         return True
 
 
-    def parseWavefileData(self, fp):
+    def parseWaveFileData(self, fp):
         """
         + avs = 0.000e+00
         + b500mv = 4.951e-01
@@ -380,7 +380,7 @@ class HspiceBinWavefileHandler(HspiceWavefileHandler):
         self.mode = "bin"
 
 
-    def parseWavefileHeader(self, fp):
+    def parseWaveFileHeader(self, fp):
         # ------------------------------
         # limits: 4 (number of int32) 4 (number of bytes)
         # ------------------------------
@@ -395,7 +395,7 @@ class HspiceBinWavefileHandler(HspiceWavefileHandler):
             nprev = np.frombuffer(fp.read(4), dtype="int32")
 
         post_key = header[0:24].strip()[-4:]
-        self._parseWavefileHeaderLine(header)
+        self._parseWaveFileHeaderLine(header)
 
         if post_key == "9601":
             self.timesize, self.timepack, self.timetype = (4, "4B", "f")
@@ -437,7 +437,7 @@ class HspiceBinWavefileHandler(HspiceWavefileHandler):
         return bindata, pnt_cnt
 
 
-    def parseWavefileData(self, fp):
+    def parseWaveFileData(self, fp):
         if self.large_file and self.plotname == "tr" and self.sigfiles_exist[self.plotname]:
             return
         bindata = []

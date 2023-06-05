@@ -1,13 +1,13 @@
 import os
 import sys
 
-from utils import get_wavefile_format
-from hspWavefile import HspiceTxtWavefileHandler
-from hspWavefile import HspiceBinWavefileHandler
-from hspWavefile import HspiceIc0WavefileHandler
+from src.wavefile.utils import get_wavefile_format
+from src.wavefile.hspWavefile import HspiceTxtWavefileHandler
+from src.wavefile.hspWavefile import HspiceBinWavefileHandler
+from src.wavefile.hspWavefile import HspiceIc0WavefileHandler
 
 
-def get_wavefile_handler(wavefile):
+def getWaveFileHandler(wavefile):
     file_format = get_wavefile_format(wavefile)
     if file_format == "hspice_txt":
         return HspiceTxtWavefileHandler(wavefile)
@@ -31,10 +31,10 @@ def checkWave(file1, file2, top=1, open_in_wv=False):
     if file1_fullpath == file2_fullpath:
         print("  ****warning**** file {} and {} are the same file".format(file1, file2))
         return "pass", ""
-    wave1 = get_wavefile_handler(file1)
-    wave1.parseWavefile()
-    wave2 = get_wavefile_handler(file2)
-    wave2.parseWavefile()
+    wave1 = getWaveFileHandler(file1)
+    wave1.parseWaveFile()
+    wave2 = getWaveFileHandler(file2)
+    wave2.parseWaveFile()
     matching, msg = wave2.checkWave(wave1, top, open_in_wv)
     return matching, msg
 
@@ -57,12 +57,12 @@ if __name__ == "__main__":
         print("")
         print("handling wavefile: {}".format(wavefile))
         fileformat = get_wavefile_format(wavefile)
-        handler = get_wavefile_handler(wavefile)
-        handler.parseWavefile()
+        handler = getWaveFileHandler(wavefile)
+        handler.parseWaveFile()
         print("fileformat = ", fileformat)
 
         for plotname in handler.plotnames:
-            signames = handler.get_signames(plotname)
+            signames = handler.getSigNames(plotname)
             sigvals = handler.getSigVals(plotname)
             print("signames =", signames)
             print("sigvals = \n", sigvals)
