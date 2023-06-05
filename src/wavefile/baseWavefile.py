@@ -330,7 +330,7 @@ class WavefileHandler():
                     f.write("{:.12e}\n".format(data[sigidx][buf_pnt_idx]))
 
 
-    def checkWave(self, other, top, open_in_wv):
+    def checkWave(self, other, top):
         """
         check the data with other wavefile handler object
         return matching (bool) and msg(str)
@@ -424,22 +424,6 @@ class WavefileHandler():
                 for reldiff in topreldiffs[:top]:
                     msg += "{} {:.4e}%  ".format(reldiff._name, reldiff._value * 100)
                 msg += "\n"
-                if open_in_wv:
-                    signames = []
-                    for diff in topabsdiffs + topreldiffs:
-                        if diff._name not in signames:
-                            signames.append(diff._name)
-                    from src.waveview.waveviewer import open_wavefiles
-                    if other.large_file or self.large_file:
-                        # open signames one by one
-                        for signame in signames:
-                            sigfile0 = other.get_sigfile(signame, plotname)
-                            sigfile1 = self.get_sigfile(signame, plotname)
-                            wavefiles = [sigfile0, sigfile1]
-                            open_wavefiles(wavefiles, plotname, [signame, ])
-                    else:
-                        wavefiles = [other.wavefile, self.wavefile]
-                        open_wavefiles(wavefiles, plotname, signames)
 
         return matching, msg
 

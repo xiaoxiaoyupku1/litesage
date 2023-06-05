@@ -25,7 +25,7 @@ def getWaveFileHandler(wavefile):
         assert 0, "not valid wavefile format: {} {}".format(file_format, wavefile)
 
 
-def checkWave(file1, file2, top=1, open_in_wv=False):
+def checkWave(file1, file2, top=1):
     file1_fullpath = os.path.abspath(file1)
     file2_fullpath = os.path.abspath(file2)
     if file1_fullpath == file2_fullpath:
@@ -35,7 +35,7 @@ def checkWave(file1, file2, top=1, open_in_wv=False):
     wave1.parseWaveFile()
     wave2 = getWaveFileHandler(file2)
     wave2.parseWaveFile()
-    matching, msg = wave2.checkWave(wave1, top, open_in_wv)
+    matching, msg = wave2.checkWave(wave1, top)
     return matching, msg
 
 
