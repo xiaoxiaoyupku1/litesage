@@ -10,17 +10,16 @@ from src.waveform import FoohuEdaWaveWindow
 from src.layout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
-from src.hmi.dialog import DesignFileDialog
+from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog
 from src.tool.design import dumpDesign
-from src.hmi.symbol import Symbol
 
 
 class FoohuEda(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.lib_symbols = Symbol.parser('devicelib/basic.lib')
         self.initUi()
         self.setupUi()
+        self.initSchScene()
 
     def initUi(self):
         # Windows
@@ -45,7 +44,9 @@ class FoohuEda(QMainWindow):
         self.actLoad = None
 
         # Menu Edit
-        self.actSymbols = []
+        self.actBasic = None
+        self.actPdk = None
+        self.actIp = None
         self.actRes = None
         self.actGnd = None
         self.actVsrc = None
@@ -78,13 +79,20 @@ class FoohuEda(QMainWindow):
         self.actLoad = QAction(text='Load Design')
         self.actLoad.triggered.connect(self.loadDesign)
 
-        for name, symbol in self.lib_symbols.items():
-            actSymbol = QAction(QIcon('img/'+ name + '.png'), '&', self,
-                                  text=name)
-            actSymbol.setObjectName('act' + name)
-            actSymbol.setShortcut(QKeySequence(name[0].lower()))
-            actSymbol.triggered.connect(self.drawSymbol(name))
-            self.actSymbols.append(actSymbol)
+        self.actBasic = QAction(text='Add Standard Component...')
+        self.actBasic.setObjectName('actBasic')
+        self.actBasic.setShortcut(QKeySequence('f2'))
+        self.actBasic.triggered.connect(self.addBasicDev)
+
+        self.actPdk = QAction(text='Add PDK Component...')
+        self.actPdk.setObjectName('actPdk')
+        self.actPdk.setShortcut(QKeySequence('f3'))
+        self.actPdk.triggered.connect(self.addPdkDev)
+
+        self.actIp = QAction(text='Add IP Component...')
+        self.actIp.setObjectName('actIp')
+        self.actIp.setShortcut(QKeySequence('f4'))
+        self.actIp.triggered.connect(self.addIpDev)
 
         self.actRes = QAction(QIcon('img/res.png'), '&', self,
                               text='Resistor')
@@ -145,11 +153,11 @@ class FoohuEda(QMainWindow):
         self.menuEdit = QMenu(self.menuBar)
         self.menuEdit.setTitle('Edit')
 
-        for actSymbol in self.actSymbols:
-            self.menuEdit.addAction(actSymbol)
-
+        self.menuEdit.addAction(self.actBasic)
+        self.menuEdit.addAction(self.actPdk)
+        self.menuEdit.addAction(self.actIp)
         self.menuEdit.addAction(self.actRes)
-        self.menuEdit.addAction(self.actGnd)
+        # self.menuEdit.addAction(self.actGnd)
         self.menuEdit.addAction(self.actVsrc)
         self.menuEdit.addAction(self.actWire)
         self.menuEdit.addAction(self.actPin)
@@ -184,7 +192,6 @@ class FoohuEda(QMainWindow):
         dumpDesign(designFile, self.schScene.rectDesign)
 
     def loadDesign(self, _):
-        self.initSchScene()
         self.schScene.cleanCursorSymb()
         dialog = DesignFileDialog(self, 'Load Design from ...', mode='load')
         if dialog.exec() != dialog.accepted:
@@ -197,51 +204,59 @@ class FoohuEda(QMainWindow):
     def initSchScene(self):
         if self.schScene is None:
             self.schScene = SchScene()
-            self.schScene.lib_symbols = self.lib_symbols
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
 
+    def addBasicDev(self):
+        devices = sorted(self.schScene.basicSymbols.keys())
+        dialog = DeviceChoiceDialog(self, 'Add Standard Component', 
+                                    devices=self.schScene.basicSymbols.keys())
+        if dialog.exec() != dialog.accepted:
+            return False
+        symbName = dialog.listview.selectedIndexes()[0].data()
+        self.drawSymbol(symbName, 'basic')
+
+    
+    def addPdkDev(self):
+        dialog = DeviceChoiceDialog(self, 'Add PDK Component', 
+                                    devices=self.schScene.pdkSymbols.keys())
+        dialog.exec()
+
+    def addIpDev(self):
+        dialog = DeviceChoiceDialog(self, 'Add IP Component',
+                                    devices=self.schScene.ipSymbols.keys())
+        dialog.exec()
+        
     def drawRes(self):
-        self.initSchScene()
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'R'
 
     def drawVsrc(self):
-        self.initSchScene()
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'V'
 
     def drawGnd(self):
-        self.initSchScene()
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'G'
 
     def drawWire(self):
-        self.initSchScene()
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'W'
         
     def drawPin(self):
-        self.initSchScene()
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'P'
         
     def drawRect(self):
-        self.initSchScene()
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'RECT'
 
-    def drawSymbol(self,name):
-        def do_drawSymbol():
-            self.initSchScene()
-            self.schScene.cleanCursorSymb()
-            self.schScene.insertSymbName = name
-            self.schScene.insertSymbType = 'Symbol'
-
-        return do_drawSymbol
+    def drawSymbol(self, name, symbType):
+        self.schScene.cleanCursorSymb()
+        self.schScene.insertSymbName = name
+        self.schScene.insertSymbType = symbType
 
     def drawSim(self):
-        self.initSchScene()
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'S'
 

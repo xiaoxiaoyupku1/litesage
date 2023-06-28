@@ -9,6 +9,7 @@ from src.hmi.line import Line
 from src.hmi.rect import Rect
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle
+from src.hmi.symbol import Symbol
 
 
 class SchScene(QGraphicsScene):
@@ -28,6 +29,16 @@ class SchScene(QGraphicsScene):
         self.rectStartPos = None                # starting point for adding design rect
         self.rectDesign = None                  # rectangle surrounding the design
         self.scale = 5.0                        # scaling coefficient
+
+        self.basicSymbols = None                # basic ideal symbols
+        self.pdkSymbols = None                  # pdk symbols
+        self.ipSymbols = None                   # ip symbols
+        self.loadSymbols()
+
+    def loadSymbols(self):
+        self.basicSymbols = Symbol.parser(r'devicelib\basic.lib')
+        # self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
+        # self.ipSymbols = Symbol.parser(r'devicelib\ip.lib')
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
@@ -51,9 +62,9 @@ class SchScene(QGraphicsScene):
         if self.enableDel:
             pass
         else:
-            if self.insertSymbType == 'Symbol':
+            if self.insertSymbType in ['basic', 'pdk', 'ip']:
                 self.wireStartPos = None
-                self.drawSymbol(event, self.insertSymbName)
+                self.drawSymbol(event, self.insertSymbName, self.insertSymbType)
             else:
                 if self.insertSymbType == 'R':
                     self.wireStartPos = None
@@ -226,9 +237,17 @@ class SchScene(QGraphicsScene):
 
         self.symbols.append(self.cursorSymb)
 
-    def drawSymbol(self, event, name):
+    def drawSymbol(self, event, name, symbType='basic'):
+        if symbType == 'basic':
+            symbols = self.basicSymbols
+        elif symbType == 'pdk':
+            symbols = self.pdkSymbols
+        else:
+            assert 0, 'ip symbols not implemented yet'
+            symbols = self.ipSymbols
         self.cursorSymb = []
-        for part in self.lib_symbols[name].parts:
+
+        for part in symbols[name].parts:
             type = part[0].lower()
             p = None
             if type == 'wire':
@@ -263,39 +282,7 @@ class SchScene(QGraphicsScene):
         self.symbols.append(self.cursorSymb)
 
     def drawRes(self, event):
-        self.cursorSymb = []
-        lines = [[0.000000,375.000000,0.000000,300.000000], 
-                 [0.000000,300.000000,-62.500000,281.250000], 
-                 [-62.500000,281.250000,62.500000,243.750000], 
-                 [62.500000,243.750000,-62.500000,206.250000],
-                 [-62.500000,206.250000,62.500000,168.750000], 
-                 [62.500000,168.750000,-62.500000,131.250000], 
-                 [-62.500000,131.250000,62.500000,93.750000], 
-                 [62.500000,93.750000,0.000000,75.000000], 
-                 [0.000000,75.000000,0.000000,0.000000]]
-        for line in lines:
-            line = [l/self.scale for l in line]
-            line = Line(*line)
-            self.addItem(line)
-            self.cursorSymb.append(line)
-            line.setPos(event.scenePos())
-        pin1 = Rect(0-20/self.scale, 375/self.scale,40/self.scale,40/self.scale)
-        self.addItem(pin1)
-        self.cursorSymb.append(pin1)
-        pin1.setPos(event.scenePos())
-        pin2 = Rect(0-20/self.scale, 0-40/self.scale,40/self.scale,40/self.scale)
-        self.addItem(pin2)
-        self.cursorSymb.append(pin2)
-        pin2.setPos(event.scenePos())
-
-        name = ParameterText('    R1\n\n    R')
-        self.addItem(name)
-        self.cursorSymb.append(name)
-        name.setPos(event.scenePos())
-
-
-        self.symbols.append(self.cursorSymb)
-
+        self.drawSymbol(event, 'RES', 'basic')
 
     def drawGnd(self, event):
         self.cursorSymb = []
@@ -322,39 +309,7 @@ class SchScene(QGraphicsScene):
         self.symbols.append(self.cursorSymb)
 
     def drawVsrc(self, event):
-        self.cursorSymb = []
-        lines = [[0.000000,175.000000,0.000000,137.500000],
-                 [18.750000,156.250000,-18.750000,156.250000],
-                 [0.000000,125.000000,0.000000,0.000000],
-                 [0.000000,250.000000,0.000000,375.000000],
-                 [18.750000,218.750000,-18.750000,218.750000]]
-        for line in lines:
-            line = [l/self.scale for l in line]
-            line = Line(*line)
-            self.addItem(line)
-            self.cursorSymb.append(line)
-            line.setPos(event.scenePos())
-        cp = [p/self.scale for p in [0.000000,187.500000,68.750000]]
-        circle = Circle(cp[0]-cp[2], cp[1]-cp[2], cp[2]*2,cp[2]*2)
-        self.addItem(circle)
-        self.cursorSymb.append(circle)
-        circle.setPos(event.scenePos())
-
-        pin1 = Rect(0-20/self.scale, 375/self.scale,40/self.scale,40/self.scale)
-        self.addItem(pin1)
-        self.cursorSymb.append(pin1)
-        pin1.setPos(event.scenePos())
-        pin2 = Rect(0-20/self.scale, 0-40/self.scale,40/self.scale,40/self.scale)
-        self.addItem(pin2)
-        self.cursorSymb.append(pin2)
-        pin2.setPos(event.scenePos())
-
-        name = ParameterText('    V1\n\n    V')
-        self.addItem(name)
-        self.cursorSymb.append(name)
-        name.setPos(event.scenePos())
-
-        self.symbols.append(self.cursorSymb)
+        self.drawSymbol(event, 'Voltage_Source', 'basic')
 
     def drawPin(self, event):
         self.cursorSymb = []
