@@ -12,11 +12,13 @@ from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog
 from src.tool.design import dumpDesign
+from src.hmi.symbol import Symbol
 
 
 class FoohuEda(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.lib_symbols = Symbol.parser('devicelib/basic.lib')
         self.initUi()
         self.setupUi()
 
@@ -43,6 +45,7 @@ class FoohuEda(QMainWindow):
         self.actLoad = None
 
         # Menu Edit
+        self.actSymbols = []
         self.actRes = None
         self.actGnd = None
         self.actVsrc = None
@@ -75,7 +78,15 @@ class FoohuEda(QMainWindow):
         self.actLoad = QAction(text='Load Design')
         self.actLoad.triggered.connect(self.loadDesign)
 
-        self.actRes = QAction(QIcon('img/res.png'), '&', self, 
+        for name, symbol in self.lib_symbols.items():
+            actSymbol = QAction(QIcon('img/'+ name + '.png'), '&', self,
+                                  text=name)
+            actSymbol.setObjectName('act' + name)
+            actSymbol.setShortcut(QKeySequence(name[0].lower()))
+            actSymbol.triggered.connect(self.drawSymbol(name))
+            self.actSymbols.append(actSymbol)
+
+        self.actRes = QAction(QIcon('img/res.png'), '&', self,
                               text='Resistor')
         self.actRes.setObjectName('actRes')
         self.actRes.setShortcut(QKeySequence('r'))
@@ -133,6 +144,10 @@ class FoohuEda(QMainWindow):
 
         self.menuEdit = QMenu(self.menuBar)
         self.menuEdit.setTitle('Edit')
+
+        for actSymbol in self.actSymbols:
+            self.menuEdit.addAction(actSymbol)
+
         self.menuEdit.addAction(self.actRes)
         self.menuEdit.addAction(self.actGnd)
         self.menuEdit.addAction(self.actVsrc)
@@ -182,6 +197,7 @@ class FoohuEda(QMainWindow):
     def initSchScene(self):
         if self.schScene is None:
             self.schScene = SchScene()
+            self.schScene.lib_symbols = self.lib_symbols
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
 
@@ -214,7 +230,16 @@ class FoohuEda(QMainWindow):
         self.initSchScene()
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'RECT'
-        
+
+    def drawSymbol(self,name):
+        def do_drawSymbol():
+            self.initSchScene()
+            self.schScene.cleanCursorSymb()
+            self.schScene.insertSymbName = name
+            self.schScene.insertSymbType = 'Symbol'
+
+        return do_drawSymbol
+
     def drawSim(self):
         self.initSchScene()
         self.schScene.cleanCursorSymb()

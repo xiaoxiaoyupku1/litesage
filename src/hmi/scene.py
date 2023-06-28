@@ -19,6 +19,8 @@ class SchScene(QGraphicsScene):
         self.enableDel = False                  # delete mode
         self.cursorSymb = None                  # list of symbols under cursor
         self.insertSymbType = None              # type of component to insert
+        self.insertSymbName = None              # insert symbol name (from lib file)
+        self.lib_symbols = None                 # symbols from lib file
         self.widgetMouseMove = None             # widget with moving mouse
         self.designTextLines = None             # list of strings: user-defined design in rectangle
         self.symbols = []                       # list of all symbols, a symbol = list of shapes
@@ -44,8 +46,37 @@ class SchScene(QGraphicsScene):
                         self.removeItem(shp)
             if not shapeInSymb:
                 self.removeItem(shape)
-    
+
     def mousePressEvent(self, event):
+        if self.enableDel:
+            pass
+        else:
+            if self.insertSymbType == 'Symbol':
+                self.wireStartPos = None
+                self.drawSymbol(event, self.insertSymbName)
+            else:
+                if self.insertSymbType == 'R':
+                    self.wireStartPos = None
+                    self.drawRes(event)
+                elif self.insertSymbType == 'G':
+                    self.wireStartPos = None
+                    self.drawGnd(event)
+                elif self.insertSymbType == 'V':
+                    self.wireStartPos = None
+                    self.drawVsrc(event)
+                if self.insertSymbType == 'W':
+                    self.drawWire(event)
+                elif self.insertSymbType == 'P':
+                    self.drawPin(event)
+                elif self.insertSymbType == 'RECT':
+                    self.drawRect(event)
+                elif self.insertSymbType == 'Design':
+                    self.drawDesign(event)
+                elif self.insertSymbType == 'S':
+                    self.drawSim(event)
+        return super().mousePressEvent(event)
+
+    def mousePressEvent_bk(self, event):
         if self.enableDel:
             pass
         else:
@@ -71,7 +102,38 @@ class SchScene(QGraphicsScene):
 
         return super().mousePressEvent(event)
 
+
     def mouseMoveEvent(self, event):
+        if self.cursorSymb is None:
+            if self.insertSymbType == 'R':
+                self.drawRes(event)
+            elif self.insertSymbType == 'G':
+                self.drawGnd(event)
+            elif self.insertSymbType == 'V':
+                self.drawVsrc(event)
+            elif self.insertSymbType == 'P':
+                self.drawPin(event)
+            elif self.insertSymbType == 'Symbol':
+                self.drawSymbol(event, self.insertSymbName)
+            elif self.insertSymbType == 'W':
+                self.drawWire(event, mode='move')
+            elif self.insertSymbType == 'RECT':
+                self.drawRect(event, mode='move')
+            elif self.insertSymbType == 'Design':
+                self.drawDesign(event)
+            elif self.insertSymbType == 'S':
+                self.drawSim(event)
+        else:
+            for item in self.cursorSymb:
+                posx = event.scenePos().x()
+                posy = event.scenePos().y()
+                if isinstance(item, ParameterText):
+                    posx += float(item.posx)
+                    posy += float(item.posy)
+                item.setPos(posx, posy)
+
+        return super().mouseMoveEvent(event)
+    def mouseMoveEvent_bk(self, event):
         if self.cursorSymb is None:
             if self.insertSymbType == 'R':
                 self.drawRes(event)
@@ -161,6 +223,42 @@ class SchScene(QGraphicsScene):
                 posx += float(item.posx)
                 posy += float(item.posy)
             item.setPos(posx, posy)
+
+        self.symbols.append(self.cursorSymb)
+
+    def drawSymbol(self, event, name):
+        self.cursorSymb = []
+        for part in self.lib_symbols[name].parts:
+            type = part[0].lower()
+            p = None
+            if type == 'wire':
+                tokens = part[1:]
+                tokens = [float(token) / self.scale for token in tokens]
+                p = Line(*tokens)
+            elif type == 'c':
+                tokens = part
+                cp = [float(p) / self.scale for p in tokens[1:4]]
+                p = Circle(cp[0] - cp[2], cp[1] - cp[2], cp[2] * 2, cp[2] * 2)
+            elif type == 'p':
+                polygonf = QPolygonF()
+                for i in range(5,len(part)-1,2):
+                    polygonf.append(QPointF(float(part[i])/self.scale,float(part[i+1])/self.scale))
+                p = Polygon(polygonf)
+            elif type == 'x':
+                name = part[1]
+                num = part[2]
+                pos_x = float(part[3])
+                pos_y = float(part[4])
+                pin_len = float(part[5])
+                orientation = part[6]
+                Snum = float(part[7])
+                half = Snum / 2
+                p = Rect((pos_x - half)/self.scale, (pos_y - half)/self.scale, Snum/self.scale, Snum/self.scale)
+            else:
+                pass
+            self.addItem(p)
+            self.cursorSymb.append(p)
+            p.setPos(event.scenePos())
 
         self.symbols.append(self.cursorSymb)
 
