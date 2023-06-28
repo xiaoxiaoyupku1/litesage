@@ -209,23 +209,27 @@ class FoohuEda(QMainWindow):
 
     def addBasicDev(self):
         devices = sorted(self.schScene.basicSymbols.keys())
-        dialog = DeviceChoiceDialog(self, 'Add Standard Component', 
-                                    devices=self.schScene.basicSymbols.keys())
+        dialog = DeviceChoiceDialog(self, 'Add Standard Component', devices=devices)
         if dialog.exec() != dialog.accepted:
             return False
         symbName = dialog.listview.selectedIndexes()[0].data()
         self.drawSymbol(symbName, 'basic')
-
     
     def addPdkDev(self):
-        dialog = DeviceChoiceDialog(self, 'Add PDK Component', 
-                                    devices=self.schScene.pdkSymbols.keys())
-        dialog.exec()
+        devices = sorted(self.schScene.pdkSymbols.keys())
+        dialog = DeviceChoiceDialog(self, 'Add PDK Component', devices=devices)
+        if dialog.exec() != dialog.accepted:
+            return False
+        symbName = dialog.listview.selectedIndexes()[0].data()
+        self.drawSymbol(symbName, 'pdk')
 
     def addIpDev(self):
-        dialog = DeviceChoiceDialog(self, 'Add IP Component',
-                                    devices=self.schScene.ipSymbols.keys())
-        dialog.exec()
+        devices = sorted(self.schScene.ipSymbols.keys())
+        dialog = DeviceChoiceDialog(self, 'Add IP Component', devices=devices)
+        if dialog.exec() != dialog.accepted:
+            return False
+        symbName = dialog.listview.selectedIndexes()[0].data()
+        self.drawSymbol(symbName, 'ip')
         
     def drawRes(self):
         self.schScene.cleanCursorSymb()
