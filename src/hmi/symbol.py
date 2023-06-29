@@ -1,9 +1,8 @@
 
 from src.hmi.line import Line
 from src.hmi.ellipse import Circle
-class Symbol():
-    scale = 5.0
 
+class Symbol():
     def __init__(self):
         self.name = None
         self.reference = None
@@ -27,7 +26,9 @@ class Symbol():
         with open(lib_file, 'r') as F:
             for line in F:
                 tokens = line.strip().split()
-                if line.lower().startswith("foohueda-librar") or line.startswith('#') or len(tokens) == 0:
+                if line.startswith('#'):
+                    pass
+                elif line.lower().startswith("foohueda-librar") or line.startswith('#') or len(tokens) == 0:
                     pass
                 elif line.lower().startswith("def "):
                     assert scope == [], "not valid libfile syntax: {}".format(line)

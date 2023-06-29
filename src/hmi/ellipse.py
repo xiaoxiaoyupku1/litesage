@@ -15,9 +15,9 @@ class Arc(QGraphicsEllipseItem):
         painter.setBrush(self.brush())
         painter.drawArc(self.rect(), self.startAngle(), self.spanAngle())
 
-    @classmethod
-    def convertangle(cls,ang):
-        ang = - ang
-        if ang < 0:
-            ang = 360 + ang
-        return  ang
+    # @classmethod
+    # def convertangle(cls,ang):
+    #     ang = - ang
+    #     if ang < 0:
+    #         ang = 360 + ang
+    #     return  ang

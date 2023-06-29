@@ -28,7 +28,7 @@ class SchScene(QGraphicsScene):
         self.wireStartPos = None                # starting point for adding wire
         self.rectStartPos = None                # starting point for adding design rect
         self.rectDesign = None                  # rectangle surrounding the design
-        self.scale = 5.0                        # scaling coefficient
+        self.scale = 15.0                       # scaling coefficient
 
         self.basicSymbols = None                # basic ideal symbols
         self.pdkSymbols = None                  # pdk symbols
@@ -86,33 +86,6 @@ class SchScene(QGraphicsScene):
                 elif self.insertSymbType == 'S':
                     self.drawSim(event)
         return super().mousePressEvent(event)
-
-    def mousePressEvent_bk(self, event):
-        if self.enableDel:
-            pass
-        else:
-            if self.insertSymbType == 'R':
-                self.wireStartPos = None
-                self.drawRes(event)
-            elif self.insertSymbType == 'G':
-                self.wireStartPos = None
-                self.drawGnd(event)
-            elif self.insertSymbType == 'V':
-                self.wireStartPos = None
-                self.drawVsrc(event)
-            elif self.insertSymbType == 'W':
-                self.drawWire(event)
-            elif self.insertSymbType == 'P':
-                self.drawPin(event)
-            elif self.insertSymbType == 'RECT':
-                self.drawRect(event)
-            elif self.insertSymbType == 'Design':
-                self.drawDesign(event)
-            elif self.insertSymbType == 'S':
-                self.drawSim(event)
-
-        return super().mousePressEvent(event)
-
 
     def mouseMoveEvent(self, event):
         if self.cursorSymb is None:
@@ -279,11 +252,12 @@ class SchScene(QGraphicsScene):
                 pos_x = float(part[1])
                 pos_y = float(part[2])
                 radius = float(part[3])
-                start = Arc.convertangle(float(part[4])/10)
-                end = Arc.convertangle(float(part[5])/10)
-                p = Arc((pos_x-radius)/self.scale,(pos_y-radius)/self.scale, radius/self.scale*2, radius/self.scale*2)
-                p.setStartAngle(end*16)
-                p.setSpanAngle(abs((end - start))*16)
+                start = float(part[4])/10
+                end = float(part[5])/10
+                p = Arc((pos_x-radius)/self.scale,(pos_y-radius)/self.scale, 
+                         radius/self.scale*2, radius/self.scale*2)
+                p.setStartAngle(start*16)
+                p.setSpanAngle((end - start)*16)
             else:
                 pass
             self.addItem(p)
@@ -425,7 +399,7 @@ class SchScene(QGraphicsScene):
         item = QGraphicsTextItem(text)
         item.setDefaultTextColor('darkblue')
         font = item.font()
-        font.setPixelSize(50)
+        font.setPixelSize(25)
         item.setFont(font)
         item.setPos(event.scenePos())
         self.addItem(item)

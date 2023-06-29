@@ -186,7 +186,8 @@ class FoohuEda(QMainWindow):
         if self.schScene is None or self.schScene.rectDesign is None:
             return
         dialog = DesignFileDialog(self, 'Save Design as ...', mode='save')
-        if dialog.exec() != dialog.accepted:
+        result = dialog.exec()
+        if result != dialog.accepted:
             return False
         designFile = dialog.selectedFiles()[0]
         dumpDesign(designFile, self.schScene.rectDesign)
@@ -194,7 +195,8 @@ class FoohuEda(QMainWindow):
     def loadDesign(self, _):
         self.schScene.cleanCursorSymb()
         dialog = DesignFileDialog(self, 'Load Design from ...', mode='load')
-        if dialog.exec() != dialog.accepted:
+        result = dialog.exec()
+        if result != dialog.accepted:
             return False
         designFile = dialog.selectedFiles()[0]
         self.schScene.insertSymbType = 'Design'
@@ -210,7 +212,8 @@ class FoohuEda(QMainWindow):
     def addBasicDev(self):
         devices = sorted(self.schScene.basicSymbols.keys())
         dialog = DeviceChoiceDialog(self, 'Add Standard Component', devices=devices)
-        if dialog.exec() != dialog.accepted:
+        result = dialog.exec()
+        if result != dialog.accepted:
             return False
         symbName = dialog.listview.selectedIndexes()[0].data()
         self.drawSymbol(symbName, 'basic')
@@ -218,7 +221,8 @@ class FoohuEda(QMainWindow):
     def addPdkDev(self):
         devices = sorted(self.schScene.pdkSymbols.keys())
         dialog = DeviceChoiceDialog(self, 'Add PDK Component', devices=devices)
-        if dialog.exec() != dialog.accepted:
+        result = dialog.exec()
+        if result != dialog.accepted:
             return False
         symbName = dialog.listview.selectedIndexes()[0].data()
         self.drawSymbol(symbName, 'pdk')
@@ -226,7 +230,8 @@ class FoohuEda(QMainWindow):
     def addIpDev(self):
         devices = sorted(self.schScene.ipSymbols.keys())
         dialog = DeviceChoiceDialog(self, 'Add IP Component', devices=devices)
-        if dialog.exec() != dialog.accepted:
+        result = dialog.exec()
+        if result != dialog.accepted:
             return False
         symbName = dialog.listview.selectedIndexes()[0].data()
         self.drawSymbol(symbName, 'ip')

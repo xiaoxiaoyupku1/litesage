@@ -5,11 +5,13 @@ class SchView(QGraphicsView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setMouseTracking(True)
+        self.origScale = 1.25
+        self.scale(self.origScale**3, self.origScale**3)
 
     def wheelEvent(self, event) -> None:
         # Only zoom/dezoom if CTRL is pressed
         if event.modifiers() == Qt.ControlModifier:
-            zoomInFactor = 1.25
+            zoomInFactor = self.origScale
             zoomOutFactor = 1 / zoomInFactor
 
             # Save the scene pos
