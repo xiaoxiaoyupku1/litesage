@@ -8,7 +8,7 @@ from src.hmi.text import ParameterText
 from src.hmi.line import Line
 from src.hmi.rect import Rect
 from src.hmi.polygon import Polygon
-from src.hmi.ellipse import Circle
+from src.hmi.ellipse import Circle, Arc
 from src.hmi.symbol import Symbol
 
 
@@ -263,6 +263,8 @@ class SchScene(QGraphicsScene):
                 for i in range(5,len(part)-1,2):
                     polygonf.append(QPointF(float(part[i])/self.scale,float(part[i+1])/self.scale))
                 p = Polygon(polygonf)
+                if part[-1].lower() == 'f':
+                    p.setBrush(QColor('black'))
             elif type == 'x':
                 name = part[1]
                 num = part[2]
@@ -273,6 +275,15 @@ class SchScene(QGraphicsScene):
                 Snum = float(part[7])
                 half = Snum / 2
                 p = Rect((pos_x - half)/self.scale, (pos_y - half)/self.scale, Snum/self.scale, Snum/self.scale)
+            elif type == 'a':
+                pos_x = float(part[1])
+                pos_y = float(part[2])
+                radius = float(part[3])
+                start = Arc.convertangle(float(part[4])/10)
+                end = Arc.convertangle(float(part[5])/10)
+                p = Arc((pos_x-radius)/self.scale,(pos_y-radius)/self.scale, radius/self.scale*2, radius/self.scale*2)
+                p.setStartAngle(end*16)
+                p.setSpanAngle(abs((end - start))*16)
             else:
                 pass
             self.addItem(p)

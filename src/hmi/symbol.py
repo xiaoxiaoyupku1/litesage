@@ -82,7 +82,7 @@ class Symbol():
                         elif part_type == 'c':
                             symbol.parts.append(tokens)
                         elif part_type == 'a':
-                            pass
+                            symbol.parts.append(tokens)
                         elif part_type == 'p':
                             symbol.parts.append(tokens)
                         else:
