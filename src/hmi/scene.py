@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.hmi.text import ParameterText
-from src.hmi.line import Line
+from src.hmi.line import Line, Bus
 from src.hmi.rect import Rect
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
@@ -21,7 +21,6 @@ class SchScene(QGraphicsScene):
         self.cursorSymb = None                  # list of symbols under cursor
         self.insertSymbType = None              # type of component to insert
         self.insertSymbName = None              # insert symbol name (from lib file)
-        self.lib_symbols = None                 # symbols from lib file
         self.widgetMouseMove = None             # widget with moving mouse
         self.designTextLines = None             # list of strings: user-defined design in rectangle
         self.symbols = []                       # list of all symbols, a symbol = list of shapes
@@ -37,7 +36,7 @@ class SchScene(QGraphicsScene):
 
     def loadSymbols(self):
         self.basicSymbols = Symbol.parser(r'devicelib\basic.lib')
-        # self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
+        self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
         # self.ipSymbols = Symbol.parser(r'devicelib\ip.lib')
 
     def keyPressEvent(self, event) -> None:
@@ -227,6 +226,10 @@ class SchScene(QGraphicsScene):
                 tokens = part[1:]
                 tokens = [float(token) / self.scale for token in tokens]
                 p = Line(*tokens)
+            elif type == 'bus':
+                tokens = part[1:]
+                tokens = [float(token) / self.scale for token in tokens]
+                p = Bus(*tokens)
             elif type == 'c':
                 tokens = part
                 cp = [float(p) / self.scale for p in tokens[1:4]]

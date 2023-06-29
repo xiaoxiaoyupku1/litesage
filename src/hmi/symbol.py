@@ -67,11 +67,11 @@ class Symbol():
 
                 elif line.lower().startswith("wire "):
                     assert scope[-1] == "draw"
-                    scope.append('wire')
+                    scope.append(tokens[1].lower())
 
                 else:
-                    if scope[-1] == "wire":
-                        part = ['wire']
+                    if scope[-1] in ('wire', 'bus'):
+                        part = [scope[-1]]
                         part.extend(tokens)
                         symbol.parts.append(part)
                         scope.pop()
