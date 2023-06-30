@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem)
+from PySide6.QtCore import Qt
 
 class Circle(QGraphicsEllipseItem):
     def __init__(self, *args, **kwargs):
@@ -11,13 +12,9 @@ class Arc(QGraphicsEllipseItem):
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
     def paint(self, painter, option, widget):
-        painter.setPen(self.pen())
+        pen = self.pen()
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setJoinStyle(Qt.RoundJoin)
+        painter.setPen(pen)
         painter.setBrush(self.brush())
         painter.drawArc(self.rect(), self.startAngle(), self.spanAngle())
-
-    # @classmethod
-    # def convertangle(cls,ang):
-    #     ang = - ang
-    #     if ang < 0:
-    #         ang = 360 + ang
-    #     return  ang

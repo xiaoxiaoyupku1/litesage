@@ -1,6 +1,10 @@
 from PySide6.QtWidgets import QGraphicsTextItem
 from src.hmi.dialog import ParameterDialog
 
+class Text(QGraphicsTextItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 class ParameterText(QGraphicsTextItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

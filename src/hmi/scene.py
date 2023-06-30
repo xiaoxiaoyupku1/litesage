@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 
 from src.hmi.text import ParameterText
 from src.hmi.line import Line, Bus
-from src.hmi.rect import Rect
+from src.hmi.rect import Rect, DesignBorder
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
 from src.hmi.symbol import Symbol
@@ -156,11 +156,7 @@ class SchScene(QGraphicsScene):
 
             elif name == 'RECT':
                 ps = [float(p) for p in parameters.split(',')]
-                item = Rect(*ps)
-                pen = QPen()
-                pen.setWidth(8)
-                pen.setColor('green')
-                item.setPen(pen)
+                item = DesignBorder(*ps)
 
             elif name == 'Wire':
                 ps = [float(p) for p in parameters.split(',')]
@@ -354,11 +350,7 @@ class SchScene(QGraphicsScene):
         height = abs(curY - self.rectStartPos[1])
         startX = min(curX, self.rectStartPos[0])
         startY = min(curY, self.rectStartPos[1])
-        rect = Rect(startX, startY, width, height)
-        pen = QPen()
-        pen.setWidth(8)
-        pen.setColor('green')
-        rect.setPen(pen)
+        rect = DesignBorder(startX, startY, width, height)
         self.addItem(rect)
 
         if mode == 'move' :
