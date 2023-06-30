@@ -28,6 +28,7 @@ class SchScene(QGraphicsScene):
         self.rectStartPos = None                # starting point for adding design rect
         self.rectDesign = None                  # rectangle surrounding the design
         self.scale = 15.0                       # scaling coefficient
+        self.sceneSymbRatio = 12.5 / 3          # x / 50 = 62.5 / 750
 
         self.basicSymbols = None                # basic ideal symbols
         self.pdkSymbols = None                  # pdk symbols
@@ -56,6 +57,9 @@ class SchScene(QGraphicsScene):
                         self.removeItem(shp)
             if not shapeInSymb:
                 self.removeItem(shape)
+
+    def roundPos(self, pos):
+        return int(pos / self.sceneSymbRatio) * self.sceneSymbRatio
 
     def mousePressEvent(self, event):
         if self.enableDel:
@@ -108,36 +112,8 @@ class SchScene(QGraphicsScene):
                 self.drawSim(event)
         else:
             for item in self.cursorSymb:
-                posx = event.scenePos().x()
-                posy = event.scenePos().y()
-                if isinstance(item, ParameterText):
-                    posx += float(item.posx)
-                    posy += float(item.posy)
-                item.setPos(posx, posy)
-
-        return super().mouseMoveEvent(event)
-    def mouseMoveEvent_bk(self, event):
-        if self.cursorSymb is None:
-            if self.insertSymbType == 'R':
-                self.drawRes(event)
-            elif self.insertSymbType == 'G':
-                self.drawGnd(event)
-            elif self.insertSymbType == 'V':
-                self.drawVsrc(event)
-            elif self.insertSymbType == 'P':
-                self.drawPin(event)
-            elif self.insertSymbType == 'W':
-                self.drawWire(event, mode='move')
-            elif self.insertSymbType == 'RECT':
-                self.drawRect(event, mode='move')
-            elif self.insertSymbType == 'Design':
-                self.drawDesign(event)
-            elif self.insertSymbType == 'S':
-                self.drawSim(event)
-        else:
-            for item in self.cursorSymb:
-                posx = event.scenePos().x()
-                posy = event.scenePos().y()
+                posx = self.roundPos(event.scenePos().x())
+                posy = self.roundPos(event.scenePos().y())
                 if isinstance(item, ParameterText):
                     posx += float(item.posx)
                     posy += float(item.posy)
@@ -332,6 +308,8 @@ class SchScene(QGraphicsScene):
         # mode: 'press', 'move'
         curPos = event.scenePos()
         curX, curY = curPos.x(), curPos.y()
+        curX = self.roundPos(curX)
+        curY = self.roundPos(curY)
 
         if self.widgetMouseMove is not None:
             self.removeItem(self.widgetMouseMove)
