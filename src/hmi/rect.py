@@ -18,3 +18,10 @@ class DesignBorder(Rect):
         self.pen.setWidth(8)
         self.pen.setColor('green')
         self.setPen(self.pen)
+
+
+class SymbolPin(Rect):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pen.setColor('red')
+        self.setPen(self.pen)

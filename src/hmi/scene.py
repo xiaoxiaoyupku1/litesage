@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 
 from src.hmi.text import ParameterText
 from src.hmi.line import Line, Bus
-from src.hmi.rect import Rect, DesignBorder
+from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
 from src.hmi.symbol import Symbol
@@ -222,7 +222,8 @@ class SchScene(QGraphicsScene):
                 orientation = part[6]
                 Snum = float(part[7])
                 half = Snum / 2
-                p = Rect((pos_x - half)/self.scale, (pos_y - half)/self.scale, Snum/self.scale, Snum/self.scale)
+                p = SymbolPin((pos_x - half)/self.scale, (pos_y - half)/self.scale, 
+                              Snum/self.scale, Snum/self.scale)
             elif type == 'a':
                 pos_x = float(part[1])
                 pos_y = float(part[2])
