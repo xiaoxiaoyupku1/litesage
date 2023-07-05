@@ -210,6 +210,7 @@ class FoohuEda(QMainWindow):
             self.setCentralWidget(self.schView)
 
     def addBasicDev(self):
+        self.schScene.initBasicSymbols()
         devices = sorted(self.schScene.basicSymbols.keys())
         dialog = DeviceChoiceDialog(self, 'Add Standard Component', devices=devices)
         result = dialog.exec()
@@ -219,6 +220,7 @@ class FoohuEda(QMainWindow):
         self.drawSymbol(symbName, 'basic')
     
     def addPdkDev(self):
+        self.schScene.initPdkSymbols()
         devices = sorted(self.schScene.pdkSymbols.keys())
         dialog = DeviceChoiceDialog(self, 'Add PDK Component', devices=devices)
         result = dialog.exec()
@@ -228,6 +230,7 @@ class FoohuEda(QMainWindow):
         self.drawSymbol(symbName, 'pdk')
 
     def addIpDev(self):
+        self.schScene.initIpSymbols()
         devices = sorted(self.schScene.ipSymbols.keys())
         dialog = DeviceChoiceDialog(self, 'Add IP Component', devices=devices)
         result = dialog.exec()

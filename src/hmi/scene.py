@@ -2,10 +2,9 @@ from PySide6.QtCore import (Qt, QPointF, QRectF)
 from PySide6.QtGui import (QPolygonF, QPen, QColor)
 from PySide6.QtWidgets import (
     QGraphicsScene, QInputDialog, QLineEdit, QGraphicsTextItem, 
-    QGraphicsItemGroup, QGraphicsItem,
 )
 
-from src.hmi.text import ParameterText
+from src.hmi.text import Text, ParameterText
 from src.hmi.line import Line, Bus
 from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon
@@ -35,12 +34,17 @@ class SchScene(QGraphicsScene):
         self.basicSymbols = None                # basic ideal symbols
         self.pdkSymbols = None                  # pdk symbols
         self.ipSymbols = None                   # ip symbols
-        self.loadSymbols()
 
-    def loadSymbols(self):
-        self.basicSymbols = Symbol.parser(r'devicelib\basic.lib')
-        self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
-        # self.ipSymbols = Symbol.parser(r'devicelib\ip.lib')
+    def initBasicSymbols(self):
+        if self.basicSymbols is None:
+            self.basicSymbols = Symbol.parser(r'devicelib\basic.lib')
+    def initPdkSymbols(self):
+        if self.pdkSymbols is None:
+            self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
+    def initIpSymbols(self):
+        if self.ipSymbols is None:
+            self.ipSymbols = {}
+            # self.ipSymbols = Symbol.parser(r'devicelib\ip.lib')
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
@@ -243,6 +247,16 @@ class SchScene(QGraphicsScene):
                          radius/self.scale*2, radius/self.scale*2)
                 p.setStartAngle(start*16)
                 p.setSpanAngle((end - start)*16)
+            
+            elif type == 'label':
+                pos_x = float(part[1])
+                pos_y = float(part[2])
+                orient = '0'
+                dimension = float(part[4])
+                text = part[5]
+                p = Text(text=text, posx=pos_x/self.scale, posy=pos_y/self.scale, 
+                         orient=orient, dimension=dimension/self.scale)
+
             else:
                 pass
             #self.addItem(p)

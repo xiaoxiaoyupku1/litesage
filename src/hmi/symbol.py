@@ -1,6 +1,4 @@
-
-from src.hmi.line import Line
-from src.hmi.ellipse import Circle
+import os
 
 class Symbol():
     def __init__(self):
@@ -19,6 +17,8 @@ class Symbol():
     @classmethod
     def parser(cls, lib_file):
         symbols = {} #to return
+        if not os.path.isfile(lib_file):
+            return symbols
 
         symbol = None # temp
         scope = [] # temp
@@ -69,10 +69,23 @@ class Symbol():
                     assert scope[-1] == "draw"
                     scope.append(tokens[1].lower())
 
+                elif line.lower().startswith('text label '):
+                    assert scope[-1] == "draw"
+                    scope.append(tokens[1].lower())
+                    part = [scope[-1]]
+                    part.extend(tokens[2:-1])
+
                 else:
                     if scope[-1] in ('wire', 'bus'):
                         part = [scope[-1]]
                         part.extend(tokens)
+                        symbol.parts.append(part)
+                        scope.pop()
+
+                    elif scope[-1] == 'label':
+                        # Text Label posx posy orient dimension
+                        # texts...
+                        part.extend([line.strip()])
                         symbol.parts.append(part)
                         scope.pop()
 
