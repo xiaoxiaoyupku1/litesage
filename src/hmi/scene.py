@@ -1,7 +1,8 @@
 from PySide6.QtCore import (Qt, QPointF, QRectF)
 from PySide6.QtGui import (QPolygonF, QPen, QColor)
 from PySide6.QtWidgets import (
-    QGraphicsScene, QInputDialog, QLineEdit, QGraphicsTextItem
+    QGraphicsScene, QInputDialog, QLineEdit, QGraphicsTextItem, 
+    QGraphicsItemGroup, QGraphicsItem,
 )
 
 from src.hmi.text import ParameterText
@@ -10,6 +11,7 @@ from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
 from src.hmi.symbol import Symbol
+from src.hmi.group import Group
 
 
 class SchScene(QGraphicsScene):
@@ -18,7 +20,7 @@ class SchScene(QGraphicsScene):
         self.setSceneRect(QRectF(0, 0, 500, 500))
 
         self.enableDel = False                  # delete mode
-        self.cursorSymb = None                  # list of symbols under cursor
+        self.cursorSymb = None                 # group of items under cursor
         self.insertSymbType = None              # type of component to insert
         self.insertSymbName = None              # insert symbol name (from lib file)
         self.widgetMouseMove = None             # widget with moving mouse
@@ -49,6 +51,7 @@ class SchScene(QGraphicsScene):
     def delSymb(self):
         self.cleanCursorSymb()
         for shape in self.selectedItems():
+            '''
             shapeInSymb = False
             for symb in self.symbols:
                 if shape in symb:
@@ -57,6 +60,8 @@ class SchScene(QGraphicsScene):
                         self.removeItem(shp)
             if not shapeInSymb:
                 self.removeItem(shape)
+            '''
+            self.removeItem(shape)
 
     def roundPos(self, pos):
         return int(pos / self.sceneSymbRatio) * self.sceneSymbRatio
@@ -100,8 +105,8 @@ class SchScene(QGraphicsScene):
                 self.drawVsrc(event)
             elif self.insertSymbType == 'P':
                 self.drawPin(event)
-            elif self.insertSymbType == 'Symbol':
-                self.drawSymbol(event, self.insertSymbName)
+            elif self.insertSymbType in ['basic','pdk','ip']:
+                self.drawSymbol(event, self.insertSymbName, self.insertSymbType)
             elif self.insertSymbType == 'W':
                 self.drawWire(event, mode='move')
             elif self.insertSymbType == 'RECT':
@@ -111,13 +116,16 @@ class SchScene(QGraphicsScene):
             elif self.insertSymbType == 'S':
                 self.drawSim(event)
         else:
-            for item in self.cursorSymb:
-                posx = self.roundPos(event.scenePos().x())
-                posy = self.roundPos(event.scenePos().y())
-                if isinstance(item, ParameterText):
-                    posx += float(item.posx)
-                    posy += float(item.posy)
-                item.setPos(posx, posy)
+            posx = self.roundPos(event.scenePos().x())
+            posy = self.roundPos(event.scenePos().y())
+            self.cursorSymb.setPos(posx, posy)
+            #for item in self.cursorSymb:
+            #    posx = self.roundPos(event.scenePos().x())
+            #    posy = self.roundPos(event.scenePos().y())
+            #    if isinstance(item, ParameterText):
+            #        posx += float(item.posx)
+            #        posy += float(item.posy)
+            #    item.setPos(posx, posy)
 
         return super().mouseMoveEvent(event)
 
@@ -191,6 +199,7 @@ class SchScene(QGraphicsScene):
             symbols = self.ipSymbols
         self.cursorSymb = []
 
+        group = Group()
         for part in symbols[name].parts:
             type = part[0].lower()
             p = None
@@ -212,7 +221,7 @@ class SchScene(QGraphicsScene):
                     polygonf.append(QPointF(float(part[i])/self.scale,float(part[i+1])/self.scale))
                 p = Polygon(polygonf)
                 if part[-1].lower() == 'f':
-                    p.setBrush(QColor('black'))
+                    p.setBrush(p.pen.color())
             elif type == 'x':
                 name = part[1]
                 num = part[2]
@@ -236,9 +245,13 @@ class SchScene(QGraphicsScene):
                 p.setSpanAngle((end - start)*16)
             else:
                 pass
-            self.addItem(p)
-            self.cursorSymb.append(p)
-            p.setPos(event.scenePos())
+            #self.addItem(p)
+            #self.cursorSymb.append(p)
+            group.addToGroup(p)
+            #p.setPos(event.scenePos())
+        self.addItem(group)
+        group.setPos(event.scenePos())
+        self.cursorSymb = group
 
         self.symbols.append(self.cursorSymb)
 
@@ -294,8 +307,9 @@ class SchScene(QGraphicsScene):
 
     def cleanCursorSymb(self):
         if self.cursorSymb is not None:
-            for shape in self.cursorSymb:
-                self.removeItem(shape)
+            self.removeItem(self.cursorSymb)
+            #for shape in self.cursorSymb:
+                #self.removeItem(shape)
             self.cursorSymb=None
         self.insertSymbType = 'NA'
         self.wireStartPos = None
