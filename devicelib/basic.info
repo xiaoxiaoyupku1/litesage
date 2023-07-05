@@ -1,0 +1,67 @@
+DEF CAP
+Type: Capacitor
+ENDDEF
+
+DEF ISRC
+Type: Current Source
+ENDDEF
+
+DEF DIO
+Type: Diode
+ENDDEF
+
+DEF IND1
+Type: Inductor
+ENDDEF
+
+DEF IND2
+Type: Inductor
+ENDDEF
+
+DEF NMOS
+Type: MOSFET
+ENDDEF
+
+DEF NPN
+Type: BJT
+ENDDEF
+
+DEF PMOS
+Type: MOSFET
+ENDDEF
+
+DEF PNP
+Type: BJT
+ENDDEF
+
+DEF RES
+Type: Resistor
+ENDDEF
+
+DEF SW
+Type: Switch
+ENDDEF
+
+DEF VCCS1
+Type: Source
+ENDDEF
+
+DEF VCCS2
+Type: Source
+ENDDEF
+
+DEF VCVS1
+Type: Source
+ENDDEF
+
+DEF VCVS2
+Type: Source
+ENDDEF
+
+DEF VSRC
+Type: Voltage Source
+ENDDEF
+
+DEF ZENER
+Type: Diode
+ENDDEF

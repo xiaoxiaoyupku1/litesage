@@ -15,15 +15,15 @@ class Symbol():
         self.parts = [] # line, cycle, pin ...
 
     @classmethod
-    def parser(cls, lib_file):
-        symbols = {} #to return
-        if not os.path.isfile(lib_file):
+    def parser(cls, libFile):
+        symbols = {} # to return
+        if not os.path.isfile(libFile):
             return symbols
 
         symbol = None # temp
         scope = [] # temp
 
-        with open(lib_file, 'r') as F:
+        with open(libFile, 'r') as F:
             for line in F:
                 tokens = line.strip().split()
                 if line.startswith('#'):

@@ -1,12 +1,13 @@
 import re
 from PySide6.QtCore import (
-    QStringListModel
+    QStringListModel, Qt
 )
 from PySide6.QtWidgets import (
     QDialog, QFormLayout, QLineEdit, 
-    QDialogButtonBox, QVBoxLayout,
-    QFileDialog, QListView,
+    QDialogButtonBox, QVBoxLayout, QGridLayout,
+    QFileDialog, QListView, QLabel, 
 )
+
 
 class ParameterDialog(QDialog):
     def __init__(self, parent=None, item=None):
@@ -46,19 +47,70 @@ class DesignFileDialog(QFileDialog):
 
 
 class DeviceChoiceDialog(QDialog):
-    def __init__(self, parent, title, devices=[]):
+    def __init__(self, parent, title, devices=[], devInfo={}, symbType='basic'):
         super().__init__(parent)
+        self.setFixedSize(500, 400)
+        self.device = None
         self.accepted = QDialog.Accepted
         self.setWindowTitle(title)
+        self.devInfo = devInfo
+        self.symbType = symbType
+
+        # thumbnail
+        from src.hmi.view import SchView
+        from src.hmi.scene import SchScene
+        self.thumbnailScene = SchScene()
+        self.thumbnailView = SchView(self.thumbnailScene)
+        self.formatThumbnail()
+        self.thumbnailView.setFixedHeight(250)
+
+        # description
+        self.description = QLabel()
+
+        # list view
         strlist = QStringListModel()
         strlist.setStringList(devices)
         self.listview = QListView()
         self.listview.setModel(strlist)
-        QBtn = QDialogButtonBox()
-        QBtn.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
-        QBtn.accepted.connect(self.accept)
-        QBtn.rejected.connect(self.reject)
-        layout = QVBoxLayout()
-        layout.addWidget(self.listview)
-        layout.addWidget(QBtn)
+        self.listview.pressed.connect(self.selDevice)
+        self.listview.clicked.connect(self.selDevice)
+        self.listview.entered.connect(self.selDevice)
+        self.listview.doubleClicked.connect(self.accept)
+        self.listview.setFixedWidth(160)
+
+        # buttons
+        btn = QDialogButtonBox()
+        btn.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        btn.accepted.connect(self.accept)
+        btn.rejected.connect(self.reject)
+
+        # packing
+        layout = QGridLayout()
+        layout.addWidget(self.thumbnailView, 0, 1, 1, 1)
+        layout.addWidget(self.description, 1, 1, 1, 1)
+        layout.addWidget(self.listview, 0, 0, 2, 1)
+        layout.addWidget(btn, 2, 0, 1, 2)
         self.setLayout(layout)
+
+    def selDevice(self, event):
+        self.device = event.data()
+        descr = self.devInfo.get(self.device, '')
+        self.description.setText(descr)
+        self.thumbnailScene.clear()
+        self.thumbnailScene.drawSymbol([0, 0], 
+                                       self.device, 
+                                       symbType=self.symbType)
+        self.thumbnailView.fitInView(self.thumbnailScene.cursorSymb.boundingRect(),
+                                     Qt.KeepAspectRatio)
+
+    def _skip(self, _):
+        pass
+    def formatThumbnail(self):
+        self.thumbnailScene.mouseMoveEvent = self._skip
+        self.thumbnailScene.mousePressEvent = self._skip
+        if self.symbType == 'pdk':
+            self.thumbnailScene.initPdkDevices()
+        elif self.symbType == 'ip':
+            self.thumbnailScene.initIpDevices()
+        self.thumbnailView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.thumbnailView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

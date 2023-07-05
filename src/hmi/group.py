@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import (QGraphicsItemGroup,QGraphicsItem)
+from PySide6.QtWidgets import (QGraphicsItemGroup, QGraphicsItem)
 from PySide6.QtGui import QPen
 from PySide6.QtCore import Qt
 

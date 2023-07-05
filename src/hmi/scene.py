@@ -11,12 +11,12 @@ from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
 from src.hmi.symbol import Symbol
 from src.hmi.group import Group
+from src.tool.device import DeviceInfo
 
 
 class SchScene(QGraphicsScene):
     def __init__(self):
         super().__init__()
-        self.setSceneRect(QRectF(0, 0, 500, 500))
 
         self.enableDel = False                  # delete mode
         self.cursorSymb = None                 # group of items under cursor
@@ -32,20 +32,27 @@ class SchScene(QGraphicsScene):
         self.sceneSymbRatio = 12.5 / 3          # x / 50 = 62.5 / 750
 
         self.basicSymbols = None                # basic ideal symbols
-        self.initBasicSymbols()
+        self.basicDevInfo = None
+        self.initBasicDevices()
         self.pdkSymbols = None                  # pdk symbols
+        self.pdkDevInfo = None
         self.ipSymbols = None                   # ip symbols
+        self.ipDevInfo = None
 
-    def initBasicSymbols(self):
-        if self.basicSymbols is None:
+    def initBasicDevices(self):
+        if self.basicSymbols is None or self.basicDevInfo is None:
             self.basicSymbols = Symbol.parser(r'devicelib\basic.lib')
-    def initPdkSymbols(self):
-        if self.pdkSymbols is None:
+            self.basicDevInfo = DeviceInfo.parser(r'devicelib\basic.info')
+    def initPdkDevices(self):
+        if self.pdkSymbols is None or self.pdkDevInfo is None:
             self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
-    def initIpSymbols(self):
-        if self.ipSymbols is None:
+            self.pdkDevInfo = DeviceInfo.parser(r'devicelib\pdk.info')
+    def initIpDevices(self):
+        if self.ipSymbols is None or self.ipDevInfo is None:
             self.ipSymbols = {}
             # self.ipSymbols = Symbol.parser(r'devicelib\ip.lib')
+            self.ipDevInfo = {}
+            # self;ipDevInfo = DeviceInfo.parser(r'devicelib\ip.lib')
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
@@ -206,28 +213,28 @@ class SchScene(QGraphicsScene):
 
         group = Group()
         for part in symbols[name].parts:
-            type = part[0].lower()
+            shapeType = part[0].lower()
             p = None
-            if type == 'wire':
+            if shapeType == 'wire':
                 tokens = part[1:]
                 tokens = [float(token) / self.scale for token in tokens]
                 p = Line(*tokens)
-            elif type == 'bus':
+            elif shapeType == 'bus':
                 tokens = part[1:]
                 tokens = [float(token) / self.scale for token in tokens]
                 p = Bus(*tokens)
-            elif type == 'c':
+            elif shapeType == 'c':
                 tokens = part
                 cp = [float(p) / self.scale for p in tokens[1:4]]
                 p = Circle(cp[0] - cp[2], cp[1] - cp[2], cp[2] * 2, cp[2] * 2)
-            elif type == 'p':
+            elif shapeType == 'p':
                 polygonf = QPolygonF()
                 for i in range(5,len(part)-1,2):
                     polygonf.append(QPointF(float(part[i])/self.scale,float(part[i+1])/self.scale))
                 p = Polygon(polygonf)
                 if part[-1].lower() == 'f':
                     p.setBrush(p.pen.color())
-            elif type == 'x':
+            elif shapeType == 'x':
                 name = part[1]
                 num = part[2]
                 pos_x = float(part[3])
@@ -238,7 +245,7 @@ class SchScene(QGraphicsScene):
                 half = Snum / 2
                 p = SymbolPin((pos_x - half)/self.scale, (pos_y - half)/self.scale, 
                               Snum/self.scale, Snum/self.scale)
-            elif type == 'a':
+            elif shapeType == 'a':
                 pos_x = float(part[1])
                 pos_y = float(part[2])
                 radius = float(part[3])
@@ -249,7 +256,7 @@ class SchScene(QGraphicsScene):
                 p.setStartAngle(start*16)
                 p.setSpanAngle((end - start)*16)
             
-            elif type == 'label':
+            elif shapeType == 'label':
                 pos_x = float(part[1])
                 pos_y = float(part[2])
                 orient = '0'
@@ -260,14 +267,14 @@ class SchScene(QGraphicsScene):
 
             else:
                 pass
-            #self.addItem(p)
-            #self.cursorSymb.append(p)
-            group.addToGroup(p)
-            #p.setPos(event.scenePos())
-        self.addItem(group)
-        group.setPos(event.scenePos())
-        self.cursorSymb = group
 
+            group.addToGroup(p)
+        self.addItem(group)
+        if isinstance(event, list):
+            group.setPos(*event)
+        else:
+            group.setPos(event.scenePos())
+        self.cursorSymb = group
         self.symbols.append(self.cursorSymb)
 
     def drawRes(self, event):
@@ -298,7 +305,7 @@ class SchScene(QGraphicsScene):
         self.symbols.append(self.cursorSymb)
 
     def drawVsrc(self, event):
-        self.drawSymbol(event, 'Voltage_Source', 'basic')
+        self.drawSymbol(event, 'VSRC', 'basic')
 
     def drawPin(self, event):
         self.cursorSymb = []

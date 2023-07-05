@@ -1,0 +1,244 @@
+DEF MNHA
+Type: HV_MOS
+高压非对称NMOS
+ENDDEF
+
+DEF MNHAT
+Type: HV_MOS
+高压厚氧非对称NMOS
+ENDDEF
+
+DEF MNHS
+Type: HV_MOS
+高压对称NMOS
+ENDDEF
+
+DEF MNHST
+Type: HV_MOS
+高压对称厚氧NMOS
+ENDDEF
+
+DEF MNL
+Type: MOS
+低压NMOS
+ENDDEF
+
+DEF MPHS
+Type: HV_MOS
+高压对称PMOS
+ENDDEF
+
+DEF MPHST
+Type: HV_MOS
+高压对称厚氧PMOS
+ENDDEF
+
+DEF MPL
+Type: MOS
+低压PMOS
+ENDDEF
+
+DEF QNH
+Type: BJT
+ENDDEF
+
+DEF QNH_HV
+Type: BJT
+NPN大器件
+ENDDEF
+
+DEF QNL
+Type: BJT
+ENDDEF
+
+DEF QPVH QPVH 0 0 N N 1 F N
+Type: BJT
+高压纵向PNP
+ENDDEF
+
+DEF QPVL
+Type: BJT
+低压纵向PNP
+ENDDEF
+
+DEF QPVPWH
+Type: BJT
+高压纵向PNP
+ENDDEF
+
+DEF MNHIA
+Type: HV_MOS
+高压独立隔离岛非对称NMOS
+ENDDEF
+
+DEF MNHIAT
+Type: HV_MOS
+高压独立隔离岛厚氧非对称NMOS
+ENDDEF
+
+DEF MPHA
+Type: HV_MOS
+高压非对称PMOS
+ENDDEF
+
+DEF MPHAT
+Type: HV_MOS
+高压厚氧非对称PMOS
+ENDDEF
+
+DEF DNPPWL
+Type: Diode
+ENDDEF
+
+DEF DNPPWH
+Type: Diode
+ENDDEF
+
+DEF DNPPWPSB
+Type: Diode
+ENDDEF
+
+DEF DNWPSB
+Type: Diode
+ENDDEF
+
+DEF DNWPSBBN
+Type: Diode
+ENDDEF
+
+DEF DPPNW
+Type: Diode
+ENDDEF
+
+DEF DPWNWBN
+Type: Diode
+ENDDEF
+
+DEF CPONWL
+Type: Capacitor
+低压薄氧电容
+ENDDEF
+
+DEF CPONWH
+Type: Capacitor
+高压薄氧电容
+ENDDEF
+
+DEF CPONWTL
+Type: Capacitor
+低压薄氧电容
+ENDDEF
+
+DEF CPONWTH
+Type: Capacitor
+高压薄氧电容
+ENDDEF
+
+DEF RHR
+Type: Resistor
+高值电阻
+ENDDEF
+
+DEF RMET1
+Type: Resistor
+ENDDEF
+
+DEF RMET2
+Type: Resistor
+ENDDEF
+
+DEF RNPL
+Type: Resistor
+ENDDEF
+
+DEF RNWL
+Type: Resistor
+ENDDEF
+
+DEF RNWH
+Type: Resistor
+ENDDEF
+
+DEF RPOLY1
+Type: Resistor
+ENDDEF
+
+DEF RPPL
+Type: Resistor
+ENDDEF
+
+DEF RPPH
+Type: Resistor
+ENDDEF
+
+DEF RFUSEM2
+Type: Resistor
+ENDDEF
+
+DEF RFUSEPOLY
+
+ENDDEF
+
+DEF ROPTION
+
+ENDDEF
+
+DEF RSMEAR
+
+ENDDEF
+
+DEF RSUB
+
+ENDDEF
+
+DEF ZZPNW
+Type: Diode
+ENDDEF
+
+DEF ESD_DNWPSB
+Type: ESD
+ENDDEF
+
+DEF ESD_MNHA
+Type: ESD
+ENDDEF
+
+DEF ESD_MNHIA
+Type: ESD
+ENDDEF
+
+DEF ESD_MNL
+Type: ESD
+ENDDEF
+
+DEF ESD_MPL
+Type: ESD
+ENDDEF
+
+DEF ESD_QNH
+Type: ESD
+ENDDEF
+
+DEF ESD_QNL
+Type: ESD
+ENDDEF
+
+DEF PAD_22
+Type: PAD
+ENDDEF
+
+DEF PAD_60
+Type: PAD
+ENDDEF
+
+DEF PAD_80
+Type: PAD
+ENDDEF
+
+DEF PAD_100
+Type: PAD
+ENDDEF
+
+DEF IPROBE
+
+ENDDEF

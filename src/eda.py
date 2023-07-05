@@ -212,34 +212,43 @@ class FoohuEda(QMainWindow):
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
         devices = sorted(self.schScene.basicSymbols.keys())
-        dialog = DeviceChoiceDialog(self, 'Add Standard Component', devices=devices)
+        devInfo = self.schScene.basicDevInfo
+        dialog = DeviceChoiceDialog(self, 'Add Standard Component', 
+                                    devices=devices, 
+                                    devInfo=devInfo,
+                                    symbType='basic')
         result = dialog.exec()
         if result != dialog.accepted:
             return False
-        symbName = dialog.listview.selectedIndexes()[0].data()
-        self.drawSymbol(symbName, 'basic')
+        self.drawSymbol(dialog.device, 'basic')
     
     def addPdkDev(self):
         self.schScene.cleanCursorSymb()
-        self.schScene.initPdkSymbols()
+        self.schScene.initPdkDevices()
         devices = sorted(self.schScene.pdkSymbols.keys())
-        dialog = DeviceChoiceDialog(self, 'Add PDK Component', devices=devices)
+        devInfo = self.schScene.pdkDevInfo
+        dialog = DeviceChoiceDialog(self, 'Add PDK Component', 
+                                    devices=devices,
+                                    devInfo=devInfo,
+                                    symbType='pdk')
         result = dialog.exec()
         if result != dialog.accepted:
             return False
-        symbName = dialog.listview.selectedIndexes()[0].data()
-        self.drawSymbol(symbName, 'pdk')
+        self.drawSymbol(dialog.device, 'pdk')
 
     def addIpDev(self):
         self.schScene.cleanCursorSymb()
-        self.schScene.initIpSymbols()
+        self.schScene.initIpDevices()
         devices = sorted(self.schScene.ipSymbols.keys())
-        dialog = DeviceChoiceDialog(self, 'Add IP Component', devices=devices)
+        devInfo = self.schScene.ipDevInfo
+        dialog = DeviceChoiceDialog(self, 'Add IP Component', 
+                                    devices=devices,
+                                    devInfo=devInfo,
+                                    symbType='ip')
         result = dialog.exec()
         if result != dialog.accepted:
             return False
-        symbName = dialog.listview.selectedIndexes()[0].data()
-        self.drawSymbol(symbName, 'ip')
+        self.drawSymbol(dialog.device, 'ip')
         
     def drawRes(self):
         self.schScene.cleanCursorSymb()
