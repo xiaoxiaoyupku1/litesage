@@ -32,6 +32,7 @@ class SchScene(QGraphicsScene):
         self.sceneSymbRatio = 12.5 / 3          # x / 50 = 62.5 / 750
 
         self.basicSymbols = None                # basic ideal symbols
+        self.initBasicSymbols()
         self.pdkSymbols = None                  # pdk symbols
         self.ipSymbols = None                   # ip symbols
 
