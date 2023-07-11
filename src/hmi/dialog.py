@@ -66,6 +66,7 @@ class DeviceChoiceDialog(QDialog):
 
         # description
         self.description = QLabel()
+        self.description.setWordWrap(True)
 
         # list view
         strlist = QStringListModel()
@@ -94,8 +95,8 @@ class DeviceChoiceDialog(QDialog):
 
     def selDevice(self, event):
         self.device = event.data()
-        descr = self.devInfo.get(self.device, '')
-        self.description.setText(descr)
+        prompt = self.devInfo[self.device].getPrompt()
+        self.description.setText(prompt)
         self.thumbnailScene.clear()
         self.thumbnailScene.drawSymbol([0, 0], 
                                        self.device, 

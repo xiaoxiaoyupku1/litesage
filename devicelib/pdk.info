@@ -1,244 +1,349 @@
 DEF MNHA
-Type: HV_MOS
-高压非对称NMOS
+Type:HV_MOS
+Model:mnha
+Descr:高压非对称NMOS
 ENDDEF
 
 DEF MNHAT
-Type: HV_MOS
-高压厚氧非对称NMOS
+Type:HV_MOS
+Model:mnhat
+Descr:高压厚氧非对称NMOS
 ENDDEF
 
 DEF MNHS
-Type: HV_MOS
-高压对称NMOS
+Type:HV_MOS
+Model:mnhs
+Descr:高压对称NMOS
 ENDDEF
 
 DEF MNHST
-Type: HV_MOS
-高压对称厚氧NMOS
+Type:HV_MOS
+Model:mnhst
+Descr:高压对称厚氧NMOS
 ENDDEF
 
 DEF MNL
-Type: MOS
-低压NMOS
+Type:MOS
+Model:mnl
+Descr:低压NMOS
 ENDDEF
 
 DEF MPHS
-Type: HV_MOS
-高压对称PMOS
+Type:HV_MOS
+Model:mphs
+Descr:高压对称PMOS
 ENDDEF
 
 DEF MPHST
-Type: HV_MOS
-高压对称厚氧PMOS
+Type:HV_MOS
+Model:mphst
+Descr:高压对称厚氧PMOS
 ENDDEF
 
 DEF MPL
-Type: MOS
-低压PMOS
+Type:MOS
+Model:mpl
+Descr:低压PMOS
 ENDDEF
 
 DEF QNH
-Type: BJT
+Type:BJT
+Model:qnh
+Descr:高压NPN
 ENDDEF
 
 DEF QNH_HV
-Type: BJT
-NPN大器件
+Type:BJT
+Model:qnh_hv
+Descr:高压NPN大器件，M=2000，表示2000个emitter，可以走大电流。
 ENDDEF
 
 DEF QNL
-Type: BJT
+Type:BJT
+Model:qnl
+Descr:低压NPN
 ENDDEF
 
 DEF QPVH QPVH 0 0 N N 1 F N
-Type: BJT
-高压纵向PNP
+Type:BJT
+Model:qpvh
+Descr:高压纵向PNP
 ENDDEF
 
 DEF QPVL
-Type: BJT
-低压纵向PNP
+Type:BJT
+Model:qpvl
+Descr:低压纵向PNP
 ENDDEF
 
 DEF QPVPWH
-Type: BJT
-高压纵向PNP
+Type:BJT
+Model:qpvpwh
+Descr:高压纵向PNP（BE结击穿电压比较大）
 ENDDEF
 
 DEF MNHIA
-Type: HV_MOS
-高压独立隔离岛非对称NMOS
+Type:HV_MOS
+Model:mnhia
+Descr:高压独立隔离岛非对称NMOS
 ENDDEF
 
 DEF MNHIAT
-Type: HV_MOS
-高压独立隔离岛厚氧非对称NMOS
+Type:HV_MOS
+Model:mnhiat
+Descr:高压独立隔离岛厚氧非对称NMOS
 ENDDEF
 
 DEF MPHA
-Type: HV_MOS
-高压非对称PMOS
+Type:HV_MOS
+Model:mpha
+Descr:高压非对称PMOS
 ENDDEF
 
 DEF MPHAT
-Type: HV_MOS
-高压厚氧非对称PMOS
+Type:HV_MOS
+Model:mphat
+Descr:高压厚氧非对称PMOS
 ENDDEF
 
 DEF DNPPWL
-Type: Diode
+Type:Diode
+Model:dnppwl
+Descr:低压DIODE
 ENDDEF
 
 DEF DNPPWH
-Type: Diode
+Type:Diode
+Model:dnppwh
+Descr:高压DIODE
 ENDDEF
 
 DEF DNPPWPSB
-Type: Diode
+Type:Diode
+Model:dnppwpsb
+Descr:DIODE
 ENDDEF
 
 DEF DNWPSB
-Type: Diode
+Type:Diode
+Model:dnwpsb
+Descr:DIODE
 ENDDEF
 
 DEF DNWPSBBN
-Type: Diode
+Type:Diode
+Model:dnwpsbbn
+Descr:DIODE
 ENDDEF
 
 DEF DPPNW
-Type: Diode
+Type:Diode
+Model:dppnw
+Descr:DIODE
 ENDDEF
 
 DEF DPWNWBN
-Type: Diode
+Type:Diode
+Model:dpwnwbn
+Descr:DIODE
 ENDDEF
 
 DEF CPONWL
-Type: Capacitor
-低压薄氧电容
+Type:Capacitor
+Model:cponwl
+Descr:低压薄氧电容（poly-to-nwell）
 ENDDEF
 
 DEF CPONWH
-Type: Capacitor
-高压薄氧电容
+Type:Capacitor
+Model:cponwh
+Descr:高压薄氧电容（poly-fox-nwell）
 ENDDEF
 
 DEF CPONWTL
-Type: Capacitor
-低压薄氧电容
+Type:Capacitor
+Model:cponwtl
+Descr:低压厚氧电容（poly-to-nwell）
 ENDDEF
 
 DEF CPONWTH
-Type: Capacitor
-高压薄氧电容
+Type:Capacitor
+Model:cponwth
+Descr:高压厚氧电容（poly-fox-nwell）
 ENDDEF
 
 DEF RHR
-Type: Resistor
-高值电阻
+Type:Resistor
+Model:rhr
+Descr:高值电阻
+Descr:R=(L/W)*RS
+Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；RHR方块电阻1080;适用于5.4k-9.25k之间]
 ENDDEF
 
 DEF RMET1
-Type: Resistor
+Type:Resistor
+Model:rmet1
+Descr:MET1电阻
 ENDDEF
 
 DEF RMET2
-Type: Resistor
+Type:Resistor
+Model:rmet2
+Descr:MET2电阻
 ENDDEF
 
 DEF RNPL
-Type: Resistor
+Type:Resistor
+Model:rnpl
+Descr:NPLUS电阻
+Descr:R=(L/W)*RS
+Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：1.2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻38;适用于190-1.9k之间]
 ENDDEF
 
 DEF RNWL
-Type: Resistor
+Type:Resistor
+Model:rnwl
+Descr:低压NWELL电阻
+Descr:R=(L/W)*RS
+Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：5U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻1850;适用于9.25k以上]
 ENDDEF
 
 DEF RNWH
-Type: Resistor
+Type:Resistor
+Model:rnwh
+Descr:高压NWELL电阻
+Descr:R=(L/W)*RS
+Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：5U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻1850;适用于9.25k以上]
 ENDDEF
 
 DEF RPOLY1
-Type: Resistor
+Type:Resistor
+Model:rpoly1
+Descr:POLY电阻
+Descr:R=(L/W)*RS
+Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：1U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻28；适用于140-1.4k之间]
 ENDDEF
 
 DEF RPPL
-Type: Resistor
+Type:Resistor
+Model:rppl
+Descr:低压PPLUS电阻
+Descr:R=(L/W)*RS
+Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：1.2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻55；适用于275-2.75k之间]
 ENDDEF
 
 DEF RPPH
-Type: Resistor
+Type:Resistor
+Model:rpph
+Descr:高压PPLUS电阻。
+Descr:R=(L/W)*RS
+Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：1.2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻55；适用于275-2.75k之间]
 ENDDEF
 
 DEF RFUSEM2
-Type: Resistor
+Type:Resistor
+Model:rfusem2
+Descr:RFUSEM2
 ENDDEF
 
 DEF RFUSEPOLY
-
+Type:
+Model:rfusepoly
+Descr:RFUSEPOLY
 ENDDEF
 
 DEF ROPTION
-
+Type:
+Model:roption
+Descr:ROPTION
 ENDDEF
 
 DEF RSMEAR
-
+Type:
+Model:rsmear
+Descr:RSMEAR
 ENDDEF
 
 DEF RSUB
-
+Type:
+Model:rsub
+Descr:RSUB
 ENDDEF
 
 DEF ZZPNW
-Type: Diode
+Type:Diode
+Model:zzpnw
+Descr:ZENER
 ENDDEF
 
 DEF ESD_DNWPSB
-Type: ESD
+Type:ESD
+Model:ESD_DNWPSB
+Descr:ESD保护
 ENDDEF
 
 DEF ESD_MNHA
-Type: ESD
+Type:ESD
+Model:ESD_MNHA
+Descr:ESD保护
 ENDDEF
 
 DEF ESD_MNHIA
-Type: ESD
+Type:ESD
+Model:ESD_MNHIA
+Descr:ESD保护
 ENDDEF
 
 DEF ESD_MNL
-Type: ESD
+Type:ESD
+Model:ESD_MNL
+Descr:ESD保护
 ENDDEF
 
 DEF ESD_MPL
-Type: ESD
+Type:ESD
+Model:ESD_MPL
+Descr:ESD保护
 ENDDEF
 
 DEF ESD_QNH
-Type: ESD
+Type:ESD
+Model:ESD_QNH
+Descr:ESD保护
 ENDDEF
 
 DEF ESD_QNL
-Type: ESD
+Type:ESD
+Model:ESD_QNL
+Descr:ESD保护
 ENDDEF
 
 DEF PAD_22
-Type: PAD
+Type:PAD
+Model:pad_22
+Descr:PAD
 ENDDEF
 
 DEF PAD_60
-Type: PAD
+Type:PAD
+Model:pad_60
+Descr:PAD
 ENDDEF
 
 DEF PAD_80
-Type: PAD
+Type:PAD
+Model:pad_80
+Descr:PAD
 ENDDEF
 
 DEF PAD_100
-Type: PAD
+Type:PAD
+Model:pad_100
+Descr:PAD
 ENDDEF
 
 DEF IPROBE
-
+Type:
+Model:iprobe
+Descr:IPROBE
 ENDDEF

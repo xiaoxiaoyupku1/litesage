@@ -11,7 +11,7 @@ from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
 from src.hmi.symbol import Symbol
 from src.hmi.group import Group
-from src.tool.device import DeviceInfo
+from src.tool.device import getDeviceInfos
 
 
 class SchScene(QGraphicsScene):
@@ -42,11 +42,11 @@ class SchScene(QGraphicsScene):
     def initBasicDevices(self):
         if self.basicSymbols is None or self.basicDevInfo is None:
             self.basicSymbols = Symbol.parser(r'devicelib\basic.lib')
-            self.basicDevInfo = DeviceInfo.parser(r'devicelib\basic.info')
+            self.basicDevInfo = getDeviceInfos(r'devicelib\basic.info')
     def initPdkDevices(self):
         if self.pdkSymbols is None or self.pdkDevInfo is None:
             self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
-            self.pdkDevInfo = DeviceInfo.parser(r'devicelib\pdk.info')
+            self.pdkDevInfo = getDeviceInfos(r'devicelib\pdk.info')
     def initIpDevices(self):
         if self.ipSymbols is None or self.ipDevInfo is None:
             self.ipSymbols = {}

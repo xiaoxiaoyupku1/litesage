@@ -1,67 +1,94 @@
 DEF CAP
-Type: Capacitor
+Type:Capacitor
+Model:CAP
+Param:,str,1p,,,F,,Value(F)
 ENDDEF
 
 DEF ISRC
-Type: Current Source
+Type:Current Source
+Model:
+Param:,str,,,,,,Value
 ENDDEF
 
 DEF DIO
-Type: Diode
+Type:Diode
+Descr:Breakdown Voltage(V) = 6
 ENDDEF
 
 DEF IND1
-Type: Inductor
+Type:Inductor
+Model:IND
+Param:,str,1,,,,,Value
 ENDDEF
 
 DEF IND2
-Type: Inductor
+Type:Inductor
+Model:IND
+Param:,str,1,,,,,Value
 ENDDEF
 
 DEF NMOS
-Type: MOSFET
+Type:MOSFET
+Model:NMOS
 ENDDEF
 
 DEF NPN
-Type: BJT
+Type:BJT
+Model:NPN
 ENDDEF
 
 DEF PMOS
-Type: MOSFET
+Type:MOSFET
+Model:PMOS
 ENDDEF
 
 DEF PNP
-Type: BJT
+Type:BJT
+Model:PNP
 ENDDEF
 
 DEF RES
-Type: Resistor
+Type:Resistor
+Model:RES
+Param:,str,1K,,,Ω,,Value(Ω)
 ENDDEF
 
 DEF SW
-Type: Switch
+Type:Switch
+Model:Switch
 ENDDEF
 
 DEF VCCS1
-Type: Source
+Type:Source
+Model:VCCS1
+Param:gm,str,,,,,,gm
 ENDDEF
 
 DEF VCCS2
-Type: Source
+Type:Source
+Model:VCCS2
+Param:gm,str,,,,,,gm
 ENDDEF
 
 DEF VCVS1
-Type: Source
+Type:Source
+Model:VCVS1
+Param:e,str,,,,,,e
 ENDDEF
 
 DEF VCVS2
-Type: Source
+Type:Source
+Model:VCVS2
+Param:e,str,,,,,,e
 ENDDEF
 
 DEF VSRC
-Type: Voltage Source
+Type:Voltage Source
+Model:
+Param:,str,,,,,,Value
 ENDDEF
 
 DEF ZENER
-Type: Diode
+Type:Diode
+Descr:Breakdown Voltage(V) = 6
 ENDDEF
