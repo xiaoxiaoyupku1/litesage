@@ -77,8 +77,24 @@ class SchScene(QGraphicsScene):
             '''
             self.removeItem(shape)
 
-    def roundPos(self, pos):
-        return int(pos / self.sceneSymbRatio) * self.sceneSymbRatio
+    def roundPos(self, origX, origY):
+        posx1 = int(origX / self.sceneSymbRatio) * self.sceneSymbRatio
+        posx2 = posx1 + self.sceneSymbRatio
+        posx3 = posx1 - self.sceneSymbRatio
+
+        posy1 = int(origY / self.sceneSymbRatio) * self.sceneSymbRatio
+        posy2 = posy1 + self.sceneSymbRatio
+        posy3 = posy1 - self.sceneSymbRatio
+
+        minDist = None
+        for posxi in (posx1, posx2, posx3):
+            for posyi in (posy1, posy2, posy3):
+                dist = (origX - posxi) ** 2 + (origY - posyi) ** 2
+                if minDist is None or dist < minDist:
+                    minDist = dist
+                    posx, posy = posxi, posyi
+
+        return posx, posy
 
     def mousePressEvent(self, event):
         if self.enableDel:
@@ -130,16 +146,8 @@ class SchScene(QGraphicsScene):
             elif self.insertSymbType == 'S':
                 self.drawSim(event)
         else:
-            posx = self.roundPos(event.scenePos().x())
-            posy = self.roundPos(event.scenePos().y())
+            posx, posy = self.roundPos(event.scenePos().x(), event.scenePos().y())
             self.cursorSymb.setPos(posx, posy)
-            #for item in self.cursorSymb:
-            #    posx = self.roundPos(event.scenePos().x())
-            #    posy = self.roundPos(event.scenePos().y())
-            #    if isinstance(item, ParameterText):
-            #        posx += float(item.posx)
-            #        posy += float(item.posy)
-            #    item.setPos(posx, posy)
 
         return super().mouseMoveEvent(event)
 
@@ -342,9 +350,7 @@ class SchScene(QGraphicsScene):
     def drawWire(self, event, mode=None):
         # mode: 'press', 'move'
         curPos = event.scenePos()
-        curX, curY = curPos.x(), curPos.y()
-        curX = self.roundPos(curX)
-        curY = self.roundPos(curY)
+        curX, curY = self.roundPos(curPos.x(), curPos.y())
 
         if self.widgetMouseMove is not None:
             self.removeItem(self.widgetMouseMove)
