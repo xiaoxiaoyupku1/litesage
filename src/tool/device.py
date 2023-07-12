@@ -63,11 +63,20 @@ class DeviceInfo():
 
     def getPrompt(self):
         return self.prompt
+
+    def getPins(self):
+        return self.pins
+
+    def getParamNames(self):
+        return self.paramNames
+
+    def getParamList(self):
+        return self.paramList
         
     def parseParams(self, devParamLines):
         for line in devParamLines:
             devParam = DeviceParam(line)
-            self.paramNames.append(devParam.name)
+            self.paramNames.append(devParam.getName())
             self.paramList.append(devParam)
 
 
@@ -81,6 +90,7 @@ class DeviceParam():
         self.maxVal = None
         self.unit = None
         self.choices = None     # list of strings
+        self.prompt = None      # label displayed on GUI
         self.parse(paramLine)
 
     def parse(self, paramLine):
@@ -98,3 +108,12 @@ class DeviceParam():
         self.unit = unit
         self.choices = choices.split()
         self.prompt = prompt
+
+    def getPrompt(self):
+        return self.prompt
+
+    def getName(self):
+        return self.name
+
+    def isUsedInNetlist(self):
+        return len(self.name) > 0
