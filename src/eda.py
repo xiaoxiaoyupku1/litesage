@@ -54,6 +54,7 @@ class FoohuEda(QMainWindow):
         self.actPin = None
         self.actRect = None
         self.actSim = None
+        self.actGrid = None
 
         # Menu Wave
         self.actOpenWave = None
@@ -136,6 +137,11 @@ class FoohuEda(QMainWindow):
         self.actSim.setShortcut(QKeySequence('s'))
         self.actSim.triggered.connect(self.drawSim)
 
+        self.actGrid = QAction(text='Turn On/Off Grid')
+        self.actGrid.setObjectName('actGrid')
+        self.actGrid.setShortcut(QKeySequence('ctrl+g'))
+        self.actGrid.triggered.connect(self.toggleGrid)
+
         self.actOpenWave = QAction(text='Open Wave')
         self.actOpenWave.triggered.connect(self.openWave)
         self.actOpenLayout = QAction(text='Open Layout')
@@ -163,6 +169,7 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actPin)
         self.menuEdit.addAction(self.actRect)
         self.menuEdit.addAction(self.actSim)
+        self.menuEdit.addAction(self.actGrid)
 
         self.menuWave = QMenu(self.menuBar)
         self.menuWave.setTitle('Wave')
@@ -282,6 +289,9 @@ class FoohuEda(QMainWindow):
     def drawSim(self):
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'S'
+
+    def toggleGrid(self):
+        self.schScene.toggleGrid()
 
     def openWave(self):
         if self.wavWin is not None:

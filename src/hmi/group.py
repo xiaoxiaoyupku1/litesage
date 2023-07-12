@@ -8,7 +8,7 @@ class Group(QGraphicsItemGroup):
         super().__init__(*args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
-    def paint(self, painter, option, widget=None,  *args, **kwargs):
+    def paint(self, painter, option, widget=None, *args, **kwargs):
         if self.isSelected():
             pen = QPen()
             pen.setStyle(Qt.DotLine)

@@ -1,4 +1,4 @@
-from PySide6.QtCore import (Qt, QPointF, QRectF)
+from PySide6.QtCore import (Qt, QPointF)
 from PySide6.QtGui import (QPolygonF, QPen, QColor)
 from PySide6.QtWidgets import (
     QGraphicsScene, QInputDialog, QLineEdit, QGraphicsTextItem, 
@@ -30,6 +30,8 @@ class SchScene(QGraphicsScene):
         self.rectDesign = None                  # rectangle surrounding the design
         self.scale = 15.0                       # scaling coefficient
         self.sceneSymbRatio = 25 / 3            # x / 50 = 62.5 * 2 / 750
+        self.gridOn = True                      # flag grid
+        self.gridPen = None
 
         self.basicSymbols = None                # basic ideal symbols
         self.basicDevInfo = None
@@ -415,3 +417,26 @@ class SchScene(QGraphicsScene):
         self.addItem(item)
         self.cursorSymb.append(item)
         self.symbols.append(self.cursorSymb)
+
+    def drawBackground(self, painter, rect):
+        if self.gridPen is None:
+            pen = QPen()
+            pen.setCapStyle(Qt.RoundCap)
+            pen.setColor('lightgray')
+            self.gridPen = pen
+            
+        if self.gridOn:
+            painter.setPen(self.gridPen)
+            startX = int(rect.x() / self.sceneSymbRatio)
+            startY = int(rect.y() / self.sceneSymbRatio)
+            endX = startX + int(rect.width() / self.sceneSymbRatio)
+            endY = startY + int(rect.height() / self.sceneSymbRatio)
+            for posx in range(startX, endX, 1):
+                posx *= self.sceneSymbRatio
+                for posy in range(startY, endY, 1):
+                    posy *= self.sceneSymbRatio
+                    painter.drawPoint(posx, posy)
+
+    def toggleGrid(self):
+        self.gridOn = not self.gridOn
+        self.update()
