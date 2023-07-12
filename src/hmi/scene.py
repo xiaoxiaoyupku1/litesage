@@ -29,7 +29,7 @@ class SchScene(QGraphicsScene):
         self.rectStartPos = None                # starting point for adding design rect
         self.rectDesign = None                  # rectangle surrounding the design
         self.scale = 15.0                       # scaling coefficient
-        self.sceneSymbRatio = 12.5 / 3          # x / 50 = 62.5 / 750
+        self.sceneSymbRatio = 25 / 3            # x / 50 = 62.5 * 2 / 750
 
         self.basicSymbols = None                # basic ideal symbols
         self.basicDevInfo = None
