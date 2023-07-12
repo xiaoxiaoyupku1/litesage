@@ -35,3 +35,6 @@ class SchView(QGraphicsView):
             super().wheelEvent(event)
 
         self.update()
+
+    def fit(self, scene):
+        self.fitInView(scene.itemsBoundingRect(), Qt.KeepAspectRatio)

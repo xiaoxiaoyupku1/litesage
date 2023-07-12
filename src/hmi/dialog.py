@@ -109,6 +109,8 @@ class DeviceChoiceDialog(QDialog):
     def formatThumbnail(self):
         self.thumbnailScene.mouseMoveEvent = self._skip
         self.thumbnailScene.mousePressEvent = self._skip
+        self.thumbnailScene.mouseDoubleClickEvent = self._skip
+        self.thumbnailScene.keyPressEvent = self._skip
         if self.symbType == 'pdk':
             self.thumbnailScene.initPdkDevices()
         elif self.symbType == 'ip':
@@ -116,4 +118,5 @@ class DeviceChoiceDialog(QDialog):
         self.thumbnailScene.gridOn = False
         self.thumbnailView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.thumbnailView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.thumbnailView.wheelEvent = self._skip
         self.thumbnailScene.update()
