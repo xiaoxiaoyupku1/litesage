@@ -15,12 +15,13 @@ def getDeviceInfos(infoFile):
                 devName = line.split()[1]
                 devType = ''
                 devModel = ''
+                devPins = []
                 devDescrLines = []
                 devParamLines = []
                 inDef = True
             elif inDef and line.startswith('ENDDEF'):
                 inDef = False
-                devInfo = DeviceInfo(devName, devType, devModel, devDescrLines, devParamLines)
+                devInfo = DeviceInfo(devName, devType, devModel, devPins, devDescrLines, devParamLines)
                 deviceInfoDict[devName] = devInfo
             elif inDef and line.startswith('Type:'):
                 devType = line[5:]
@@ -30,15 +31,19 @@ def getDeviceInfos(infoFile):
                 devDescrLines.append(line[6:])
             elif inDef and line.startswith('Param:'):
                 devParamLines.append(line[6:])
+            elif inDef and line.startswith('Pin:'):
+                devPins = line[4:].split(',')
+                devPins = [p.strip() for p in devPins]
 
     return deviceInfoDict
 
 
 class DeviceInfo():
-    def __init__(self, devName, devType, devModel, devDescrLines, devParamLines):
+    def __init__(self, devName, devType, devModel, devPins, devDescrLines, devParamLines):
         self.name = devName
         self.type = devType
         self.model = devModel
+        self.pins = devPins
         self.descrLines = devDescrLines
 
         self.prompt = ''
