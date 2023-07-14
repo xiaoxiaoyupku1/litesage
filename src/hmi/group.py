@@ -18,6 +18,7 @@ class Group(QGraphicsItemGroup):
         self.id_head = None
         self.id_num = None
         self.id = None
+        self.devName = None
         self.parameter_text = None
         self.parameters = [] # [('','p1'),('param_name','c1')...]
         self.space = ''
@@ -50,11 +51,11 @@ class Group(QGraphicsItemGroup):
                 self.setid(None, None)
         #return super().contextMenuEvent(event)
 
-    def draw(self, scene, sym_type, shapes, params, isThumbnail=False):
-        id_head = sym_type[0].upper()
+    def draw(self, scene, id_head, devName, shapes, params, isThumbnail=False):
         id_num = self.auto_id(scene, id_head)
         self.setid(id_head, id_num)
         self.id = id_head + str(id_num)
+        self.devName = devName
         for shape_params in shapes:
             shape = self.draw_shape(scene, shape_params)
             if shape is not None:
@@ -74,19 +75,15 @@ class Group(QGraphicsItemGroup):
         return  [(p.name,p.defVal) for p in params]
 
     def set_parameter_text(self):
-        p = [self.space+self.id]
+        p = [self.space+self.id, self.devName]
         for param in self.parameters:
             name, value = param[0], param[1]
             if name == '' or name.lower() == 'value':
                 p.append(self.space + value)
             else:
                 p.append(self.space+name[0]+'='+value)
-        if len(self.parameters) > 1:
-            text = '\n'.join(p)
-        else:
-            text = '\n\n'.join(p)
+        text = '\n'.join(p)
         self.parameter_text.setPlainText(text)
-
 
     def auto_id(self, scene, id_head):
         num_set = set()

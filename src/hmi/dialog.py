@@ -5,20 +5,24 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QDialog, QFormLayout, QLineEdit, 
     QDialogButtonBox, QVBoxLayout, QGridLayout,
-    QFileDialog, QListView, QLabel, 
+    QFileDialog, QListView, QLabel
 )
 
 
 class ParameterDialog(QDialog):
     def __init__(self, parent=None, item=None):
         super().__init__(parent)
-        self.setWindowTitle('Enter Paramters')
+        self.setWindowTitle('Enter Parameters')
         formLayout = QFormLayout()
         text = item.toPlainText()
         parameters = re.split('\s+', text.strip())
         self.name = QLineEdit(parameters.pop(0))
         formLayout.addRow('Name:', self.name)
-        self.values = [] # list of (pname,QLineEdit)
+        self.devName = QLineEdit(parameters.pop(0))
+        self.devName.setReadOnly(True)
+        self.devName.setFrame(False)
+        formLayout.addRow('Device:', self.devName)
+        self.values = [] # list of (pname, QLineEdit)
         for param in parameters:
             if '=' in param:
                 pname, value = param.split('=')

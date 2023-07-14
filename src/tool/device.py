@@ -46,12 +46,19 @@ class DeviceInfo():
         self.pins = devPins
         self.descrLines = devDescrLines
 
+        self.head = self.parseNameHead()
+
         self.prompt = ''
         self.parsePrompt()    # displayed on device selection window
 
         self.paramNames = []
         self.paramList = []
         self.parseParams(devParamLines)
+
+    def parseNameHead(self):
+        if len(self.type) == 0:
+            return 'I'
+        return DEVNAME_HEAD_MAPPING.get(self.type.lower(), self.type[0].upper())
 
     def parsePrompt(self):
         # if len(self.descrLines) == 0:
@@ -117,3 +124,14 @@ class DeviceParam():
 
     def isUsedInNetlist(self):
         return len(self.name) > 0
+
+
+DEVNAME_HEAD_MAPPING = {
+    'source': 'E',
+    'current Source': 'I',
+    'bjt': 'Q',
+    'hv_mos': 'M',
+    'rsub': 'RSUB',
+    'esd': 'ESD',
+    'pad': 'PAD',
+}

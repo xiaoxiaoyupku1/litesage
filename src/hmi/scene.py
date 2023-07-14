@@ -223,11 +223,9 @@ class SchScene(QGraphicsScene):
         group = Group()
         shapes = symbols[name].parts
         params = devinfo[name].getParamList()
-        sym_type = devinfo[name].type
-        if sym_type == '':
-            group.draw(self, name, shapes, params, self.isThumbnail)
-        else:
-            group.draw(self, sym_type, shapes, params, self.isThumbnail)
+        devName = devinfo[name].name
+        devNameHead = devinfo[name].head
+        group.draw(self, devNameHead, devName, shapes, params, self.isThumbnail)
 
         self.addItem(group)
         if isinstance(event, list):
@@ -292,6 +290,7 @@ class SchScene(QGraphicsScene):
     def cleanCursorSymb(self):
         if self.cursorSymb is not None:
             self.removeItem(self.cursorSymb)
+            self.symbols.remove(self.cursorSymb)
             self.cursorSymb = None
         self.insertSymbType = 'NA'
         self.wireStartPos = None

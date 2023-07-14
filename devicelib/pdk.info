@@ -358,28 +358,28 @@ Pin:T1,T2
 ENDDEF
 
 DEF RFUSEPOLY
-Type:
+Type:RFUSE
 Model:rfusepoly
 Descr:RFUSEPOLY
 Pin:T1,T2
 ENDDEF
 
 DEF ROPTION
-Type:
+Type:ROPTION
 Model:roption
 Descr:ROPTION
 Pin:T1,T2
 ENDDEF
 
 DEF RSMEAR
-Type:
+Type:RSMEAR
 Model:rsmear
 Descr:RSMEAR
 Pin:T1,T2
 ENDDEF
 
 DEF RSUB
-Type:
+Type:RSUB
 Model:rsub
 Descr:RSUB
 Pin:T1,T2
@@ -471,7 +471,7 @@ Pin:T1
 ENDDEF
 
 DEF IPROBE
-Type:
+Type:IPROBE
 Model:iprobe
 Descr:IPROBE
 Pin:T1,T2
