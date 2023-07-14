@@ -70,8 +70,8 @@ class SchScene(QGraphicsScene):
         self.cleanCursorSymb()
         for shape in self.selectedItems():
             self.removeItem(shape)
-            self.symbols.remove(shape)
-
+            if shape in self.symbols:  # wire is not included
+                self.symbols.remove(shape)
 
     def roundPos(self, origX, origY):
         posx1 = int(origX / self.sceneSymbRatio) * self.sceneSymbRatio
