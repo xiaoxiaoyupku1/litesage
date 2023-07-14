@@ -50,7 +50,7 @@ class Group(QGraphicsItemGroup):
                 self.setid(None, None)
         #return super().contextMenuEvent(event)
 
-    def draw(self, scene, sym_type, shapes, params):
+    def draw(self, scene, sym_type, shapes, params, isThumbnail=False):
         id_head = sym_type[0].upper()
         id_num = self.auto_id(scene, id_head)
         self.setid(id_head, id_num)
@@ -59,6 +59,9 @@ class Group(QGraphicsItemGroup):
             shape = self.draw_shape(scene, shape_params)
             if shape is not None:
                 self.addToGroup(shape)
+
+        if isThumbnail:
+            return
 
         self.parameters = self.parse_params(params)
         self.parameter_text = ParameterText()
@@ -74,10 +77,10 @@ class Group(QGraphicsItemGroup):
         p = [self.space+self.id]
         for param in self.parameters:
             name, value = param[0], param[1]
-            if name == '':
+            if name == '' or name.lower() == 'value':
                 p.append(self.space + value)
             else:
-                p.append(self.space+name+'='+value)
+                p.append(self.space+name[0]+'='+value)
         if len(self.parameters) > 1:
             text = '\n'.join(p)
         else:

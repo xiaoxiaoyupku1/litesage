@@ -125,6 +125,7 @@ class DeviceChoiceDialog(QDialog):
         elif self.symbType == 'ip':
             self.thumbnailScene.initIpDevices()
         self.thumbnailScene.gridOn = False
+        self.thumbnailScene.isThumbnail = True
         self.thumbnailView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.thumbnailView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.thumbnailView.wheelEvent = self._skip

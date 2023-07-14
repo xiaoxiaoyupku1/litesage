@@ -34,6 +34,7 @@ class SchScene(QGraphicsScene):
         self.sceneSymbRatio = 25 / 3  # x / 50 = 62.5 * 2 / 750
         self.gridOn = True  # flag grid
         self.gridPen = None
+        self.isThumbnail = False
 
         self.basicSymbols = None  # basic ideal symbols
         self.basicDevInfo = None
@@ -224,10 +225,9 @@ class SchScene(QGraphicsScene):
         params = devinfo[name].getParamList()
         sym_type = devinfo[name].type
         if sym_type == '':
-            group.draw(self, name, shapes, params)
+            group.draw(self, name, shapes, params, self.isThumbnail)
         else:
-            group.draw(self, sym_type, shapes, params)
-
+            group.draw(self, sym_type, shapes, params, self.isThumbnail)
 
         self.addItem(group)
         if isinstance(event, list):
