@@ -17,6 +17,7 @@ class ParameterText(QGraphicsTextItem):
         self.posx = 0
         self.posy = 0
 
+'''
     def contextMenuEvent(self, event):
         dialog = ParameterDialog(parent=None, item=self)
         if dialog.exec():
@@ -24,3 +25,5 @@ class ParameterText(QGraphicsTextItem):
                                              dialog.value.text())
             self.setPlainText(text)
         return super().contextMenuEvent(event)
+
+'''
