@@ -7,10 +7,11 @@ from PySide6.QtWidgets import (
     QDialogButtonBox, QVBoxLayout, QGridLayout,
     QFileDialog, QListView, QLabel
 )
+from src.tool.num import EngNum
 
 
 class ParameterDialog(QDialog):
-    def __init__(self, parent=None, item=None):
+    def __init__(self, parent=None, item=None, limits=None):
         super().__init__(parent)
         self.setWindowTitle('Enter Parameters')
         formLayout = QFormLayout()
@@ -28,19 +29,50 @@ class ParameterDialog(QDialog):
                 pname, value = param.split('=')
                 value_qle = QLineEdit(value)
                 formLayout.addRow(pname + ':', value_qle)
-                self.values.append([pname,value_qle])
+                self.values.append([pname, value_qle])
             else:
                 value_qle = QLineEdit(param)
                 formLayout.addRow('Param:', value_qle)
                 self.values.append(['', value_qle])
+
+        self.errMsg = QLabel()
+        self.errMsg.setStyleSheet("color: red;")
+        self.errMsg.hide()
         QBtn = QDialogButtonBox()
         QBtn.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
         QBtn.accepted.connect(self.accept)
         QBtn.rejected.connect(self.reject)
         layout = QVBoxLayout()
         layout.addLayout(formLayout)
+        layout.addWidget(self.errMsg)
         layout.addWidget(QBtn)
         self.setLayout(layout)
+        self.limits = limits
+
+    def accept(self):
+        for idx, (value, limit) in enumerate(zip(self.values, self.limits)):
+            name, nom = value[0], limit[0]
+            minVal, maxVal = limit[1:]
+            if len(name) == 0 and minVal is None and maxVal is None:
+                continue
+            num = value[1].text().strip()
+            try:
+                num = EngNum(num)
+            except:
+                self.errMsg.setText('invalid input: {}={}'.format(name, num)) 
+                self.errMsg.show()
+                return
+            if minVal is not None and num < minVal:
+                self.errMsg.setText('invalid input: {}={}\nhint: \u2265 {}'.format(name, num, minVal))
+                self.errMsg.show()
+                return
+            if maxVal is not None and num > maxVal:
+                self.errMsg.setText('invalid input: {}={}\nhint: \u2264 {}'.format(name, num, maxVal))
+                self.errMsg.show()
+                return
+            self.values[idx][1].setText(str(num))
+        super().accept()
+
 
 
 class DesignFileDialog(QFileDialog):

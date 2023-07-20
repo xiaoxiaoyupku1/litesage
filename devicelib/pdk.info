@@ -262,8 +262,8 @@ Descr:高值电阻
 Descr:R=(L/W)*RS
 Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；RHR方块电阻1080;适用于5.4k-9.25k之间]
 Pin:T1,T2
-Param:value,str,8k,,,,,Value
-Param:wjb,str,2u,,,,,Width
+Param:value,str,8k,5.4k,9.25k,,,Value
+Param:wjb,str,2u,2u,,,,Width
 ENDDEF
 
 DEF RMET1
@@ -291,8 +291,8 @@ Descr:NPLUS电阻
 Descr:R=(L/W)*RS
 Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：1.2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻38;适用于190-1.9k之间]
 Pin:T1,T2
-Param:value,str,500,,,,,Value
-Param:wjb,str,1.2u,,,,,Width
+Param:value,str,500,190,1.9k,,,Value
+Param:wjb,str,1.2u,1.2u,,,,Width
 ENDDEF
 
 DEF RNWL
@@ -302,8 +302,8 @@ Descr:低压NWELL电阻
 Descr:R=(L/W)*RS
 Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：5U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻1850;适用于9.25k以上]
 Pin:T1,T2
-Param:value,str,15k,,,,,Value
-Param:wjb,str,5u,,,,,Width
+Param:value,str,15k,9.25k,,,,Value
+Param:wjb,str,5u,5u,,,,Width
 ENDDEF
 
 DEF RNWH
@@ -313,8 +313,8 @@ Descr:高压NWELL电阻
 Descr:R=(L/W)*RS
 Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：5U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻1850;适用于9.25k以上]
 Pin:T1,T2
-Param:value,str,15k,,,,,Value
-Param:wjb,str,5u,,,,,Width
+Param:value,str,15k,9.25k,,,,Value
+Param:wjb,str,5u,5u,,,,Width
 ENDDEF
 
 DEF RPOLY1
@@ -324,8 +324,8 @@ Descr:POLY电阻
 Descr:R=(L/W)*RS
 Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：1U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻28；适用于140-1.4k之间]
 Pin:T1,T2
-Param:value,str,400,,,,,Value
-Param:wjb,str,2u,,,,,Width
+Param:value,str,400,140,1.4k,,,Value
+Param:wjb,str,2u,1u,,,,Width
 ENDDEF
 
 DEF RPPL
@@ -335,8 +335,8 @@ Descr:低压PPLUS电阻
 Descr:R=(L/W)*RS
 Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：1.2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻55；适用于275-2.75k之间]
 Pin:T1,T2,T3
-Param:value,str,1k,,,,,Value
-Param:wjb,str,1.2u,,,,,Width
+Param:value,str,1k,275,2.75k,,,Value
+Param:wjb,str,1.2u,1.2u,,,,Width
 ENDDEF
 
 DEF RPPH
@@ -346,8 +346,8 @@ Descr:高压PPLUS电阻。
 Descr:R=(L/W)*RS
 Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：1.2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；方块电阻55；适用于275-2.75k之间]
 Pin:T1,T2,T3
-Param:value,str,1k,,,,,Value
-Param:wjb,str,1.2u,,,,,Width
+Param:value,str,1k,275,2.75k,,,Value
+Param:wjb,str,1.2u,1.2u,,,,Width
 ENDDEF
 
 DEF RFUSEM2

@@ -1,4 +1,6 @@
 import os
+from src.tool.num import EngNum
+
 
 def getDeviceInfos(infoFile):
     """return list of DeviceInfo"""
@@ -110,8 +112,8 @@ class DeviceParam():
         self.name = parName
         self.type = parType.lower()
         self.defVal = defVal
-        self.minVal = minVal
-        self.maxVal = maxVal
+        self.minVal = None if len(minVal) == 0 else EngNum(minVal)
+        self.maxVal = None if len(maxVal) == 0 else EngNum(maxVal)
         self.unit = unit
         self.choices = choices.split()
         self.prompt = prompt

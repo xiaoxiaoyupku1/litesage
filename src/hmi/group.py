@@ -20,7 +20,8 @@ class Group(QGraphicsItemGroup):
         self.id = None
         self.devName = None
         self.parameter_text = None
-        self.parameters = [] # [('','p1'),('param_name','c1')...]
+        self.parameters = [] # [('','p1'), ('param_name','c1'), ...]
+        self.parametersLimits = [] # [(name, minVal, maxVal), ...]
         self.space = ''
 
     def paint(self, painter, option, widget=None, *args, **kwargs):
@@ -36,7 +37,9 @@ class Group(QGraphicsItemGroup):
         self.id_num = id_num
 
     def contextMenuEvent(self, event):
-        dialog = ParameterDialog(parent=None, item=self.parameter_text)
+        dialog = ParameterDialog(parent=None, 
+                                 item=self.parameter_text, 
+                                 limits=self.parametersLimits)
         if dialog.exec():
             self.id = dialog.name.text()
             self.parameters = [(v[0], v[1].text()) for v in dialog.values]
@@ -65,14 +68,18 @@ class Group(QGraphicsItemGroup):
             return
 
         self.parameters = self.parse_params(params)
+        self.parametersLimits = self.parseParamLimits(params)
         self.parameter_text = ParameterText()
         self.set_parameter_text()
         right = self.boundingRect().x() + self.boundingRect().width()
         self.parameter_text.setPos(right,self.boundingRect().y())
         self.addToGroup(self.parameter_text)
 
+    def parseParamLimits(self, params):
+        return [(p.name, p.minVal, p.maxVal) for p in params]
+
     def parse_params(self,params):
-        return  [(p.name,p.defVal) for p in params]
+        return  [(p.name, p.defVal) for p in params]
 
     def set_parameter_text(self):
         p = [self.space+self.id, self.devName]
