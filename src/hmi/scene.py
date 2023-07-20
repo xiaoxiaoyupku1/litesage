@@ -31,7 +31,7 @@ class SchScene(QGraphicsScene):
         self.rectStartPos = None  # starting point for adding design rect
         self.rectDesign = None  # rectangle surrounding the design
         self.scale = 15.0  # scaling coefficient
-        self.sceneSymbRatio = 25 / 3  # x / 50 = 62.5 * 2 / 750
+        self.sceneSymbRatio = 125 / self.scale  # x / 50 = 62.5 * 2 / 750
         self.gridOn = True  # flag grid
         self.gridPen = None
         self.isThumbnail = False
@@ -357,14 +357,15 @@ class SchScene(QGraphicsScene):
 
         if self.gridOn:
             painter.setPen(self.gridPen)
-            startX = int(rect.x() / self.sceneSymbRatio)
-            startY = int(rect.y() / self.sceneSymbRatio)
-            endX = int(rect.right() / self.sceneSymbRatio) + 1
-            endY = int(rect.bottom() / self.sceneSymbRatio) + 1
+            ratio = self.sceneSymbRatio * 3
+            startX = int(rect.x() / ratio) - 1
+            startY = int(rect.y() / ratio) - 1
+            endX = int(rect.right() / ratio) + 1
+            endY = int(rect.bottom() / ratio) + 1
             for posx in range(startX, endX, 1):
-                posx *= self.sceneSymbRatio
+                posx *= ratio
                 for posy in range(startY, endY, 1):
-                    posy *= self.sceneSymbRatio
+                    posy *= ratio
                     painter.drawPoint(posx, posy)
 
     def toggleGrid(self):
