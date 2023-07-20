@@ -235,34 +235,8 @@ class SchScene(QGraphicsScene):
         self.cursorSymb = group
         self.symbols.append(self.cursorSymb)
 
-
-
     def drawRes(self, event):
         self.drawSymbol(event, 'RES', 'basic')
-
-    def drawGnd(self, event):
-        self.cursorSymb = []
-        points = [[-62.500000, 187.500000], [62.500000, 187.500000], [0.000000, 250.000000]]
-        polygonf = QPolygonF()
-        for point in points:
-            polygonf.append(QPointF(point[0] / self.scale, point[1] / self.scale))
-        ground = Polygon(polygonf)
-        self.addItem(ground)
-        self.cursorSymb.append(ground)
-        ground.setPos(event.scenePos())
-
-        line = [0.000000, 0.000000, 0.000000, 187.500000]
-        line = [l / self.scale for l in line]
-        line = Line(*line)
-        self.addItem(line)
-        self.cursorSymb.append(line)
-        line.setPos(event.scenePos())
-
-        pin = Rect(0 - 20 / self.scale, 0 - 40 / self.scale, 40 / self.scale, 40 / self.scale)
-        self.addItem(pin)
-        self.cursorSymb.append(pin)
-        pin.setPos(event.scenePos())
-        self.symbols.append(self.cursorSymb)
 
     def drawVsrc(self, event):
         self.drawSymbol(event, 'VSRC', 'basic')
