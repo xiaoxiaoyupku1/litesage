@@ -291,7 +291,8 @@ class SchScene(QGraphicsScene):
             endPos = [curX, self.wireStartPos[1]]
         line = self.wireStartPos + endPos
         line = Line(*line)
-        line.setPen(QColor('blue'))
+        line.pen.setColor('blue')
+        line.setPen(line.pen)
         self.addItem(line)
 
         if mode == 'move':
@@ -358,8 +359,8 @@ class SchScene(QGraphicsScene):
             painter.setPen(self.gridPen)
             startX = int(rect.x() / self.sceneSymbRatio)
             startY = int(rect.y() / self.sceneSymbRatio)
-            endX = startX + int(rect.width() / self.sceneSymbRatio)
-            endY = startY + int(rect.height() / self.sceneSymbRatio)
+            endX = int(rect.right() / self.sceneSymbRatio) + 1
+            endY = int(rect.bottom() / self.sceneSymbRatio) + 1
             for posx in range(startX, endX, 1):
                 posx *= self.sceneSymbRatio
                 for posy in range(startY, endY, 1):

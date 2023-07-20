@@ -98,7 +98,6 @@ class Group(QGraphicsItemGroup):
 
         return id_num
 
-
     def draw_shape(self, scene, shape_params):
         # shape_params is  a list from lib file to describe a shape
         shape_type = shape_params[0].lower()
