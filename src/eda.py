@@ -56,6 +56,7 @@ class FoohuEda(QMainWindow):
         self.actSim = None
         self.actFit = None
         self.actGrid = None
+        self.actNetlist = None
 
         # Menu Wave
         self.actOpenWave = None
@@ -148,6 +149,11 @@ class FoohuEda(QMainWindow):
         self.actGrid.setShortcut(QKeySequence('ctrl+g'))
         self.actGrid.triggered.connect(self.toggleGrid)
 
+        self.actNetlist = QAction(text='SPICE Netlist')
+        self.actNetlist.setObjectName('actNetlist')
+        self.actNetlist.setShortcut(QKeySequence('ctrl+n'))
+        self.actNetlist.triggered.connect(self.showNetlist)
+
         self.actOpenWave = QAction(text='Open Wave')
         self.actOpenWave.triggered.connect(self.openWave)
         self.actOpenLayout = QAction(text='Open Layout')
@@ -176,7 +182,8 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actRect)
         self.menuEdit.addAction(self.actSim)
         self.menuEdit.addAction(self.actFit)
-        self.menuEdit.addAction(self.actGrid)
+        self.menuEdit.addAction(self.actGrid) 
+        self.menuEdit.addAction(self.actNetlist)
 
         self.menuWave = QMenu(self.menuBar)
         self.menuWave.setTitle('Wave')
@@ -302,6 +309,9 @@ class FoohuEda(QMainWindow):
 
     def toggleGrid(self):
         self.schScene.toggleGrid()
+
+    def showNetlist(self):
+        self.schScene.showNetlist()
 
     def openWave(self):
         if self.wavWin is not None:

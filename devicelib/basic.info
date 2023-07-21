@@ -2,14 +2,14 @@ DEF CAP
 Type:Capacitor
 Model:CAP
 Pin:T1,T2
-Param:,str,1p,,,F,,Value(F)
+Param:,y,str,1p,,,F,,Value(F)
 ENDDEF
 
 DEF ISRC
 Type:Current Source
 Model:
 Pin:T1,T2
-Param:,str,,,,,,Value
+Param:,y,str,,,,,,Value
 ENDDEF
 
 DEF DIO
@@ -23,14 +23,14 @@ DEF IND1
 Type:Inductor
 Model:IND
 Pin:T1,T2
-Param:,str,1,,,,,Value
+Param:,y,str,1,,,,,Value
 ENDDEF
 
 DEF IND2
 Type:Inductor
 Model:IND
 Pin:T1,T2
-Param:,str,1,,,,,Value
+Param:,y,str,1,,,,,Value
 ENDDEF
 
 DEF NMOS
@@ -61,7 +61,7 @@ DEF RES
 Type:Resistor
 Model:RES
 Pin:T1,T2
-Param:,str,1K,,,Ω,,Value(Ω)
+Param:,y,str,1K,,,Ω,,Value(Ω)
 ENDDEF
 
 DEF SW
@@ -74,35 +74,35 @@ DEF VCCS1
 Type:Source
 Model:VCCS1
 Pin:T1,T2,T3,T4
-Param:gm,str,,,,,,gm
+Param:gm,y,str,,,,,,gm
 ENDDEF
 
 DEF VCCS2
 Type:Source
 Model:VCCS2
 Pin:T1,T2,T3,T4
-Param:gm,str,,,,,,gm
+Param:gm,y,str,,,,,,gm
 ENDDEF
 
 DEF VCVS1
 Type:Source
 Model:VCVS1
 Pin:T1,T2,T3,T4
-Param:e,str,,,,,,e
+Param:e,y,str,,,,,,e
 ENDDEF
 
 DEF VCVS2
 Type:Source
 Model:VCVS2
 Pin:T1,T2,T3,T4
-Param:e,str,,,,,,e
+Param:e,y,str,,,,,,e
 ENDDEF
 
 DEF VSRC
 Type:Voltage Source
 Model:
 Pin:T1,T2
-Param:,str,,,,,,Value
+Param:,y,str,,,,,,Value
 ENDDEF
 
 DEF ZENER

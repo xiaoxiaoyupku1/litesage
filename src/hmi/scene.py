@@ -4,16 +4,16 @@ from PySide6.QtWidgets import (
     QGraphicsScene, QInputDialog, QLineEdit, QGraphicsTextItem,
 )
 
-from collections import defaultdict
-
-from src.hmi.text import Text, ParameterText
-from src.hmi.line import Line, Bus
-from src.hmi.rect import Rect, DesignBorder, SymbolPin
+from src.hmi.text import ParameterText
+from src.hmi.dialog import NetlistDialog
+from src.hmi.line import Line
+from src.hmi.rect import Rect, DesignBorder
 from src.hmi.polygon import Polygon
-from src.hmi.ellipse import Circle, Arc
+from src.hmi.ellipse import Circle
 from src.hmi.symbol import Symbol
-from src.hmi.group import Group
+from src.hmi.group import SchInst
 from src.tool.device import getDeviceInfos
+from src.tool.netlist import createNetlist
 
 
 class SchScene(QGraphicsScene):
@@ -220,19 +220,16 @@ class SchScene(QGraphicsScene):
             symbols = self.ipSymbols
         self.cursorSymb = []
 
-        group = Group()
+        inst = SchInst()
         shapes = symbols[name].parts
-        params = devinfo[name].getParamList()
-        devName = devinfo[name].name
-        devNameHead = devinfo[name].head
-        group.draw(self, devNameHead, devName, shapes, params, self.isThumbnail)
+        inst.draw(self, name, shapes, devinfo, self.isThumbnail)
 
-        self.addItem(group)
+        self.addItem(inst)
         if isinstance(event, list):
-            group.setPos(*event)
+            inst.setPos(*event)
         else:
-            group.setPos(event.scenePos())
-        self.cursorSymb = group
+            inst.setPos(event.scenePos())
+        self.cursorSymb = inst
         self.symbols.append(self.cursorSymb)
 
     def drawRes(self, event):
@@ -371,6 +368,11 @@ class SchScene(QGraphicsScene):
     def toggleGrid(self):
         self.gridOn = not self.gridOn
         self.update()
+
+    def showNetlist(self):
+        netlist = createNetlist(self)
+        dialog = NetlistDialog(None, netlist)
+        dialog.exec()
 
     def clear(self):
         self.symbols = []

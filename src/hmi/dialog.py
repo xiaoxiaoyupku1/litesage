@@ -7,52 +7,48 @@ from PySide6.QtWidgets import (
     QDialogButtonBox, QVBoxLayout, QGridLayout,
     QFileDialog, QListView, QLabel
 )
+from src.hmi.text import NetlistText
 from src.tool.num import EngNum
 
 
 class ParameterDialog(QDialog):
-    def __init__(self, parent=None, item=None, limits=None):
+    def __init__(self, parent=None, item=None, params=None):
         super().__init__(parent)
         self.setWindowTitle('Enter Parameters')
         formLayout = QFormLayout()
         text = item.toPlainText()
-        parameters = re.split('\s+', text.strip())
-        self.name = QLineEdit(parameters.pop(0))
+        paramTextLines = re.split('\s+', text.strip())
+        self.name = QLineEdit(paramTextLines.pop(0))
         formLayout.addRow('Name:', self.name)
-        self.devName = QLineEdit(parameters.pop(0))
+        self.devName = QLineEdit(paramTextLines.pop(0))
         self.devName.setReadOnly(True)
         self.devName.setFrame(False)
         formLayout.addRow('Device:', self.devName)
         self.values = [] # list of (pname, QLineEdit)
-        for param in parameters:
-            if '=' in param:
-                pname, value = param.split('=')
-                value_qle = QLineEdit(value)
-                formLayout.addRow(pname + ':', value_qle)
-                self.values.append([pname, value_qle])
-            else:
-                value_qle = QLineEdit(param)
-                formLayout.addRow('Param:', value_qle)
-                self.values.append(['', value_qle])
+        for param in params:
+            name, prompt, value = param.name, param.prompt, param.value
+            widget = QLineEdit(value)
+            formLayout.addRow(prompt + ':', widget)
+            self.values.append([name, widget])
 
         self.errMsg = QLabel()
         self.errMsg.setStyleSheet("color: red;")
         self.errMsg.hide()
-        QBtn = QDialogButtonBox()
-        QBtn.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
-        QBtn.accepted.connect(self.accept)
-        QBtn.rejected.connect(self.reject)
+        btn = QDialogButtonBox()
+        btn.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        btn.accepted.connect(self.accept)
+        btn.rejected.connect(self.reject)
         layout = QVBoxLayout()
         layout.addLayout(formLayout)
         layout.addWidget(self.errMsg)
-        layout.addWidget(QBtn)
+        layout.addWidget(btn)
         self.setLayout(layout)
-        self.limits = limits
+        self.params = params
 
     def accept(self):
-        for idx, (value, limit) in enumerate(zip(self.values, self.limits)):
-            name, nom = value[0], limit[0]
-            minVal, maxVal = limit[1:]
+        for idx, (value, param) in enumerate(zip(self.values, self.params)):
+            name = value[0]
+            minVal, maxVal = param.minVal, param.maxVal
             if len(name) == 0 and minVal is None and maxVal is None:
                 continue
             num = value[1].text().strip()
@@ -72,7 +68,6 @@ class ParameterDialog(QDialog):
                 return
             self.values[idx][1].setText(str(num))
         super().accept()
-
 
 
 class DesignFileDialog(QFileDialog):
@@ -166,3 +161,21 @@ class DeviceChoiceDialog(QDialog):
         self.thumbnailView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.thumbnailView.wheelEvent = self._skip
         self.thumbnailScene.update()
+
+
+class NetlistDialog(QDialog):
+    def __init__(self, parent=None, netlist=[]):
+        super().__init__(parent)
+        self.setWindowTitle('SPICE Netlist')
+
+        browser = NetlistText()
+        browser.setText('\n'.join(netlist))
+
+        btn = QDialogButtonBox()
+        btn.setStandardButtons(QDialogButtonBox.Close)
+        btn.rejected.connect(self.close)
+
+        layout = QVBoxLayout()
+        layout.addWidget(browser)
+        layout.addWidget(btn)
+        self.setLayout(layout)

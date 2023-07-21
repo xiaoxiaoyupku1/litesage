@@ -11,17 +11,18 @@ from src.hmi.ellipse import Circle, Arc
 import re
 
 
-class Group(QGraphicsItemGroup):
+class SchInst(QGraphicsItemGroup):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.id_head = None
-        self.id_num = None
-        self.id = None
-        self.devName = None
-        self.parameter_text = None
-        self.parameters = [] # [('','p1'), ('param_name','c1'), ...]
-        self.parametersLimits = [] # [(name, minVal, maxVal), ...]
+        self.nameHead = None
+        self.nameId = None
+        self.name = None
+        self.model = None
+        self.pins = []
+        self.conns = {} # key: pin
+        self.paramText = None
+        self.params = [] # list of DeviceParam
         self.space = ''
 
     def paint(self, painter, option, widget=None, *args, **kwargs):
@@ -32,33 +33,38 @@ class Group(QGraphicsItemGroup):
             painter.setPen(pen)
             painter.drawRect(self.boundingRect())
 
-    def setid(self, id_head, id_num):
-        self.id_head = id_head
-        self.id_num = id_num
+    def setInstName(self, nameHead, nameId):
+        self.nameHead = nameHead
+        self.nameId = nameId 
 
     def contextMenuEvent(self, event):
         dialog = ParameterDialog(parent=None, 
-                                 item=self.parameter_text, 
-                                 limits=self.parametersLimits)
+                                 item=self.paramText, 
+                                 params=self.params)
         if dialog.exec():
-            self.id = dialog.name.text()
-            self.parameters = [(v[0], v[1].text()) for v in dialog.values]
-            self.set_parameter_text()
+            self.name = dialog.name.text()
+            for idx, value in enumerate(dialog.values):
+                self.params[idx].name = value[0]
+                self.params[idx].value = value[1].text()
+            self.setParamText()
 
-            id_head = self.id[0].upper()
-            id_num = self.id[1:]
-            if re.search('^\d+$', id_num):
-                id_num = int(id_num)
-                self.setid(id_head, id_num)
+            nameHead = self.name[0].upper()
+            nameId = self.name[1:]
+            if re.search('^\d+$', nameId):
+                nameId = int(nameId)
+                self.setInstName(nameHead, nameId)
             else:
-                self.setid(None, None)
-        #return super().contextMenuEvent(event)
+                self.setInstName(None, None)
 
-    def draw(self, scene, id_head, devName, shapes, params, isThumbnail=False):
-        id_num = self.auto_id(scene, id_head)
-        self.setid(id_head, id_num)
-        self.id = id_head + str(id_num)
-        self.devName = devName
+    def draw(self, scene, model, shapes, devinfo, isThumbnail=False):
+        nameHead = devinfo[model].head
+        params = devinfo[model].getParamList()
+        nameId = self.getAutoNameId(scene, nameHead)
+        self.setInstName(nameHead, nameId)
+        self.name = nameHead + str(nameId)
+        self.model = model
+        self.pins = devinfo[model].pins
+        self.conns = {p:'TODO_Node_{}'.format(idx) for idx, p in enumerate(self.pins)}
         for shape_params in shapes:
             shape = self.draw_shape(scene, shape_params)
             if shape is not None:
@@ -67,42 +73,34 @@ class Group(QGraphicsItemGroup):
         if isThumbnail:
             return
 
-        self.parameters = self.parse_params(params)
-        self.parametersLimits = self.parseParamLimits(params)
-        self.parameter_text = ParameterText()
-        self.set_parameter_text()
+        self.params = params
+        self.paramText = ParameterText()
+        self.setParamText()
         right = self.boundingRect().x() + self.boundingRect().width()
-        self.parameter_text.setPos(right,self.boundingRect().y())
-        self.addToGroup(self.parameter_text)
+        self.paramText.setPos(right,self.boundingRect().y())
+        self.addToGroup(self.paramText)
 
-    def parseParamLimits(self, params):
-        return [(p.name, p.minVal, p.maxVal) for p in params]
-
-    def parse_params(self,params):
-        return  [(p.name, p.defVal) for p in params]
-
-    def set_parameter_text(self):
-        p = [self.space+self.id, self.devName]
-        for param in self.parameters:
-            name, value = param[0], param[1]
+    def setParamText(self):
+        p = [self.space + self.name, self.model]
+        for param in self.params:
+            name, value = param.name, param.value
             if name == '' or name.lower() == 'value':
                 p.append(self.space + value)
             else:
-                p.append(self.space+name[0]+'='+value)
+                p.append(self.space + name[0]+'='+value)
         text = '\n'.join(p)
-        self.parameter_text.setPlainText(text)
+        self.paramText.setPlainText(text)
 
-    def auto_id(self, scene, id_head):
+    def getAutoNameId(self, scene, nameHead):
         num_set = set()
         for symbol in scene.symbols:
-            if symbol.id_head is not None:
-                if id_head == symbol.id_head:
-                    if symbol.id_num is not None:
-                        num_set.add(symbol.id_num)
+            if symbol.nameHead is not None:
+                if nameHead == symbol.nameHead:
+                    if symbol.nameId is not None:
+                        num_set.add(symbol.nameId)
         id_num = 1
         while id_num in num_set:
             id_num += 1
-
         return id_num
 
     def draw_shape(self, scene, shape_params):

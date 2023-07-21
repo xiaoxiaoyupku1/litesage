@@ -93,10 +93,12 @@ class DeviceParam():
     def __init__(self, paramLine):
         self.name = None        # param name to be used in netlist
                                 # (can be empty string, R1 n1 n2 5K)
+        self.usedInNetlist = None # y or n: whether used in netlist
         self.type = None        # str, int, bool, cyclic
         self.defVal = None
         self.minVal = None
         self.maxVal = None
+        self.value = None       # actual value
         self.unit = None
         self.choices = None     # list of strings
         self.prompt = None      # label displayed on GUI
@@ -105,15 +107,17 @@ class DeviceParam():
     def parse(self, paramLine):
         """
         Param:Name,Type,DefaultValue,MinValue,MaxValue,Unit,Choices,Prompt
-        Param:R,str,1K,,,Ohm,,Value
+        Param:R,y,str,1K,,,Ohm,,Value
         """
         items = [item.strip() for item in paramLine.split(',')]
-        parName, parType, defVal, minVal, maxVal, unit, choices, prompt = items
+        parName, parUsedInNetlist, parType, defVal, minVal, maxVal, unit, choices, prompt = items
         self.name = parName
+        self.usedInNetlist = parUsedInNetlist.lower() == 'y'
         self.type = parType.lower()
         self.defVal = defVal
         self.minVal = None if len(minVal) == 0 else EngNum(minVal)
         self.maxVal = None if len(maxVal) == 0 else EngNum(maxVal)
+        self.value = defVal
         self.unit = unit
         self.choices = choices.split()
         self.prompt = prompt
@@ -125,7 +129,7 @@ class DeviceParam():
         return self.name
 
     def isUsedInNetlist(self):
-        return len(self.name) > 0
+        return self.usedInNetlist
 
 
 DEVNAME_HEAD_MAPPING = {
