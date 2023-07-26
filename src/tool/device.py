@@ -2,7 +2,7 @@ import os
 from src.tool.num import EngNum
 
 
-def getDeviceInfos(infoFile):
+def getDeviceInfos(infoFile, lib):
     """return list of DeviceInfo"""
     deviceInfoDict = {}
     if not os.path.isfile(infoFile):
@@ -23,7 +23,7 @@ def getDeviceInfos(infoFile):
                 inDef = True
             elif inDef and line.startswith('ENDDEF'):
                 inDef = False
-                devInfo = DeviceInfo(devName, devType, devModel, devPins, devDescrLines, devParamLines)
+                devInfo = DeviceInfo(devName, devType, devModel, devPins, devDescrLines, devParamLines, lib)
                 deviceInfoDict[devName] = devInfo
             elif inDef and line.startswith('Type:'):
                 devType = line[5:]
@@ -41,7 +41,8 @@ def getDeviceInfos(infoFile):
 
 
 class DeviceInfo():
-    def __init__(self, devName, devType, devModel, devPins, devDescrLines, devParamLines):
+    def __init__(self, devName, devType, devModel, devPins, devDescrLines, devParamLines, lib):
+        self.lib = lib # 'basic', 'pdk', 'ip'
         self.name = devName
         self.type = devType
         self.model = devModel
@@ -60,6 +61,8 @@ class DeviceInfo():
     def parseNameHead(self):
         if len(self.type) == 0:
             return 'I'
+        elif self.lib == 'ip':
+            return 'X'
         return DEVNAME_HEAD_MAPPING.get(self.type.lower(), self.type[0].upper())
 
     def parsePrompt(self):

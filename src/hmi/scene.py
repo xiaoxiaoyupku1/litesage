@@ -51,19 +51,17 @@ class SchScene(QGraphicsScene):
     def initBasicDevices(self):
         if self.basicSymbols is None or self.basicDevInfo is None:
             self.basicSymbols = Symbol.parser(r'devicelib\basic.lib')
-            self.basicDevInfo = getDeviceInfos(r'devicelib\basic.info')
+            self.basicDevInfo = getDeviceInfos(r'devicelib\basic.info', lib='basic')
 
     def initPdkDevices(self):
         if self.pdkSymbols is None or self.pdkDevInfo is None:
             self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
-            self.pdkDevInfo = getDeviceInfos(r'devicelib\pdk.info')
+            self.pdkDevInfo = getDeviceInfos(r'devicelib\pdk.info', lib='pdk')
 
     def initIpDevices(self):
         if self.ipSymbols is None or self.ipDevInfo is None:
-            self.ipSymbols = {}
-            # self.ipSymbols = Symbol.parser(r'devicelib\ip.lib')
-            self.ipDevInfo = {}
-            # self;ipDevInfo = DeviceInfo.parser(r'devicelib\ip.lib')
+            self.ipSymbols = Symbol.parser(r'devicelib\ip.lib')
+            self.ipDevInfo = getDeviceInfos(r'devicelib\ip.info', lib='ip')
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
@@ -238,8 +236,8 @@ class SchScene(QGraphicsScene):
             symbols = self.pdkSymbols
             devinfo = self.pdkDevInfo
         else:
-            assert 0, 'ip symbols not implemented yet'
             symbols = self.ipSymbols
+            devinfo = self.ipDevInfo
         self.cursorSymb = []
 
         inst = SchInst()
