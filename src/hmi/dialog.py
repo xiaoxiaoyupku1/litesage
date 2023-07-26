@@ -11,6 +11,45 @@ from src.hmi.text import NetlistText
 from src.tool.num import EngNum
 
 
+class WireDialog(QDialog):
+    def __init__(self, parent=None, wiresegment=None):
+        super().__init__(parent)
+        self.wiresegment = wiresegment
+        self.setWindowTitle('Enter Wire Name')
+
+        layout = QVBoxLayout()
+
+
+        formLayout = QFormLayout()
+        self.name = QLineEdit(self.wiresegment.wire.name)
+        formLayout.addRow('Name:', self.name)
+        layout.addLayout(formLayout)
+
+        self.errMsg = QLabel()
+        self.errMsg.setStyleSheet("color: red;")
+        self.errMsg.hide()
+        layout.addWidget(self.errMsg)
+
+        btn = QDialogButtonBox()
+        btn.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        btn.accepted.connect(self.accept)
+        btn.rejected.connect(self.reject)
+        layout.addWidget(btn)
+
+        self.setLayout(layout)
+    def accept(self):
+        for wire in self.wiresegment.scene().wireList:
+            if wire is self.wiresegment.wire: #same wire
+                continue
+            if any(pin in self.wiresegment.wire.getPins() for pin in wire.getPins()):
+                #the two wires linked to same pin
+                if wire.name is not None:
+                    if self.name.text() != wire.name:
+                        self.errMsg.setText("Wires linked to same pin requied same name")
+                        self.errMsg.show()
+                        return
+        super().accept()
+
 class ParameterDialog(QDialog):
     def __init__(self, parent=None, item=None, params=None):
         super().__init__(parent)

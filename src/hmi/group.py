@@ -20,7 +20,7 @@ class SchInst(QGraphicsItemGroup):
         self.name = None
         self.model = None
         self.pins = []
-        self.conns = {} # key: pin
+        self.conns = {} #pin name -> wire name
         self.paramText = None
         self.params = [] # list of DeviceParam
         self.space = ''
@@ -65,6 +65,7 @@ class SchInst(QGraphicsItemGroup):
         self.model = model
         self.pins = devinfo[model].pins
         self.conns = {p:'TODO_Node_{}'.format(idx) for idx, p in enumerate(self.pins)}
+        self.initial_conns = self.conns.copy()
         for shape_params in shapes:
             shape = self.draw_shape(scene, shape_params)
             if shape is not None:
@@ -83,7 +84,7 @@ class SchInst(QGraphicsItemGroup):
     def setParamText(self):
         p = [self.space + self.name, self.model]
         for param in self.params:
-            name, value = param.name, param.value
+            name, value = param.getName(), param.getValue()
             if name == '' or name.lower() == 'value':
                 p.append(self.space + value)
             else:
@@ -137,6 +138,7 @@ class SchInst(QGraphicsItemGroup):
             half = Snum / 2
             p = SymbolPin((pos_x - half) / scene.scale, (pos_y - half) / scene.scale,
                           Snum / scene.scale, Snum / scene.scale)
+            p.setName(name)
         elif shape_type == 'a':
             pos_x = float(shape_params[1])
             pos_y = float(shape_params[2])

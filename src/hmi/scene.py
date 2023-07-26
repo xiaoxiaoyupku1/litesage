@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
 
 from src.hmi.text import ParameterText
 from src.hmi.dialog import NetlistDialog
-from src.hmi.line import Line
-from src.hmi.rect import Rect, DesignBorder
+from src.hmi.line import Line, Wire, WireSegment, WireList
+from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle
 from src.hmi.symbol import Symbol
@@ -27,7 +27,11 @@ class SchScene(QGraphicsScene):
         self.widgetMouseMove = None  # widget with moving mouse
         self.designTextLines = None  # list of strings: user-defined design in rectangle
         self.symbols = []  # list of all symbols, a symbol = list of shapes
+
         self.wireStartPos = None  # starting point for adding wire
+        self.wireList = WireList(self)
+        self.currentWire = Wire(self)
+
         self.rectStartPos = None  # starting point for adding design rect
         self.rectDesign = None  # rectangle surrounding the design
         self.scale = 15.0  # scaling coefficient
@@ -63,6 +67,7 @@ class SchScene(QGraphicsScene):
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
+            self.endWire()
             self.cleanCursorSymb()
         elif event.key() == Qt.Key_Delete:
             self.delSymb()
@@ -70,9 +75,21 @@ class SchScene(QGraphicsScene):
     def delSymb(self):
         self.cleanCursorSymb()
         for shape in self.selectedItems():
-            self.removeItem(shape)
-            if shape in self.symbols:  # wire is not included
-                self.symbols.remove(shape)
+            if type(shape) is WireSegment:
+                shape.delete()
+            elif type(shape) is SchInst:
+                pins = [item for item in shape.childItems() if type(item) is SymbolPin]
+                for pin in pins:
+                    wiresegments = [ item for item in pin.collidingItems() if type(item) is WireSegment]
+                    for wiresegment in wiresegments:
+                        wiresegment.removePin(pin)
+                if shape in self.symbols:  # wire is not included
+                    self.symbols.remove(shape)
+                self.removeItem(shape)
+            else:
+                #not wire or symbol
+                self.removeItem(shape)
+
 
     def roundPos(self, origX, origY):
         posx1 = int(origX / self.sceneSymbRatio) * self.sceneSymbRatio
@@ -149,8 +166,13 @@ class SchScene(QGraphicsScene):
         return super().mouseMoveEvent(event)
 
     def mouseDoubleClickEvent(self, event):
+        self.endWire()
+    def endWire(self):
         if self.insertSymbType == 'W':
             self.wireStartPos = None
+            self.currentWire.complete()
+            self.wireList.append(self.currentWire)
+            self.currentWire = Wire(self)
 
     def drawDesign(self, event):
         self.cursorSymb = []
@@ -287,16 +309,16 @@ class SchScene(QGraphicsScene):
         else:
             endPos = [curX, self.wireStartPos[1]]
         line = self.wireStartPos + endPos
-        line = Line(*line)
-        line.pen.setColor('blue')
-        line.setPen(line.pen)
-        self.addItem(line)
+        wireseg = WireSegment(*line)
+        self.addItem(wireseg)
 
         if mode == 'move':
-            self.widgetMouseMove = line
+            self.widgetMouseMove = wireseg
         else:
             self.wireStartPos = endPos
             self.widgetMouseMove = None
+            wireseg.addPins()
+            self.currentWire.add(wireseg)
 
     def drawRect(self, event, mode=None):
         # mode: 'press', 'move'
@@ -377,3 +399,15 @@ class SchScene(QGraphicsScene):
     def clear(self):
         self.symbols = []
         super().clear()
+
+'''
+    def hidePins(self):
+        for sym in self.symbols:
+            pins = [ shape for shape in sym.childItems() if type(shape) is SymbolPin]
+            for pin in pins:
+                for wire in self.wireList:
+                    if wire.collidesWithItem(pin):
+                        pin.hide()
+                        break
+
+'''

@@ -24,3 +24,6 @@ class SymbolPin(Rect):
         super().__init__(*args, **kwargs)
         self.pen.setColor('red')
         self.setPen(self.pen)
+        self.name = None
+    def setName(self,name):
+        self.name = name

@@ -130,7 +130,8 @@ class DeviceParam():
 
     def isUsedInNetlist(self):
         return self.usedInNetlist
-
+    def getValue(self):
+        return self.value
 
 DEVNAME_HEAD_MAPPING = {
     'source': 'E',
