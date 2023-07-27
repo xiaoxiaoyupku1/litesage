@@ -233,6 +233,7 @@ class FoohuEda(QMainWindow):
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
         devices = sorted(self.schScene.basicSymbols.keys())
+        devices = [dev for dev in devices if dev != 'PIN']
         devInfo = self.schScene.basicDevInfo
         dialog = DeviceChoiceDialog(self, 'Add Standard Component', 
                                     devices=devices, 

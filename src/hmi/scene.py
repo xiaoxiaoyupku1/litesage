@@ -259,6 +259,8 @@ class SchScene(QGraphicsScene):
         self.drawSymbol(event, 'VSRC', 'basic')
 
     def drawPin(self, event):
+        self.drawSymbol(event, 'PIN', 'basic')
+        return
         self.cursorSymb = []
         points = [[87.500000, 0.000000],
                   [31.250000, 56.250000],

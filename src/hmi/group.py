@@ -37,7 +37,12 @@ class SchInst(QGraphicsItemGroup):
         self.nameHead = nameHead
         self.nameId = nameId 
 
+    def isPin(self):
+        return self.model == 'PIN'
+
     def contextMenuEvent(self, event):
+        if self.isPin():
+            return
         dialog = ParameterDialog(parent=None, 
                                  item=self.paramText, 
                                  params=self.params)
@@ -64,7 +69,7 @@ class SchInst(QGraphicsItemGroup):
         self.name = nameHead + str(nameId)
         self.model = model
         self.pins = devinfo[model].pins
-        self.conns = {p:'TODO_Node_{}'.format(idx) for idx, p in enumerate(self.pins)}
+        self.conns = {p:'node{}'.format(idx) for idx, p in enumerate(self.pins)}
         self.initial_conns = self.conns.copy()
         for shape_params in shapes:
             shape = self.draw_shape(scene, shape_params)
@@ -76,7 +81,8 @@ class SchInst(QGraphicsItemGroup):
 
         self.params = params
         self.paramText = ParameterText()
-        self.setParamText()
+        if not self.isPin():
+            self.setParamText()
         right = self.boundingRect().x() + self.boundingRect().width()
         self.paramText.setPos(right,self.boundingRect().y())
         self.addToGroup(self.paramText)
@@ -125,6 +131,9 @@ class SchInst(QGraphicsItemGroup):
             for i in range(5, len(shape_params) - 1, 2):
                 polygonf.append(QPointF(float(shape_params[i]) / scene.scale, float(shape_params[i + 1]) / scene.scale))
             p = Polygon(polygonf)
+            if self.isPin():
+                p.pen.setColor('red')
+                p.setPen(p.pen)
             if shape_params[-1].lower() == 'f':
                 p.setBrush(p.pen.color())
         elif shape_type == 'x':
