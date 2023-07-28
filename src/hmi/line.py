@@ -1,9 +1,11 @@
 from PySide6.QtWidgets import (QGraphicsLineItem, QGraphicsItem)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt,QLineF
+from PySide6.QtWidgets import ( QGraphicsScene )
 
 from src.hmi.dialog import WireDialog
 from src.hmi.text import WireNameText
 from src.hmi.rect import  SymbolPin
+from src.hmi.polygon import Pin
 
 import re
 
@@ -27,7 +29,7 @@ class WireSegment(Line):
         super().__init__(*args, **kwargs)
         self.pen.setColor('blue')
         self.setPen(self.pen)
-        self.pins = set()
+        self.pins = set() #SymbolPins or Pins (design)
         self.text = WireNameText()
         self.wire = None # included in this wire
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
@@ -39,9 +41,10 @@ class WireSegment(Line):
         return self.pins
     def addPins(self):
         for item in self.collidingItems():
-            if type(item) is SymbolPin:
+            if type(item) is SymbolPin or type(item) is Pin:
                 self.addPin(item)
-                item.setOpacity(0)
+                item.setConnected()
+
 
     def contextMenuEvent(self, event):
         dialog = WireDialog(parent=None, wiresegment=self)
@@ -54,12 +57,12 @@ class WireSegment(Line):
 
     def delete(self):
         for pin in self.getPins():
-            pin.setOpacity(1)
-            pin.parentItem().conns[pin.name] = pin.parentItem().initial_conns[pin.name]
+            pin.setDisConnected()
+            pin.getParent().conns[pin.name] = pin.getParent().initial_conns[pin.name]
         self.scene().removeItem(self.text)
         self.scene().removeItem(self)
         self.wire.remove(self)
-        self.scene().WireList.checkConnectivity(self.wire)
+        self.wire.parent.wireList.checkConnectivity(self.wire)
 
     def isConnected(self, other):
 
@@ -89,10 +92,16 @@ class WireSegment(Line):
             return 'x_direct'
         else:
             raise Exception("strange line ")
+    def toPrevJSON(self, centerX, centerY):
+        line = self.line()
+        items = [line.x1() - centerX, line.y1() - centerY, line.x2() - centerX, line.y2() - centerY]
+        return items
+    def make_by_JSON(self,jsn):
+        self.setLine(QLineF(*jsn))
 
 class Wire(): # Wire is a list of WireSegment
-    def __init__(self,scene):
-        self.scene = scene
+    def __init__(self,parent):
+        self.parent = parent #scene or design
         self.segments = []
         self.name = None
 
@@ -119,7 +128,7 @@ class Wire(): # Wire is a list of WireSegment
     def remove(self, segment):
         self.segments.remove(segment)
         if len(self.getSegments()) == 0:
-            self.scene.wireList.remove(self)
+            self.parent.wireList.remove(self)
 
     def getPins(self):
         pins = set()
@@ -128,7 +137,7 @@ class Wire(): # Wire is a list of WireSegment
         return pins
 
     def __setAutoName(self):
-        name_nums = [ int(wire.name[3:]) for wire in self.scene.wireList if wire.getName() is not None and re.match('net\d+',wire.getName())]
+        name_nums = [ int(wire.name[3:]) for wire in self.parent.wireList if wire.getName() is not None and re.match('net\d+',wire.getName())]
 
         id_num = 1
         while id_num in name_nums:
@@ -146,13 +155,15 @@ class Wire(): # Wire is a list of WireSegment
 
     def __updatePinsConn(self):
         for pin in self.getPins():
-            pin.parentItem().conns[pin.name] = self.getName()
+            #print(pin)
+            pin.getParent().conns[pin.name] = self.getName()
 
     def __updateSegmentText(self):
         for segment in self.getSegments():
             segment.text.setPlainText(self.name)
 
     def complete(self):
+        self.__checkParent() # in scene or editing_design
         self.__setAutoName()
         self.__setSelectable()
 
@@ -160,42 +171,79 @@ class Wire(): # Wire is a list of WireSegment
         for seg in self.getSegments():
             seg.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
+    def __checkParent(self):
+        scene = self.parent
+        if scene.editDesign is not None:
+            if all(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
+                self.parent = scene.editDesign
+                self.parent.wireList.append(self)
+            else:
+                if any(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
+                    #TODO: forbidden, alert
+                    pass
+                else:
+                    scene.wireList.append(self)
+        else:
+            scene.wireList.append(self)
+    def toPrevJSON(self, centerX, centerY):
+        d = {}
+        d['name'] = self.name
+        d['segs'] = []
+        for seg in self.getSegments():
+            d['segs'].append(seg.toPrevJSON(centerX, centerY))
+
+        return d
+    def make_by_JSON(self,jsn):
+        self.name = jsn['name']
+        for seg in jsn['segs']:
+            segment = WireSegment()
+            segment.make_by_JSON(seg)
+            self.add(segment)
+
+
 class WireList():
-    def __init__(self,scene):
+    def __init__(self,parent):
         self.wirelist=[]
-        self.scene = scene
+        #parent is the main scene or a design
+        self.parent = parent
 
     def __iter__(self):
         return self.wirelist.__iter__()
 
     def __next__(self):
         return self.wirelist.__next__()
-    def append(self,new):
-        wires_connected = []
-        others=[]
-        for wire in self.wirelist:
-            if new.isConnected(wire):
-                wires_connected.append(wire)
+    def append(self,new,check=True):
+        if check:
+            wires_connected = []
+            others=[]
+            for wire in self.wirelist:
+                if new.isConnected(wire):
+                    wires_connected.append(wire)
+                else:
+                    others.append(wire)
+
+            if len(wires_connected)> 0:
+                name = wires_connected[0].getName()
+                merged = Wire(self.parent)
+
+                for wire in wires_connected + [new]:
+                    for segment in wire.getSegments():
+                        merged.add(segment)
+
+                merged.setName(name)
+
+                self.wirelist = others + [merged]
             else:
-                others.append(wire)
-
-        if len(wires_connected)> 0:
-            name = wires_connected[0].getName()
-            merged = Wire(self.scene)
-
-            for wire in wires_connected + [new]:
-                for segment in wire.getSegments():
-                    merged.add(segment)
-
-            merged.setName(name)
-
-            self.wirelist = others + [merged]
+                self.wirelist.append(new)
         else:
             self.wirelist.append(new)
+    def cleanup(self):
+        for wire in self.wirelist:
+            for seg in wire.getSegments():
+                seg.scene().removeItem(seg)
 
 
-
-    def remove(self,wire):
+    def remove(self,wire, check=True):
         self.wirelist.remove(wire)
 
     def checkConnectivity(self,wire):

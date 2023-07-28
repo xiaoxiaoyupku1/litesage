@@ -93,7 +93,7 @@ class DeviceInfo():
 
 
 class DeviceParam():
-    def __init__(self, paramLine):
+    def __init__(self, paramLine=None):
         self.name = None        # param name to be used in netlist
                                 # (can be empty string, R1 n1 n2 5K)
         self.usedInNetlist = None # y or n: whether used in netlist
@@ -105,7 +105,8 @@ class DeviceParam():
         self.unit = None
         self.choices = None     # list of strings
         self.prompt = None      # label displayed on GUI
-        self.parse(paramLine)
+        if paramLine is not None:
+            self.parse(paramLine)
 
     def parse(self, paramLine):
         """
@@ -135,6 +136,21 @@ class DeviceParam():
         return self.usedInNetlist
     def getValue(self):
         return self.value
+
+    def toPrevJSON(self):
+        ret = {}
+        for k in self.__dict__:
+            v = getattr(self, k)
+            if type(v) is EngNum:
+                ret[k] = v.__repr__()
+            else:
+                ret[k] = v
+        return ret
+
+    def make_by_JSON(self, jsn):
+        for k in self.__dict__:
+            setattr(self, k, jsn[k])
+
 
 DEVNAME_HEAD_MAPPING = {
     'source': 'E',

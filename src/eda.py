@@ -1,6 +1,6 @@
 from PySide6.QtCore import (QRect )
 from PySide6.QtWidgets import (
-    QMainWindow, QMenuBar, QMenu, QWidget, QGraphicsView
+    QMainWindow, QMenuBar, QMenu, QWidget, QGraphicsView, QMessageBox
 )
 from PySide6.QtGui import (
     QAction, QIcon, QKeySequence
@@ -11,7 +11,6 @@ from src.layout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog
-from src.tool.design import dumpDesign
 
 
 class FoohuEda(QMainWindow):
@@ -204,14 +203,21 @@ class FoohuEda(QMainWindow):
         self.setCentralWidget(self.centralWidget)
 
     def saveDesign(self, _):
-        if self.schScene is None or self.schScene.rectDesign is None:
+        if self.schScene is None:
+            return
+        if self.schScene.editDesign is None:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Alert")
+            msgBox.setText("There is no design in editing")
+            msgBox.exec()
             return
         dialog = DesignFileDialog(self, 'Save Design as ...', mode='save')
         result = dialog.exec()
         if result != dialog.accepted:
             return False
         designFile = dialog.selectedFiles()[0]
-        dumpDesign(designFile, self.schScene.rectDesign)
+        self.schScene.editDesign.dumpDesign(designFile)
+        self.schScene.editDesign.change_to_readonly()
 
     def loadDesign(self, _):
         self.schScene.cleanCursorSymb()
@@ -233,7 +239,6 @@ class FoohuEda(QMainWindow):
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
         devices = sorted(self.schScene.basicSymbols.keys())
-        devices = [dev for dev in devices if dev != 'PIN']
         devInfo = self.schScene.basicDevInfo
         dialog = DeviceChoiceDialog(self, 'Add Standard Component', 
                                     devices=devices, 
@@ -294,7 +299,13 @@ class FoohuEda(QMainWindow):
         
     def drawRect(self):
         self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'RECT'
+        if self.schScene.anyUnSavedDesign():
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Alert")
+            msgBox.setText("There is unsaved design, can't draw another design")
+            msgBox.exec()
+        else:
+            self.schScene.insertSymbType = 'RECT'
 
     def drawSymbol(self, name, symbType):
         self.schScene.cleanCursorSymb()

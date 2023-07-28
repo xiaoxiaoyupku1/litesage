@@ -8,6 +8,7 @@ from src.hmi.line import Line, Bus
 from src.hmi.rect import SymbolPin
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
+from src.tool.device import DeviceParam
 import re
 
 
@@ -21,9 +22,90 @@ class SchInst(QGraphicsItemGroup):
         self.model = None
         self.pins = []
         self.conns = {} #pin name -> wire name
+        self.initial_conns = {}
         self.paramText = None
         self.params = [] # list of DeviceParam
         self.space = ''
+        self.SymbolPins = []
+
+    def toPrevJSON(self, centerX, centerY):
+        params =  [p.toPrevJSON() for p in self.params]
+        ret = {k: getattr(self, k) for k in ['nameHead',
+                                            'nameId',
+                                             'name',
+                                             'model',
+                                             'pins',
+                                             'conns',
+                                             'initial_conns',
+                                             'space']}
+        ret['params'] = params
+        distx, disty = [self.x() - centerX, self.y() - centerY]
+        ret['pins_status'] = []
+        ret['shapes'] = []
+        for shape in self.SymbolPins:
+            row = ['x', shape.name,'_']
+            snum = shape.rect().width() * self.scene().scale
+            half = snum / 2
+            pos_x =  (shape.rect().x() + distx) * self.scene().scale + half
+            pos_y =  (shape.rect().y() + disty) * self.scene().scale + half
+            row += [pos_x, pos_y, 0, 0, snum]
+            ret['shapes'].append(row)
+            if shape.status:
+                ret['pins_status'].append(True)
+            else:
+                ret['pins_status'].append(False)
+
+        text = self.paramText.toPlainText()
+        text_x = self.paramText.x() +distx
+        text_y = self.paramText.y() +disty
+        ret['paramText'] = [text, text_x, text_y]
+
+        for shape in self.childItems():
+            if type(shape) is Line:
+                row = ['wire']
+                line = shape.line()
+                row += [e * self.scene().scale for e in [line.x1() + distx , line.y1() + disty, line.x2() + distx, line.y2() + disty]]
+                ret['shapes'].append(row)
+            elif type(shape) is Bus:
+                row = ['bus']
+                line = shape.line()
+                row += [e * self.scene().scale for e in [line.x1() + distx , line.y1() + disty, line.x2() + distx, line.y2() + disty]]
+                ret['shapes'].append(row)
+            elif type(shape) is Circle:
+                row = ['c']
+                rect = shape.rect()
+                row += [ e * self.scene().scale for e in [rect.x()+distx+rect.width()/2, rect.y()+disty+rect.width()/2, rect.width()/2]]
+                ret['shapes'].append(row)
+            elif type(shape) is Polygon:
+                row = ['p']
+                row += ['_','_','_','_'] # useless so far
+                for point in shape.polygon().toList():
+                    row += [(point.x() + distx) * self.scene().scale,
+                            (point.y() + disty) * self.scene().scale,
+                            ]
+                row += [shape.last]
+                ret['shapes'].append(row)
+            elif type(shape) is Arc:
+                row = ['a']
+                radius = shape.rect().width()/2 * self.scene().scale
+                pos_x = (shape.rect().x()+distx)*self.scene().scale + radius
+                pos_y = (shape.rect().y()+disty)*self.scene().scale + radius
+                start = shape.startAngle() / 16
+                end = shape.spanAngle() /16 + start
+                row += [pos_x, pos_y, radius, start*10, end*10]
+                ret['shapes'].append(row)
+            elif type(shape) is Text:
+                row = ['label']
+                text = shape.toPlainText()
+                dimension = shape.dimension * self.scene().scale
+                pos_x = (shape.x() + distx)* self.scene().scale
+                pos_y = (shape.y() + +disty+shape.dimension)* self.scene().scale
+                row += [pos_x, pos_y, '_', dimension, text]
+                ret['shapes'].append(row)
+
+            else:
+                pass
+        return ret
 
     def paint(self, painter, option, widget=None, *args, **kwargs):
         if self.isSelected():
@@ -37,12 +119,7 @@ class SchInst(QGraphicsItemGroup):
         self.nameHead = nameHead
         self.nameId = nameId 
 
-    def isPin(self):
-        return self.model == 'PIN'
-
     def contextMenuEvent(self, event):
-        if self.isPin():
-            return
         dialog = ParameterDialog(parent=None, 
                                  item=self.paramText, 
                                  params=self.params)
@@ -75,14 +152,15 @@ class SchInst(QGraphicsItemGroup):
             shape = self.draw_shape(scene, shape_params)
             if shape is not None:
                 self.addToGroup(shape)
+                if isinstance(shape, SymbolPin):
+                    self.SymbolPins.append(shape)
 
         if isThumbnail:
             return
 
         self.params = params
         self.paramText = ParameterText()
-        if not self.isPin():
-            self.setParamText()
+        self.setParamText()
         right = self.boundingRect().x() + self.boundingRect().width()
         self.paramText.setPos(right,self.boundingRect().y())
         self.addToGroup(self.paramText)
@@ -131,11 +209,9 @@ class SchInst(QGraphicsItemGroup):
             for i in range(5, len(shape_params) - 1, 2):
                 polygonf.append(QPointF(float(shape_params[i]) / scene.scale, float(shape_params[i + 1]) / scene.scale))
             p = Polygon(polygonf)
-            if self.isPin():
-                p.pen.setColor('red')
-                p.setPen(p.pen)
             if shape_params[-1].lower() == 'f':
                 p.setBrush(p.pen.color())
+                p.last = 'f'
         elif shape_type == 'x':
             name = shape_params[1]
             num = shape_params[2]
@@ -148,6 +224,7 @@ class SchInst(QGraphicsItemGroup):
             p = SymbolPin((pos_x - half) / scene.scale, (pos_y - half) / scene.scale,
                           Snum / scene.scale, Snum / scene.scale)
             p.setName(name)
+            p.setParent(self)
         elif shape_type == 'a':
             pos_x = float(shape_params[1])
             pos_y = float(shape_params[2])
@@ -170,3 +247,29 @@ class SchInst(QGraphicsItemGroup):
             pass
 
         return p
+
+    def make_by_JSON(self, jsn, scene):
+        for k in ['nameHead', 'nameId','name','model','pins','conns','initial_conns','space']:
+            setattr(self, k, jsn[k])
+        for p in jsn['params']:
+            param = DeviceParam()
+            param.make_by_JSON(p)
+            self.params.append(param)
+        for shape in jsn['shapes']:
+            p = self.draw_shape(scene, shape)
+            if p is not None:
+                self.addToGroup(p)
+                if isinstance(p, SymbolPin):
+                    self.SymbolPins.append(p)
+
+        for idx, status in enumerate(jsn['pins_status']):
+            if status is True:
+                self.SymbolPins[idx].setConnected()
+            else:
+                self.SymbolPins[idx].setDisConnected()
+
+        if jsn.get('paramText') is not None:
+            self.paramText = ParameterText()
+            self.paramText.setPlainText(jsn['paramText'][0])
+            self.paramText.setPos(jsn['paramText'][1],jsn['paramText'][2])
+            self.addToGroup(self.paramText)

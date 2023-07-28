@@ -9,6 +9,7 @@ class Text(QGraphicsTextItem):
         font = self.font()
         font.setPixelSize(dimension)
         self.setFont(font)
+        self.dimension = dimension
 
 
 class ParameterText(QGraphicsTextItem):
@@ -17,14 +18,23 @@ class ParameterText(QGraphicsTextItem):
         self.posx = 0
         self.posy = 0
 
+
 class WireNameText(ParameterText):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
 
-
 class NetlistText(QTextBrowser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setLineWrapMode(QTextBrowser.NoWrap)
+
+
+class SimulationCommandText(QGraphicsTextItem):
+    def __init__(self, text='', size=25, color='darkblue'):
+        super().__init__(text)
+        self.setDefaultTextColor(color)
+        self.font = self.font()
+        self.font.setPixelSize(size)
+        self.setFont(self.font)

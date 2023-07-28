@@ -1,19 +1,21 @@
-from PySide6.QtCore import (Qt, QPointF)
+from PySide6.QtCore import (Qt, QPointF, QEvent)
 from PySide6.QtGui import (QPolygonF, QPen, QColor)
 from PySide6.QtWidgets import (
     QGraphicsScene, QInputDialog, QLineEdit, QGraphicsTextItem,
 )
 
-from src.hmi.text import ParameterText
+from src.hmi.text import ParameterText, SimulationCommandText
 from src.hmi.dialog import NetlistDialog
 from src.hmi.line import Line, Wire, WireSegment, WireList
 from src.hmi.rect import Rect, DesignBorder, SymbolPin
-from src.hmi.polygon import Polygon
+from src.hmi.polygon import Polygon, Pin
 from src.hmi.ellipse import Circle
 from src.hmi.symbol import Symbol
 from src.hmi.group import SchInst
 from src.tool.device import getDeviceInfos
 from src.tool.netlist import createNetlist
+from src.tool.design import Design
+import json
 
 
 class SchScene(QGraphicsScene):
@@ -21,19 +23,22 @@ class SchScene(QGraphicsScene):
         super().__init__()
 
         self.enableDel = False  # delete mode
-        self.cursorSymb = None  # group of items under cursor
+        self.cursorSymb = None  # SchInst or Pin or Design
+        self.cursorDesign = None
         self.insertSymbType = None  # type of component to insert
         self.insertSymbName = None  # insert symbol name (from lib file)
         self.widgetMouseMove = None  # widget with moving mouse
         self.designTextLines = None  # list of strings: user-defined design in rectangle
         self.symbols = []  # list of all symbols, a symbol = list of shapes
+        self.designs = [] # list of saved designs (not in editing)
+        self.simtexts = [] # list of simulation command texts
 
         self.wireStartPos = None  # starting point for adding wire
         self.wireList = WireList(self)
         self.currentWire = Wire(self)
 
         self.rectStartPos = None  # starting point for adding design rect
-        self.rectDesign = None  # rectangle surrounding the design
+        self.editDesign = None  # rectangle surrounding the design
         self.scale = 15.0  # scaling coefficient
         self.sceneSymbRatio = 125 / self.scale  # x / 50 = 62.5 * 2 / 750
         self.gridOn = True  # flag grid
@@ -73,19 +78,27 @@ class SchScene(QGraphicsScene):
     def delSymb(self):
         self.cleanCursorSymb()
         for shape in self.selectedItems():
-            if type(shape) is WireSegment:
+            if isinstance(shape, WireSegment):
                 shape.delete()
-            elif type(shape) is SchInst:
-                pins = [item for item in shape.childItems() if type(item) is SymbolPin]
+            elif isinstance(shape, SchInst):
+                pins = [item for item in shape.childItems() 
+                        if isinstance(item, SymbolPin)]
                 for pin in pins:
-                    wiresegments = [ item for item in pin.collidingItems() if type(item) is WireSegment]
+                    wiresegments = [item for item in pin.collidingItems() 
+                                    if isinstance(item, WireSegment)]
                     for wiresegment in wiresegments:
                         wiresegment.removePin(pin)
                 if shape in self.symbols:  # wire is not included
                     self.symbols.remove(shape)
                 self.removeItem(shape)
+            elif isinstance(shape, DesignBorder):
+                shape.delete()
+            elif isinstance(shape, Pin):
+                shape.delete()
+            elif isinstance(shape, SimulationCommandText):
+                shape.delete()
+                self.simtexts.remove(shape)
             else:
-                #not wire or symbol
                 self.removeItem(shape)
 
 
@@ -119,9 +132,6 @@ class SchScene(QGraphicsScene):
                 if self.insertSymbType == 'R':
                     self.wireStartPos = None
                     self.drawRes(event)
-                elif self.insertSymbType == 'G':
-                    self.wireStartPos = None
-                    self.drawGnd(event)
                 elif self.insertSymbType == 'V':
                     self.wireStartPos = None
                     self.drawVsrc(event)
@@ -141,8 +151,6 @@ class SchScene(QGraphicsScene):
         if self.cursorSymb is None:
             if self.insertSymbType == 'R':
                 self.drawRes(event)
-            elif self.insertSymbType == 'G':
-                self.drawGnd(event)
             elif self.insertSymbType == 'V':
                 self.drawVsrc(event)
             elif self.insertSymbType == 'P':
@@ -158,21 +166,52 @@ class SchScene(QGraphicsScene):
             elif self.insertSymbType == 'S':
                 self.drawSim(event)
         else:
-            posx, posy = self.roundPos(event.scenePos().x(), event.scenePos().y())
-            self.cursorSymb.setPos(posx, posy)
+            curPos = event.scenePos()
+            posx, posy = self.roundPos(curPos.x(), curPos.y())
+            if isinstance(self.cursorSymb, list):
+                for sym in self.cursorSymb:
+                    sym.setPos(posx,posy)
+            else:
+                self.cursorSymb.setPos(posx, posy)
 
         return super().mouseMoveEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         self.endWire()
+
     def endWire(self):
         if self.insertSymbType == 'W':
             self.wireStartPos = None
             self.currentWire.complete()
-            self.wireList.append(self.currentWire)
             self.currentWire = Wire(self)
 
     def drawDesign(self, event):
+        if self.cursorSymb is not None:
+            self.designs.append(self.cursorDesign)
+        self.cursorSymb = []
+        design = Design(self)
+        self.cursorDesign = design
+        design.make_by_lines(self.designTextLines)
+        for sym in design.symbols:
+            self.addItem(sym)
+            self.cursorSymb.append(sym)
+
+        self.addItem(design.rect)
+        self.cursorSymb.append(design.rect)
+
+        for wire in design.wireList.wirelist:
+            for seg in wire.getSegments():
+                self.addItem(seg)
+                self.cursorSymb.append(seg)
+
+        for pn in design.Pins:
+            self.addItem(pn)
+            self.cursorSymb.append(pn)
+
+        for sym in self.cursorSymb:
+            sym.setPos(event.scenePos())
+
+    def drawDesign_bk(self, event):
         self.cursorSymb = []
         for itemDef in self.designTextLines:
             itemDef = itemDef.rstrip()
@@ -259,9 +298,9 @@ class SchScene(QGraphicsScene):
         self.drawSymbol(event, 'VSRC', 'basic')
 
     def drawPin(self, event):
-        self.drawSymbol(event, 'PIN', 'basic')
-        return
-        self.cursorSymb = []
+        if self.cursorSymb is not None:
+            self.cursorSymb.check_design(self.editDesign)
+
         points = [[87.500000, 0.000000],
                   [31.250000, 56.250000],
                   [-31.250000, 56.250000],
@@ -271,19 +310,20 @@ class SchScene(QGraphicsScene):
         polygonf = QPolygonF()
         for point in points:
             polygonf.append(QPointF(point[0] / self.scale, point[1] / self.scale))
-        iopin = Polygon(polygonf)
-        iopin.setPen(QPen('red'))
-        iopin.setBrush(QColor('red'))
+        iopin = Pin(polygonf)
         self.addItem(iopin)
-        self.cursorSymb.append(iopin)
         iopin.setPos(event.scenePos())
-
-        self.symbols.append(self.cursorSymb)
+        self.cursorSymb=iopin
 
     def cleanCursorSymb(self):
         if self.cursorSymb is not None:
-            self.removeItem(self.cursorSymb)
-            self.symbols.remove(self.cursorSymb)
+            if isinstance(self.cursorSymb, list):
+                for sym in self.cursorSymb:
+                    self.removeItem(sym)
+            else:
+                self.removeItem(self.cursorSymb)
+            if self.cursorSymb in self.symbols:
+                self.symbols.remove(self.cursorSymb)
             self.cursorSymb = None
         self.insertSymbType = 'NA'
         self.wireStartPos = None
@@ -323,7 +363,7 @@ class SchScene(QGraphicsScene):
     def drawRect(self, event, mode=None):
         # mode: 'press', 'move'
         curPos = event.scenePos()
-        curX, curY = curPos.x(), curPos.y()
+        curX, curY = self.roundPos(curPos.x(), curPos.y())
 
         if self.widgetMouseMove is not None:
             self.removeItem(self.widgetMouseMove)
@@ -345,10 +385,13 @@ class SchScene(QGraphicsScene):
             self.widgetMouseMove = rect
         else:
             self.rectStartPos = None
-            self.rectDesign = rect
+            self.editDesign = Design(self, rect=rect)
             self.widgetMouseMove = None
+            self.insertSymbType = 'NA'
 
     def drawSim(self, event):
+        curPos = event.scenePos()
+        posx, posy = self.roundPos(curPos.x(), curPos.y())
         self.cursorSymb = []
         text, ok = QInputDialog.getText(None,
                                         'SPICE Analysis',
@@ -357,15 +400,12 @@ class SchScene(QGraphicsScene):
                                         '.dc temp -5 50 1')
         if not ok or len(text.strip()) == 0:
             return
-        item = QGraphicsTextItem(text)
-        item.setDefaultTextColor('darkblue')
-        font = item.font()
-        font.setPixelSize(25)
-        item.setFont(font)
-        item.setPos(event.scenePos())
+
+        item = SimulationCommandText(text)
+        item.setPos(posx, posy)
         self.addItem(item)
         self.cursorSymb.append(item)
-        self.symbols.append(self.cursorSymb)
+        self.simtexts.append(item)
 
     def drawBackground(self, painter, rect):
         if self.gridPen is None:
@@ -400,14 +440,5 @@ class SchScene(QGraphicsScene):
         self.symbols = []
         super().clear()
 
-'''
-    def hidePins(self):
-        for sym in self.symbols:
-            pins = [ shape for shape in sym.childItems() if type(shape) is SymbolPin]
-            for pin in pins:
-                for wire in self.wireList:
-                    if wire.collidesWithItem(pin):
-                        pin.hide()
-                        break
-
-'''
+    def anyUnSavedDesign(self):
+        return False

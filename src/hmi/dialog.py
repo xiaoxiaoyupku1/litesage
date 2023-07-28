@@ -10,6 +10,38 @@ from PySide6.QtWidgets import (
 from src.hmi.text import NetlistText
 from src.tool.num import EngNum
 
+class DesignDialog(QDialog):
+    def __init__(self, parent=None, designRect=None):
+        super().__init__(parent)
+        self.designRect = designRect
+        if self.designRect.design.readonly:
+            self.setWindowTitle('Enter Name:')
+            layout = QVBoxLayout()
+            formLayout = QFormLayout()
+            self.name = QLineEdit(self.designRect.design.name)
+            formLayout.addRow('Name:', self.name)
+            layout.addLayout(formLayout)
+        else:
+            self.setWindowTitle('Enter Model Name:')
+            layout = QVBoxLayout()
+            formLayout = QFormLayout()
+            self.model = QLineEdit(self.designRect.design.model)
+            formLayout.addRow('Model Name:', self.model)
+            layout.addLayout(formLayout)
+
+        btn = QDialogButtonBox()
+        btn.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        btn.accepted.connect(self.accept)
+        btn.rejected.connect(self.reject)
+        layout.addWidget(btn)
+
+        self.setLayout(layout)
+    def accept(self) -> None:
+        if self.designRect.design.readonly:
+            self.designRect.design.name = self.name.text()
+        else:
+            self.designRect.design.model = self.model.text()
+        super().accept()
 
 class WireDialog(QDialog):
     def __init__(self, parent=None, wiresegment=None):
@@ -18,8 +50,6 @@ class WireDialog(QDialog):
         self.setWindowTitle('Enter Wire Name')
 
         layout = QVBoxLayout()
-
-
         formLayout = QFormLayout()
         self.name = QLineEdit(self.wiresegment.wire.name)
         formLayout.addRow('Name:', self.name)

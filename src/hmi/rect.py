@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (QGraphicsRectItem, QGraphicsItem)
 from PySide6.QtCore import Qt
+from src.hmi.dialog import DesignDialog
 
 class Rect(QGraphicsRectItem):
     def __init__(self, *args, **kwargs):
@@ -16,7 +17,23 @@ class DesignBorder(Rect):
         super().__init__(*args, **kwargs)
         self.pen.setWidth(8)
         self.pen.setColor('green')
+        self.pen.setStyle(Qt.DotLine)
         self.setPen(self.pen)
+        self.design = None
+
+    def setDesign(self, design):
+        self.design = design
+
+    def delete(self):
+        self.design.delete()
+
+
+    def contextMenuEvent(self, event):
+        if self.design is None:
+            return
+
+        dialog = DesignDialog(parent=None,designRect=self)
+        dialog.exec()
 
 
 class SymbolPin(Rect):
@@ -25,5 +42,21 @@ class SymbolPin(Rect):
         self.pen.setColor('red')
         self.setPen(self.pen)
         self.name = None
+        self.parent = None
+        self.status = False
     def setName(self,name):
         self.name = name
+
+    def setConnected(self):
+        self.setOpacity(0)
+        self.status = True
+
+    def setDisConnected(self):
+        self.setOpacity(1)
+        self.status = False
+
+    def setParent(self, parent):
+        self.parent = parent
+
+    def getParent(self):
+        return self.parent
