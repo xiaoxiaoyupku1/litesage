@@ -5,10 +5,11 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QDialog, QFormLayout, QLineEdit, 
     QDialogButtonBox, QVBoxLayout, QGridLayout,
-    QFileDialog, QListView, QLabel
+    QFileDialog, QListView, QLabel, QTabWidget
 )
 from src.hmi.text import NetlistText
 from src.tool.num import EngNum
+
 
 class DesignDialog(QDialog):
     def __init__(self, parent=None, designRect=None):
@@ -36,12 +37,14 @@ class DesignDialog(QDialog):
         layout.addWidget(btn)
 
         self.setLayout(layout)
+
     def accept(self) -> None:
         if self.designRect.design.readonly:
             self.designRect.design.name = self.name.text()
         else:
             self.designRect.design.model = self.model.text()
         super().accept()
+
 
 class WireDialog(QDialog):
     def __init__(self, parent=None, wiresegment=None):
@@ -67,6 +70,7 @@ class WireDialog(QDialog):
         layout.addWidget(btn)
 
         self.setLayout(layout)
+
     def accept(self):
         for wire in self.wiresegment.scene().wireList:
             if wire is self.wiresegment.wire: #same wire
@@ -79,6 +83,7 @@ class WireDialog(QDialog):
                         self.errMsg.show()
                         return
         super().accept()
+
 
 class ParameterDialog(QDialog):
     def __init__(self, parent=None, item=None, params=None):
@@ -215,6 +220,7 @@ class DeviceChoiceDialog(QDialog):
 
     def _skip(self, _):
         pass
+
     def formatThumbnail(self):
         self.thumbnailScene.mouseMoveEvent = self._skip
         self.thumbnailScene.mousePressEvent = self._skip
@@ -248,3 +254,131 @@ class NetlistDialog(QDialog):
         layout.addWidget(browser)
         layout.addWidget(btn)
         self.setLayout(layout)
+
+
+class SimulationCommandDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init()
+        self.setup()
+
+    def init(self):
+        self.setWindowTitle('SPICE Analysis')
+        self.setFixedSize(600, 300)
+        self.accepted = QDialog.Accepted
+        self.command = ''
+        dialTran = SimCmdDialog_TRAN(self)
+        dialAc = SimCmdDialog_AC(self)
+        dialDc = SimCmdDialog_DC(self)
+        dialDcOp = SimCmdDialog_DCOP(self)
+        dialCustom = SimCmdDialog_CUSTOMIZE(self)
+        self.dialogs = [dialTran, dialAc, dialDc, dialDcOp, dialCustom]
+        self.dialNames = ['TRAN', 'AC', 'DC', 'DC OP', 'Customize']
+
+    def setup(self):
+        self.tab = QTabWidget(self)
+        for dial, dialName in zip(self.dialogs, self.dialNames):
+            self.tab.addTab(dial, dialName)
+
+        btn = QDialogButtonBox()
+        btn.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        btn.accepted.connect(self.accept)
+        btn.rejected.connect(self.reject)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.tab)
+        layout.addWidget(btn)
+        self.setLayout(layout)
+
+    def accept(self):
+        tabId = self.tab.currentIndex()
+        self.command = self.dialogs[tabId].getCommand()
+        if len(self.command) == 0:
+            self.reject()
+        else:
+            super().accept()
+
+        
+class SimCmdDialog_TRAN(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QFormLayout()
+        self.start = QLineEdit('0')
+        self.stop = QLineEdit('1m')
+        self.step = QLineEdit('1n')
+        layout.addRow('Start Time', self.start)
+        layout.addRow('Stop Time', self.stop)
+        layout.addRow('Increment', self.step)
+        self.setLayout(layout)
+    
+    def getCommand(self):
+        start = self.start.text().strip()
+        start = '' if start == '0' else ' start={}'.format(start)
+        stop = self.stop.text().strip()
+        step = self.step.text().strip()
+        return '.tran {} {}{}'.format(step, stop, start)
+
+class SimCmdDialog_AC(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QFormLayout()
+        self.sweep = QLineEdit('dec')
+        self.num = QLineEdit('10')
+        self.start = QLineEdit('1m')
+        self.stop = QLineEdit('10meg')
+        layout.addRow('Type of Sweep (dec, oct, lin)', self.sweep)
+        layout.addRow('Number of Points', self.num)
+        layout.addRow('Start', self.start)
+        layout.addRow('Stop', self.stop)
+        self.setLayout(layout)
+    
+    def getCommand(self):
+        sweep = self.sweep.text().strip()
+        num = self.num.text().strip()
+        start = self.start.text().strip()
+        stop = self.stop.text().strip()
+        return '.ac {} {} {} {}'.format(sweep, num, start, stop)
+
+class SimCmdDialog_DC(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QFormLayout()
+        self.sweep = QLineEdit('temp')
+        self.start = QLineEdit('-40')
+        self.stop = QLineEdit('150')
+        self.step = QLineEdit('1')
+        layout.addRow('Sweep Variable', self.sweep)
+        layout.addRow('Start', self.start)
+        layout.addRow('Stop', self.stop)
+        layout.addRow('Increment', self.step)
+        self.setLayout(layout)
+    
+    def getCommand(self):
+        sweep = self.sweep.text().strip()
+        start = self.start.text().strip()
+        stop = self.stop.text().strip()
+        step = self.step.text().strip()
+        return '.dc {} {} {} {}'.format(sweep, start, stop, step)
+
+class SimCmdDialog_DCOP(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QFormLayout()
+        label = QLabel()
+        label.setText('Save DC Operating Point')
+        layout.addRow('', label)
+        self.setLayout(layout)
+
+    def getCommand(self):
+        return '.op'
+
+class SimCmdDialog_CUSTOMIZE(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QFormLayout()
+        self.text = QLineEdit('.option temp=25')
+        layout.addRow('', self.text)
+        self.setLayout(layout)
+
+    def getCommand(self):
+        return self.text.text().strip()

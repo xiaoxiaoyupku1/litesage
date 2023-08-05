@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.hmi.text import ParameterText, SimulationCommandText
-from src.hmi.dialog import NetlistDialog
+from src.hmi.dialog import NetlistDialog, SimulationCommandDialog
 from src.hmi.line import Line, Wire, WireSegment, WireList
 from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon, Pin
@@ -402,20 +402,18 @@ class SchScene(QGraphicsScene):
         curPos = event.scenePos()
         posx, posy = self.roundPos(curPos.x(), curPos.y())
         self.cursorSymb = []
-        if mode == 'move':
-            text, ok = QInputDialog.getText(None,
-                                            'SPICE Analysis',
-                                            'Simulation command:',
-                                            QLineEdit.Normal,
-                                            '.dc temp -5 50 1')
-            if not ok or len(text.strip()) == 0:
-                return
+        if mode != 'move':
+            return False
+        dialog = SimulationCommandDialog(None)
+        result = dialog.exec()
+        if result != dialog.accepted:
+            return False
 
-            item = SimulationCommandText(text)
-            item.setPos(posx, posy)
-            self.addItem(item)
-            self.cursorSymb.append(item)
-            self.simtexts.append(item)
+        item = SimulationCommandText(dialog.command)
+        item.setPos(posx, posy)
+        self.addItem(item)
+        self.cursorSymb.append(item)
+        self.simtexts.append(item)
 
     def drawBackground(self, painter, rect):
         if self.gridPen is None:
