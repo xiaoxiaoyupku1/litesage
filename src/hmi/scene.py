@@ -171,7 +171,7 @@ class SchScene(QGraphicsScene):
             elif self.insertSymbType == 'Design':
                 self.drawDesign(event)
             elif self.insertSymbType == 'S':
-                self.drawSim(event)
+                self.drawSim(event, mode='move')
         else:
             curPos = event.scenePos()
             posx, posy = self.roundPos(curPos.x(), curPos.y())
@@ -321,7 +321,7 @@ class SchScene(QGraphicsScene):
         iopin = Pin(polygonf)
         self.addItem(iopin)
         iopin.setPos(event.scenePos())
-        self.cursorSymb=iopin
+        self.cursorSymb = iopin
 
     def cleanCursorSymb(self):
         if self.cursorSymb is not None:
@@ -397,23 +397,25 @@ class SchScene(QGraphicsScene):
             self.widgetMouseMove = None
             self.insertSymbType = 'NA'
 
-    def drawSim(self, event):
+    def drawSim(self, event, mode=None):
+        # mode: 'press', 'move'
         curPos = event.scenePos()
         posx, posy = self.roundPos(curPos.x(), curPos.y())
         self.cursorSymb = []
-        text, ok = QInputDialog.getText(None,
-                                        'SPICE Analysis',
-                                        'Simulation command:',
-                                        QLineEdit.Normal,
-                                        '.dc temp -5 50 1')
-        if not ok or len(text.strip()) == 0:
-            return
+        if mode == 'move':
+            text, ok = QInputDialog.getText(None,
+                                            'SPICE Analysis',
+                                            'Simulation command:',
+                                            QLineEdit.Normal,
+                                            '.dc temp -5 50 1')
+            if not ok or len(text.strip()) == 0:
+                return
 
-        item = SimulationCommandText(text)
-        item.setPos(posx, posy)
-        self.addItem(item)
-        self.cursorSymb.append(item)
-        self.simtexts.append(item)
+            item = SimulationCommandText(text)
+            item.setPos(posx, posy)
+            self.addItem(item)
+            self.cursorSymb.append(item)
+            self.simtexts.append(item)
 
     def drawBackground(self, painter, rect):
         if self.gridPen is None:
