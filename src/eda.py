@@ -11,6 +11,7 @@ from src.layout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog
+from src.tool.status import setStatus
 
 
 class FoohuEda(QMainWindow):
@@ -47,7 +48,7 @@ class FoohuEda(QMainWindow):
         self.actPdk = None
         self.actIp = None
         self.actRes = None
-        self.actGnd = None
+        # self.actGnd = None
         self.actVsrc = None
         self.actWire = None
         self.actPin = None
@@ -63,6 +64,9 @@ class FoohuEda(QMainWindow):
         # Menu Layout
         self.actOpenLayout = None
 
+        # Status Bar
+        self.statBar = None
+
 
     def setupUi(self):
         if not self.objectName():
@@ -73,6 +77,8 @@ class FoohuEda(QMainWindow):
 
         self.setupUiAction()
         self.setupUiMenu()
+        self.statBar = self.statusBar()
+        setStatus('Welcome to FOOHU EDA', bar=self.statBar)
 
     def setupUiAction(self):
         self.actSave = QAction(text='Save Design')
@@ -102,11 +108,11 @@ class FoohuEda(QMainWindow):
         self.actRes.setShortcut(QKeySequence('r'))
         self.actRes.triggered.connect(self.drawRes)
 
-        self.actGnd = QAction(QIcon('img/gnd.png'), '&', self, 
-                              text='Ground')
-        self.actGnd.setObjectName('actGnd')
-        self.actGnd.setShortcut(QKeySequence('g'))
-        self.actGnd.triggered.connect(self.drawGnd)
+        # self.actGnd = QAction(QIcon('img/gnd.png'), '&', self, 
+        #                       text='Ground')
+        # self.actGnd.setObjectName('actGnd')
+        # self.actGnd.setShortcut(QKeySequence('g'))
+        # self.actGnd.triggered.connect(self.drawGnd)
 
         self.actVsrc = QAction(QIcon('img/vsrc.png'), '&', self, 
                                text='Voltage Source')
@@ -218,6 +224,7 @@ class FoohuEda(QMainWindow):
         designFile = dialog.selectedFiles()[0]
         self.schScene.editDesign.dumpDesign(designFile)
         self.schScene.editDesign.change_to_readonly()
+        setStatus('Save Design to {}'.format(designFile))
 
     def loadDesign(self, _):
         self.schScene.cleanCursorSymb()
@@ -229,6 +236,7 @@ class FoohuEda(QMainWindow):
         self.schScene.insertSymbType = 'Design'
         with open(designFile, 'r') as filePort:
             self.schScene.designTextLines = filePort.read().splitlines()
+        setStatus('Load Design from {}'.format(designFile))
 
     def initSchScene(self):
         if self.schScene is None:
@@ -248,6 +256,7 @@ class FoohuEda(QMainWindow):
         if result != dialog.accepted:
             return False
         self.drawSymbol(dialog.device, 'basic')
+        setStatus('Select standard device {}'.format(dialog.device))
     
     def addPdkDev(self):
         self.schScene.cleanCursorSymb()
@@ -262,6 +271,7 @@ class FoohuEda(QMainWindow):
         if result != dialog.accepted:
             return False
         self.drawSymbol(dialog.device, 'pdk')
+        setStatus('Select PDK device {}'.format(dialog.device))
 
     def addIpDev(self):
         self.schScene.cleanCursorSymb()
@@ -276,6 +286,7 @@ class FoohuEda(QMainWindow):
         if result != dialog.accepted:
             return False
         self.drawSymbol(dialog.device, 'ip')
+        setStatus('Select IP device {}'.format(dialog.device))
         
     def drawRes(self):
         self.schScene.cleanCursorSymb()
@@ -285,9 +296,9 @@ class FoohuEda(QMainWindow):
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'V'
 
-    def drawGnd(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'G'
+    # def drawGnd(self):
+    #     self.schScene.cleanCursorSymb()
+    #     self.schScene.insertSymbType = 'G'
 
     def drawWire(self):
         self.schScene.cleanCursorSymb()
@@ -318,9 +329,11 @@ class FoohuEda(QMainWindow):
 
     def fit(self):
         self.schView.fit(self.schScene)
+        setStatus('Auto-fit schematic to window size')
 
     def toggleGrid(self):
         self.schScene.toggleGrid()
+        setStatus('Toggle background grid points')
 
     def showNetlist(self):
         self.schScene.showNetlist()
@@ -330,7 +343,9 @@ class FoohuEda(QMainWindow):
             self.wavWin.destroy()
         wavefile = 'examples/wave/waveform.tr0'
         self.wavWin = FoohuEdaWaveWindow(self, wavefile)
+        setStatus('Open waveform viewer')
 
     def openLayout(self):
         gdsfile = 'examples/layout/reference.gds'
         runLayout(gdsfile)
+        setStatus('Open layout editor')

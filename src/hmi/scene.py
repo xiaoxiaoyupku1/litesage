@@ -15,7 +15,7 @@ from src.hmi.group import SchInst
 from src.tool.device import getDeviceInfos
 from src.tool.netlist import createNetlist
 from src.tool.design import Design
-import json
+from src.tool.status import setStatus
 
 
 class SchScene(QGraphicsScene):
@@ -100,7 +100,7 @@ class SchScene(QGraphicsScene):
                 self.simtexts.remove(shape)
             else:
                 self.removeItem(shape)
-
+        setStatus('Delete items')
 
     def roundPos(self, origX, origY):
         posx1 = int(origX / self.sceneSymbRatio) * self.sceneSymbRatio
@@ -128,23 +128,30 @@ class SchScene(QGraphicsScene):
             if self.insertSymbType in ['basic', 'pdk', 'ip']:
                 self.wireStartPos = None
                 self.drawSymbol(event, self.insertSymbName, self.insertSymbType)
+                setStatus('Add device {}'.format(self.insertSymbName))
             else:
                 if self.insertSymbType == 'R':
                     self.wireStartPos = None
                     self.drawRes(event)
+                    setStatus('Add device RES')
                 elif self.insertSymbType == 'V':
                     self.wireStartPos = None
                     self.drawVsrc(event)
+                    setStatus('Add device VSRC')
                 if self.insertSymbType == 'W':
                     self.drawWire(event)
                 elif self.insertSymbType == 'P':
                     self.drawPin(event)
+                    setStatus('Add pin')
                 elif self.insertSymbType == 'RECT':
                     self.drawRect(event)
+                    setStatus('Add design border')
                 elif self.insertSymbType == 'Design':
                     self.drawDesign(event)
+                    setStatus('Add design')
                 elif self.insertSymbType == 'S':
                     self.drawSim(event)
+                    setStatus('Add simulation command')
         return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -184,6 +191,7 @@ class SchScene(QGraphicsScene):
             self.wireStartPos = None
             self.currentWire.complete()
             self.currentWire = Wire(self)
+            setStatus('Add wire')
 
     def drawDesign(self, event):
         if self.cursorSymb is not None:
@@ -434,6 +442,7 @@ class SchScene(QGraphicsScene):
     def showNetlist(self):
         netlist = createNetlist(self)
         dialog = NetlistDialog(None, netlist)
+        setStatus('Create netlist')
         dialog.exec()
 
     def clear(self):
