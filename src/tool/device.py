@@ -3,12 +3,18 @@ from devicelib.basicInfo import BASIC_INFO
 from devicelib.pdkInfo import PDK_INFO
 from devicelib.ipInfo import IP_INFO
 
-DEV_INFOS = {'basic': BASIC_INFO, 'pdk': PDK_INFO, 'ip': IP_INFO}
 
 def getDeviceInfos(lib):
     """return list of DeviceInfo"""
     deviceInfoDict = {}
-    infotext = DEV_INFOS.get(lib)
+    if lib == 'basic':
+        infotext = BASIC_INFO
+    elif lib == 'pdk':
+        infotext = PDK_INFO
+    elif lib == 'ip':
+        infotext = IP_INFO
+    else:
+        infotext = ''
 
     inDef = False
     for line in infotext.splitlines():

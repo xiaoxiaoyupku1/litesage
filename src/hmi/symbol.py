@@ -2,7 +2,6 @@ from devicelib.basicLib import BASIC_LIB
 from devicelib.pdkLib import PDK_LIB
 from devicelib.ipLib import IP_LIB
 
-DEV_LIBS = {'basic': BASIC_LIB, 'pdk': PDK_LIB, 'ip': IP_LIB}
 
 class Symbol():
     def __init__(self):
@@ -21,7 +20,15 @@ class Symbol():
     @classmethod
     def parse(cls, lib):
         symbols = {} # to return
-        libtext = DEV_LIBS.get(lib)
+        if lib == 'basic':
+            libtext = BASIC_LIB
+        elif lib == 'pdk':
+            libtext = PDK_LIB
+        elif lib == 'ip':
+            libtext = IP_LIB
+        else:
+            libtext = ''
+
         symbol = None # temp
         scope = [] # temp
 

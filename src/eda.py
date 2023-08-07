@@ -1,9 +1,9 @@
-from PySide6.QtCore import (QRect )
+from PySide6.QtCore import (QRect)
 from PySide6.QtWidgets import (
     QMainWindow, QMenuBar, QMenu, QWidget, QGraphicsView, QMessageBox
 )
 from PySide6.QtGui import (
-    QAction, QIcon, QKeySequence
+    QAction, QKeySequence
 )
 
 from src.waveform import FoohuEdaWaveWindow
@@ -11,6 +11,7 @@ from src.layout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog
+from src.hmi.image import getIcon
 from src.tool.status import setStatus
 
 
@@ -102,43 +103,37 @@ class FoohuEda(QMainWindow):
         self.actIp.setShortcut(QKeySequence('f4'))
         self.actIp.triggered.connect(self.addIpDev)
 
-        self.actRes = QAction(QIcon('img/res.png'), '&', self,
+        self.actRes = QAction(getIcon('res'), '&', self, 
                               text='Resistor')
         self.actRes.setObjectName('actRes')
         self.actRes.setShortcut(QKeySequence('r'))
         self.actRes.triggered.connect(self.drawRes)
 
-        # self.actGnd = QAction(QIcon('img/gnd.png'), '&', self, 
-        #                       text='Ground')
-        # self.actGnd.setObjectName('actGnd')
-        # self.actGnd.setShortcut(QKeySequence('g'))
-        # self.actGnd.triggered.connect(self.drawGnd)
-
-        self.actVsrc = QAction(QIcon('img/vsrc.png'), '&', self, 
+        self.actVsrc = QAction(getIcon('vsrc'), '&', self, 
                                text='Voltage Source')
         self.actVsrc.setObjectName('actVsrc')
         self.actVsrc.setShortcut(QKeySequence('v'))
         self.actVsrc.triggered.connect(self.drawVsrc)
 
-        self.actWire = QAction(QIcon('img/wire.png'), '&', self, 
+        self.actWire = QAction(getIcon('wire'), '&', self, 
                                text='Wire')
         self.actWire.setObjectName('actWire')
         self.actWire.setShortcut(QKeySequence('w'))
         self.actWire.triggered.connect(self.drawWire)
 
-        self.actPin = QAction(QIcon('img/pin.png'), '&', self, 
+        self.actPin = QAction(getIcon('pin'), '&', self, 
                               text='Pin')
         self.actPin.setObjectName('actPin')
         self.actPin.setShortcut(QKeySequence('p'))
         self.actPin.triggered.connect(self.drawPin)
 
-        self.actRect = QAction(QIcon('img/rect.png'), '&', self, 
+        self.actRect = QAction(getIcon('rect'), '&', self, 
                                text='Design Rectangle')
         self.actRect.setObjectName('actRect')
         self.actRect.setShortcut(QKeySequence('t'))
         self.actRect.triggered.connect(self.drawRect)
 
-        self.actSim = QAction(QIcon('img/sim.png'), '&', self,
+        self.actSim = QAction(getIcon('sim'), '&', self,
                               text='Simulation Command')
         self.actSim.setObjectName('actSim')
         self.actSim.setShortcut(QKeySequence('s'))
