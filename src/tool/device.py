@@ -1,41 +1,41 @@
-import os
 from src.tool.num import EngNum
+from devicelib.basicInfo import BASIC_INFO
+from devicelib.pdkInfo import PDK_INFO
+from devicelib.ipInfo import IP_INFO
 
+DEV_INFOS = {'basic': BASIC_INFO, 'pdk': PDK_INFO, 'ip': IP_INFO}
 
-def getDeviceInfos(infoFile, lib):
+def getDeviceInfos(lib):
     """return list of DeviceInfo"""
     deviceInfoDict = {}
-    if not os.path.isfile(infoFile):
-        print('invalid info file: {}'.format(infoFile))
-        return deviceInfoDict
+    infotext = DEV_INFOS.get(lib)
 
     inDef = False
-    with open(infoFile, 'r', encoding='utf-8') as F:
-        for line in F:
-            line = line.strip()
-            if not inDef and line.startswith('DEF '):
-                devName = line.split()[1]
-                devType = ''
-                devModel = ''
-                devPins = []
-                devDescrLines = []
-                devParamLines = []
-                inDef = True
-            elif inDef and line.startswith('ENDDEF'):
-                inDef = False
-                devInfo = DeviceInfo(devName, devType, devModel, devPins, devDescrLines, devParamLines, lib)
-                deviceInfoDict[devName] = devInfo
-            elif inDef and line.startswith('Type:'):
-                devType = line[5:]
-            elif inDef and line.startswith('Model:'):
-                devModel = line[6:]
-            elif inDef and line.startswith('Descr:'):
-                devDescrLines.append(line[6:])
-            elif inDef and line.startswith('Param:'):
-                devParamLines.append(line[6:])
-            elif inDef and line.startswith('Pin:'):
-                devPins = line[4:].split(',')
-                devPins = [p.strip() for p in devPins]
+    for line in infotext.splitlines():
+        line = line.strip()
+        if not inDef and line.startswith('DEF '):
+            devName = line.split()[1]
+            devType = ''
+            devModel = ''
+            devPins = []
+            devDescrLines = []
+            devParamLines = []
+            inDef = True
+        elif inDef and line.startswith('ENDDEF'):
+            inDef = False
+            devInfo = DeviceInfo(devName, devType, devModel, devPins, devDescrLines, devParamLines, lib)
+            deviceInfoDict[devName] = devInfo
+        elif inDef and line.startswith('Type:'):
+            devType = line[5:]
+        elif inDef and line.startswith('Model:'):
+            devModel = line[6:]
+        elif inDef and line.startswith('Descr:'):
+            devDescrLines.append(line[6:])
+        elif inDef and line.startswith('Param:'):
+            devParamLines.append(line[6:])
+        elif inDef and line.startswith('Pin:'):
+            devPins = line[4:].split(',')
+            devPins = [p.strip() for p in devPins]
 
     return deviceInfoDict
 

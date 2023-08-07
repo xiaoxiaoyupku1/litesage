@@ -55,18 +55,18 @@ class SchScene(QGraphicsScene):
 
     def initBasicDevices(self):
         if self.basicSymbols is None or self.basicDevInfo is None:
-            self.basicSymbols = Symbol.parser(r'devicelib\basic.lib')
-            self.basicDevInfo = getDeviceInfos(r'devicelib\basic.info', lib='basic')
+            self.basicSymbols = Symbol.parse('basic')
+            self.basicDevInfo = getDeviceInfos('basic')
 
     def initPdkDevices(self):
         if self.pdkSymbols is None or self.pdkDevInfo is None:
-            self.pdkSymbols = Symbol.parser(r'devicelib\pdk.lib')
-            self.pdkDevInfo = getDeviceInfos(r'devicelib\pdk.info', lib='pdk')
+            self.pdkSymbols = Symbol.parse('pdk')
+            self.pdkDevInfo = getDeviceInfos('pdk')
 
     def initIpDevices(self):
         if self.ipSymbols is None or self.ipDevInfo is None:
-            self.ipSymbols = Symbol.parser(r'devicelib\ip.lib')
-            self.ipDevInfo = getDeviceInfos(r'devicelib\ip.info', lib='ip')
+            self.ipSymbols = Symbol.parse('ip')
+            self.ipDevInfo = getDeviceInfos('ip')
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:

@@ -1,3 +1,4 @@
+PDK_INFO = r"""
 DEF MNHA
 Type:HV_MOS
 Model:mnha
@@ -476,3 +477,4 @@ Model:iprobe
 Descr:IPROBE
 Pin:T1,T2
 ENDDEF
+"""

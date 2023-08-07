@@ -1,3 +1,4 @@
+BASIC_INFO = r"""
 DEF CAP
 Type:Capacitor
 Model:CAP
@@ -116,3 +117,4 @@ DEF PIN
 Type:Pin
 Model:
 ENDDEF
+"""

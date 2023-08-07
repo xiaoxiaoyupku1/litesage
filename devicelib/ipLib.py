@@ -1,4 +1,4 @@
-
+IP_LIB = r"""
 FoohuEda-LIBRARY Version 1
 #encoding utf-8
 #description: ip devices
@@ -20,3 +20,4 @@ X vss 3 0.000000 250.000000 0 R 50 50 1 0 B
 X vout 4 1250.000000 125.000000 0 R 50 50 1 0 B
 ENDDRAW
 ENDDEF
+"""

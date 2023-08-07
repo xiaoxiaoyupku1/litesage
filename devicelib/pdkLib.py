@@ -1,3 +1,4 @@
+PDK_LIB = r"""
 FoohuEda-LIBRARY Version 1
 #encoding utf-8
 #description: pdk devices
@@ -1194,3 +1195,4 @@ X T1 1 0.000000 0.000000 0 R 50 50 1 0 B
 X T2 2 0.000000 750.000000 0 R 50 50 1 0 B
 ENDDRAW
 ENDDEF
+"""
