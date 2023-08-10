@@ -456,9 +456,12 @@ class SchScene(QGraphicsScene):
             self.netlist = createNetlist(self)
         remoteNetlistPath = runSimulation(self.netlist)
         setStatus('Send netlist for simulation')
-        remoteWaveformPath = getSimResult(remoteNetlistPath)
-        self.wavWin = WaveformViewer(remoteWaveformPath, delWaveFile=True)
-        setStatus('Open waveform viewer')
+        localWavePath = getSimResult(remoteNetlistPath)
+        if localWavePath is None:
+            setStatus('Simulation failed')
+        else:
+            self.wavWin = WaveformViewer(localWavePath, delWaveFile=True)
+            setStatus('Simulation finished')
 
     def clear(self):
         self.symbols = []
