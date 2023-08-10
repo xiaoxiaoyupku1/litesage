@@ -21,7 +21,7 @@ class SchInst(QGraphicsItemGroup):
         self.name = None
         self.model = None
         self.pins = []
-        self.conns = {} #pin name -> wire name
+        self.conns = {} # pin name -> wire name
         self.initial_conns = {}
         self.paramText = None
         self.params = [] # list of DeviceParam
@@ -138,7 +138,7 @@ class SchInst(QGraphicsItemGroup):
             else:
                 self.setInstName(None, None)
 
-    def draw(self, scene, model, shapes, devinfo, isThumbnail=False):
+    def draw(self, scene, model, shapes, devinfo, nextNetIndex, isThumbnail=False):
         nameHead = devinfo[model].head
         params = devinfo[model].getParamList()
         nameId = self.getAutoNameId(scene, nameHead)
@@ -146,7 +146,7 @@ class SchInst(QGraphicsItemGroup):
         self.name = nameHead + str(nameId)
         self.model = model
         self.pins = devinfo[model].pins
-        self.conns = {p:'node{}'.format(idx) for idx, p in enumerate(self.pins)}
+        self.conns = {p:'net{}'.format(nextNetIndex+idx) for idx, p in enumerate(self.pins)}
         self.initial_conns = self.conns.copy()
         for shape_params in shapes:
             shape = self.draw_shape(scene, shape_params)

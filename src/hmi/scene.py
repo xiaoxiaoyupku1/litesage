@@ -294,8 +294,9 @@ class SchScene(QGraphicsScene):
         self.cursorSymb = []
 
         inst = SchInst()
+        nextNetIndex = self.getNextNetIndex()
         shapes = symbols[name].parts
-        inst.draw(self, name, shapes, devinfo, self.isThumbnail)
+        inst.draw(self, name, shapes, devinfo, nextNetIndex, self.isThumbnail)
 
         self.addItem(inst)
         if isinstance(event, list):
@@ -469,3 +470,25 @@ class SchScene(QGraphicsScene):
 
     def anyUnSavedDesign(self):
         return False
+
+    def getNextNetIndex(self):
+        idx = 1
+        for inst in self.symbols:
+            for net in inst.conns.values():
+                if net.startswith('net'):
+                    try:
+                        netIdx = int(net[3:])
+                        if netIdx == idx:
+                            idx = netIdx + 1
+                    except:
+                        continue
+        for wire in self.wireList.wirelist:
+            net = wire.getName()
+            if net.startswith('net'):
+                try:
+                    netIdx = int(net[3:])
+                    if netIdx == idx:
+                        idx = netIdx + 1
+                except:
+                    continue 
+        return idx
