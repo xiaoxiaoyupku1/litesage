@@ -16,6 +16,8 @@ from src.tool.device import getDeviceInfos
 from src.tool.netlist import createNetlist
 from src.tool.design import Design
 from src.tool.status import setStatus
+from src.tool.simulate import runSimulation, getSimResult
+from src.waveform import WaveformViewer
 
 
 class SchScene(QGraphicsScene):
@@ -32,6 +34,7 @@ class SchScene(QGraphicsScene):
         self.symbols = []  # list of all symbols, a symbol = list of shapes
         self.designs = [] # list of saved designs (not in editing)
         self.simtexts = [] # list of simulation command texts
+        self.netlist = [] # list of netlist text lines
 
         self.wireStartPos = None  # starting point for adding wire
         self.wireList = WireList(self)
@@ -52,6 +55,9 @@ class SchScene(QGraphicsScene):
         self.pdkDevInfo = None
         self.ipSymbols = None  # ip symbols
         self.ipDevInfo = None
+
+        self.wavWin = None
+        self.layWin = None
 
     def initBasicDevices(self):
         if self.basicSymbols is None or self.basicDevInfo is None:
@@ -440,10 +446,19 @@ class SchScene(QGraphicsScene):
         self.update()
 
     def showNetlist(self):
-        netlist = createNetlist(self)
-        dialog = NetlistDialog(None, netlist)
+        self.netlist = createNetlist(self)
+        dialog = NetlistDialog(None, self.netlist)
         setStatus('Create netlist')
         dialog.exec()
+
+    def runSimulation(self, genNet=True):
+        if genNet:
+            self.netlist = createNetlist(self)
+        remoteNetlistPath = runSimulation(self.netlist)
+        setStatus('Send netlist for simulation')
+        remoteWaveformPath = getSimResult(remoteNetlistPath)
+        self.wavWin = WaveformViewer(remoteWaveformPath, delWaveFile=True)
+        setStatus('Open waveform viewer')
 
     def clear(self):
         self.symbols = []

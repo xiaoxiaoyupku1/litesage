@@ -6,7 +6,7 @@ from PySide6.QtGui import (
     QAction, QKeySequence
 )
 
-from src.waveform import FoohuEdaWaveWindow
+from src.waveform import WaveformViewer
 from src.layout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
@@ -25,9 +25,6 @@ class FoohuEda(QMainWindow):
     def initUi(self):
         # Windows
         # self = main window = schematic editor window
-        self.wavWin = None
-        self.layWin = None
-
         self.centralWidget = None   # widget to put view on
         self.schView = None         # view to put scene on
         self.schScene = None        # scene to put symbols on
@@ -57,6 +54,7 @@ class FoohuEda(QMainWindow):
         self.actSim = None
         self.actFit = None
         self.actGrid = None
+        self.actRun = None
         self.actNetlist = None
 
         # Menu Wave
@@ -149,6 +147,11 @@ class FoohuEda(QMainWindow):
         self.actGrid.setShortcut(QKeySequence('ctrl+g'))
         self.actGrid.triggered.connect(self.toggleGrid)
 
+        self.actRun = QAction(text='Run')
+        self.actRun.setObjectName('actRun')
+        self.actRun.setShortcut(QKeySequence('ctrl+r'))
+        self.actRun.triggered.connect(self.runSim)
+
         self.actNetlist = QAction(text='SPICE Netlist')
         self.actNetlist.setObjectName('actNetlist')
         self.actNetlist.setShortcut(QKeySequence('ctrl+n'))
@@ -183,6 +186,7 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actSim)
         self.menuEdit.addAction(self.actFit)
         self.menuEdit.addAction(self.actGrid) 
+        self.menuEdit.addAction(self.actRun)
         self.menuEdit.addAction(self.actNetlist)
 
         self.menuWave = QMenu(self.menuBar)
@@ -330,14 +334,17 @@ class FoohuEda(QMainWindow):
         self.schScene.toggleGrid()
         setStatus('Toggle background grid points')
 
+    def runSim(self):
+        self.schScene.runSimulation()
+
     def showNetlist(self):
         self.schScene.showNetlist()
 
     def openWave(self):
-        if self.wavWin is not None:
-            self.wavWin.destroy()
+        if self.schScene.wavWin is not None:
+            self.schScene.wavWin.destroy()
         wavefile = 'examples/wave/waveform.tr0'
-        self.wavWin = FoohuEdaWaveWindow(self, wavefile)
+        self.schScene.wavWin = WaveformViewer(wavefile)
         setStatus('Open waveform viewer')
 
     def openLayout(self):

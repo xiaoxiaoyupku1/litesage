@@ -1,3 +1,4 @@
+import os
 from numpy import array as NDArray
 from PySide6.QtGui import (QPainter)
 from PySide6.QtWidgets import (QWidget, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsTextItem)
@@ -7,11 +8,12 @@ from PySide6.QtGui import QPainter, QFont, QFontMetrics, QPainterPath, QColor
 from src.wavefile.wavefile import getWaveFileHandler
 
 
-class FoohuEdaWaveWindow(QWidget):
-    def __init__(self, schWin, waveFile):
+class WaveformViewer(QWidget):
+    def __init__(self, waveFile, delWaveFile=False):
         super().__init__()
-
         self.waveFile = waveFile
+        self.delWaveFile = delWaveFile
+        self.simType = None
         self.sigNames = None
         self.sigValues = None
         self.listView = None
@@ -21,7 +23,6 @@ class FoohuEdaWaveWindow(QWidget):
         self.parseWaveFile()
         self.setupUi()
 
-        self.schWin = schWin  # FoohuEda schematic window
         # TODO: make self an embedded window instead of an independent window
         #       embedded to its parent which is schWin (FoohuEda)
         self.setWindowTitle('FOOHU EDA - Waveform Viewer')
@@ -34,14 +35,15 @@ class FoohuEdaWaveWindow(QWidget):
         handler = getWaveFileHandler(self.waveFile)
         handler.parseWaveFile()
 
+        self.simType = self.waveFile.split('.')[-1][:2]
         self.sigNames = handler.getSigNames()
-        self.sigValues = handler.getSigVals('tr')
+        self.sigValues = handler.getSigVals(self.simType)
 
     def setupUi(self):
         # Left side: wave name list
         self.listView = QListWidget()
         self.listView.addItems(self.sigNames[1:])
-        self.listView.currentItemChanged.connect(self.change_wave)
+        self.listView.currentItemChanged.connect(self.changeWave)
 
         # Right side: wave signal chart
         self.chartView = ChartView()
@@ -54,9 +56,9 @@ class FoohuEdaWaveWindow(QWidget):
         self.layout.setColumnStretch(1, 1)
 
         # Select 1st wave
-        self.change_wave(None, sigName=self.sigNames[1])
+        self.changeWave(None, sigName=self.sigNames[1])
 
-    def change_wave(self, selItem, sigName=None):
+    def changeWave(self, selItem, sigName=None):
         if sigName is None or not isinstance(sigName, str):
             sigName = selItem.text()
         index = self.sigNames.index(sigName)
@@ -77,6 +79,12 @@ class FoohuEdaWaveWindow(QWidget):
         self.chartView.callouts = []
         self.chartView.tooltip.hide()
         self.chartView.delta.setHtml("")
+
+    def closeEvent(self, event):
+        if self.delWaveFile and os.path.isfile(self.waveFile):
+            os.remove(self.waveFile)
+        return super().closeEvent(event)
+
 
 class ChartView(QGraphicsView):
     def __init__(self):

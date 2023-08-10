@@ -56,7 +56,7 @@ class HspiceWavefileHandler(WavefileHandler):
             # SWEEP?
             idx = tokens.index("0")
             tokens = tokens[:idx]
-        elif "monte_carlo" in tokens:
+        elif "MONTE_CARLO" in tokens:
             """
             monte carlo example 1:
             11
@@ -81,7 +81,7 @@ class HspiceWavefileHandler(WavefileHandler):
             # for monte carlo cases, we now have a case in unittest
             # reverse loop to get the sinal count
             self.mc = True
-            assert tokens[0] == "monte_carlo", "not valid tokens: {}".format(str(tokens))
+            assert tokens[0] == "MONTE_CARLO", "not valid tokens: {}".format(str(tokens))
             if tokens[1] == "sweep":
                 tokens = tokens[2:]
                 self.sweep = True
@@ -270,13 +270,23 @@ class HspiceTxtWavefileHandler(HspiceWavefileHandler):
             assert 0, "not implemented for large file for hspice txt wavefile "
 
         sigvals = []
-        digcnt = 13
+        digcnt = 130
         data = ""
         while True:
             line = fp.readline().decode("utf-8")
             if line == "":
                 break
-            line = line.replace(" ", "").replace("\n", "")
+            line = line.replace(" ", "").strip()
+            # auto find digcnt
+            point_count = line.count('.')
+            if point_count == 1:
+                digcnt = len(line)
+            elif point_count > 1:
+                first_point = line.find('.')
+                last_point = line.rfind('.')
+                digcnt = int((last_point - first_point) / (point_count - 1))
+            else:
+                continue
             data += line
             while len(data) >= digcnt:
                 val, data = data[:digcnt], data[digcnt:]
@@ -494,10 +504,12 @@ class HspiceBinWavefileHandler(HspiceWavefileHandler):
                     ix += self.vsigsize
                     if ix >= nbytes:
                         break
+                if ix + self.timesize + self.vsigsize * (self.num_cnt - 1) > nbytes:
+                    break
             # ------------------------
             # last data entry is 1e30
             # ------------------------
-            data.pop()
+            # data.pop()
             assert len(data) % self.num_cnt == 0
             self.pnt_cnt = int(len(data) / self.num_cnt)
             self.data = np.array(data).reshape(self.pnt_cnt, self.num_cnt).transpose()
