@@ -16,10 +16,9 @@ class Polygon(QGraphicsPolygonItem):
 
 
 class Pin(Polygon):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.name = 'Pin1'
+        self.name = 'pin1'
         self.setPen(QPen('red'))
         self.setBrush(QColor('red'))
         self.design = None
@@ -41,12 +40,26 @@ class Pin(Polygon):
     def setDisConnected(self):
         pass
 
+    def getConn(self):
+        assert self.design is not None
+        return self.design.conns.get(self.name, self.name)
+
+    def updName(self, name):
+        if self.design.readonly:
+            self.design.conns[self.name] = name
+        else:
+            oldname = self.name
+            idx = self.design.pins.index(oldname)
+            self.design.pins[idx] = name
+            del self.design.conns[oldname]
+            self.design.conns[name] = name
+            self.name = name
+
     def setDesign(self, design):
         self.design = design
 
     def getParent(self):
         return self.design
-
 
     def toPrevJSON(self, centerX, centerY):
         points = []

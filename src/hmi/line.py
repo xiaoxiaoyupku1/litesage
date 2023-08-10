@@ -7,7 +7,6 @@ from src.hmi.text import WireNameText
 from src.hmi.rect import  SymbolPin
 from src.hmi.polygon import Pin
 
-import re
 
 class Line(QGraphicsLineItem):
     def __init__(self, *args, **kwargs):
@@ -49,7 +48,10 @@ class WireSegment(Line):
     def contextMenuEvent(self, event):
         dialog = WireDialog(parent=None, wiresegment=self)
         if dialog.exec():
-            self.wire.setName(dialog.name.text())
+            netName = dialog.name.text().strip()
+            self.wire.setName(netName)
+            for designPin in [p for p in self.getPins() if isinstance(p, Pin)]:
+                designPin.updName(netName)
 
             if self.text not in self.scene().items():
                 self.scene().addItem(self.text)
@@ -137,13 +139,20 @@ class Wire(): # Wire is a list of WireSegment
         return pins
 
     def __setAutoName(self):
-        name_nums = [ int(wire.name[3:]) for wire in self.parent.wireList if wire.getName() is not None and re.match('net\d+',wire.getName())]
-
-        id_num = 1
-        while id_num in name_nums:
-            id_num += 1
-
-        self.setName('net'+str(id_num))
+        pins = self.getPins()
+        if len(pins) == 0:
+            nextNetIndex = self.parent.getNextNetIndex()
+            netName = 'net{}'.format(nextNetIndex)
+        else:
+            designPins = [p for p in pins if isinstance(p, Pin)]
+            if len(designPins) == 0:
+                pin = list(pins)[0]
+                netName = pin.getConn()
+            else:
+                pin = [p for p in pins if not isinstance(p, Pin)][0]
+                netName = pin.getConn()
+                designPins[0].updName(netName)
+        self.setName(netName)
 
     def getName(self):
         return self.name
@@ -173,18 +182,22 @@ class Wire(): # Wire is a list of WireSegment
 
     def __checkParent(self):
         scene = self.parent
-        if scene.editDesign is not None:
-            if all(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
-                self.parent = scene.editDesign
-                self.parent.wireList.append(self)
-            else:
-                if any(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
-                    #TODO: forbidden, alert
-                    pass
+        try:
+            if scene.editDesign is not None:
+                if all(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
+                    self.parent = scene.editDesign
+                    self.parent.wireList.append(self)
                 else:
-                    scene.wireList.append(self)
-        else:
+                    if any(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
+                        #TODO: forbidden, alert
+                        pass
+                    else:
+                        scene.wireList.append(self)
+            else:
+                scene.wireList.append(self)
+        except:
             scene.wireList.append(self)
+
     def toPrevJSON(self, centerX, centerY):
         d = {}
         d['name'] = self.name

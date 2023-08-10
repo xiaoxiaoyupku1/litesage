@@ -60,3 +60,7 @@ class SymbolPin(Rect):
 
     def getParent(self):
         return self.parent
+
+    def getConn(self):
+        assert self.parent is not None
+        return self.parent.conns.get(self.name, self.name)

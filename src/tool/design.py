@@ -2,7 +2,7 @@ import re
 import json
 
 from PySide6.QtCore import (Qt)
-from src.hmi.line import Line, WireList, WireSegment, Wire
+from src.hmi.line import WireList, WireSegment, Wire
 from src.hmi.rect import Rect, DesignBorder
 from src.hmi.polygon import Polygon, Pin
 from src.hmi.ellipse import Circle
@@ -53,11 +53,13 @@ class Design:
             self.wireList.append(wire,check=False)
             self.scene.wireList.remove(wire, check=False)
 
-    def make_by_lines(self, lines):
+    def make_by_lines(self, lines, nextNetIndex):
         jsn = json.loads(lines[0].split(':', maxsplit=1)[1])
         for k in ['model', 'pins', 'conns']:
             setattr(self, k, jsn[k])
         self.initial_conns = self.conns.copy()
+        for pinIdx, pin in enumerate(self.pins):
+            self.conns[pin] = 'net{}'.format(nextNetIndex + pinIdx)
 
         jsn = json.loads(lines[1].split(':', maxsplit=1)[1])
         rect = DesignBorder(*jsn)
@@ -66,8 +68,9 @@ class Design:
         self.rect.design = self
 
         jsn = json.loads(lines[3].split(':', maxsplit=1)[1])
-        for p in jsn:
+        for idx, p in enumerate(jsn):
             pn = Pin()
+            pn.name = self.pins[idx]
             pn.make_by_JSON(p, self.scene)
             pn.setDesign(self)
             self.Pins.append(pn)
@@ -112,9 +115,9 @@ class Design:
 
     def addPin(self, Pin):
         name_id = 1
-        while 'Pin' + str(name_id) in self.pins:
+        while 'pin' + str(name_id) in self.pins:
             name_id += 1
-        Pin.name = 'Pin' + str(name_id)
+        Pin.name = 'pin' + str(name_id)
         self.pins.append(Pin.name)
         self.Pins.append(Pin)
         self.conns[Pin.name] = 'node'+str(name_id)

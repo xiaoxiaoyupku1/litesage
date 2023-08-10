@@ -76,7 +76,7 @@ class SchScene(QGraphicsScene):
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
-            self.endWire()
+            self.cancelWire()
             self.cleanCursorSymb()
         elif event.key() == Qt.Key_Delete:
             self.delSymb()
@@ -191,6 +191,10 @@ class SchScene(QGraphicsScene):
 
     def mouseDoubleClickEvent(self, event):
         self.endWire()
+    
+    def cancelWire(self):
+        if self.insertSymbType == 'W':
+            self.wireStartPos = None
 
     def endWire(self):
         if self.insertSymbType == 'W':
@@ -205,7 +209,7 @@ class SchScene(QGraphicsScene):
         self.cursorSymb = []
         design = Design(self)
         self.cursorDesign = design
-        design.make_by_lines(self.designTextLines)
+        design.make_by_lines(self.designTextLines, self.getNextNetIndex())
         for sym in design.symbols:
             self.addItem(sym)
             self.cursorSymb.append(sym)
@@ -478,17 +482,28 @@ class SchScene(QGraphicsScene):
                 if net.startswith('net'):
                     try:
                         netIdx = int(net[3:])
-                        if netIdx == idx:
+                        if netIdx >= idx:
                             idx = netIdx + 1
                     except:
                         continue
         for wire in self.wireList.wirelist:
             net = wire.getName()
-            if net.startswith('net'):
+            if net is None:
+                continue
+            elif net.startswith('net'):
                 try:
                     netIdx = int(net[3:])
-                    if netIdx == idx:
+                    if netIdx >= idx:
                         idx = netIdx + 1
                 except:
                     continue 
+        for design in self.designs:
+            for net in design.conns.values():
+                if net.startswith('net'):
+                    try:
+                        netIdx = int(net[3:])
+                        if netIdx >= idx:
+                            idx = netIdx + 1
+                    except:
+                        continue
         return idx
