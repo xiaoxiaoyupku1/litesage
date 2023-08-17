@@ -38,8 +38,17 @@ class SchInst(QGraphicsItemGroup):
                                              'conns',
                                              'initial_conns',
                                              'space']}
+        ret['scale'] = self.scale()
+        ret['rotation'] = self.rotation()
+        ret['m11'] = self.transform().m11()
+        ret['m22'] = self.transform().m22()
+
         ret['params'] = params
         distx, disty = [self.x() - centerX, self.y() - centerY]
+
+        ret['distx'] = distx
+        ret['disty'] = disty
+
         ret['pins_status'] = []
         ret['shapes'] = []
         for shape in self.SymbolPins:
@@ -105,6 +114,7 @@ class SchInst(QGraphicsItemGroup):
 
             else:
                 pass
+
         return ret
 
     def paint(self, painter, option, widget=None, *args, **kwargs):
@@ -137,6 +147,7 @@ class SchInst(QGraphicsItemGroup):
                 self.setInstName(nameHead, nameId)
             else:
                 self.setInstName(None, None)
+        self.setScale(float(dialog.scale_percentage.text()) / 100)
 
     def draw(self, scene, model, shapes, devinfo, nextNetIndex, isThumbnail=False):
         nameHead = devinfo[model].head
@@ -273,3 +284,12 @@ class SchInst(QGraphicsItemGroup):
             self.paramText.setPlainText(jsn['paramText'][0])
             self.paramText.setPos(jsn['paramText'][1],jsn['paramText'][2])
             self.addToGroup(self.paramText)
+
+        self.setTransformOriginPoint(jsn.get('distx'), jsn.get('disty'))
+        self.setScale(jsn.get('scale'))
+        self.setRotation(jsn.get('rotation'))
+        t = self.transform()
+        t.translate(jsn.get('distx'), jsn.get('disty'))
+        t.scale(jsn.get('m11'), jsn.get('m22'))
+        t.translate(-jsn.get('distx'), -jsn.get('disty'))
+        self.setTransform(t)

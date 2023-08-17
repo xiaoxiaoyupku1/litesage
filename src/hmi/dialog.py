@@ -1,4 +1,5 @@
 import re
+import os
 from PySide6.QtCore import (
     QStringListModel, Qt
 )
@@ -105,6 +106,9 @@ class ParameterDialog(QDialog):
             formLayout.addRow(prompt + ':', widget)
             self.values.append([name, widget])
 
+        self.scale_percentage = QLineEdit(str(item.parentItem().scale()*100))
+        formLayout.addRow("Scale(%):", self.scale_percentage)
+
         self.errMsg = QLabel()
         self.errMsg.setStyleSheet("color: red;")
         self.errMsg.hide()
@@ -147,11 +151,19 @@ class ParameterDialog(QDialog):
 class DesignFileDialog(QFileDialog):
     def __init__(self, *args, **kwargs):
         mode = kwargs.pop('mode', 'load')       # load or save
+        directory = kwargs.get('directory')
+
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+
         super().__init__(*args, **kwargs)
         self.accepted = QDialog.Accepted
 
-        mimeTypes = ['text/plain']
-        self.setMimeTypeFilters(mimeTypes)
+        #filters=["Design Files (*.dsgn)",
+        #         "Any files (*)"
+        #         ]
+        filters="Design Files (*.dsgn)"
+        self.setNameFilter(filters)
 
         if mode == 'load':
             acceptMode = QFileDialog.AcceptOpen

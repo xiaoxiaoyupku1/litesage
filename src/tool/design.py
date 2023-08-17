@@ -8,6 +8,7 @@ from src.hmi.polygon import Polygon, Pin
 from src.hmi.ellipse import Circle
 from src.hmi.text import ParameterText
 from src.hmi.group import SchInst
+from src.hmi.ellipse import WireConnection
 
 
 class Design:
@@ -27,6 +28,7 @@ class Design:
         self.wireList = WireList(self)
         self.rect = rect
         self.Pins = []  # Pins
+        self.connections = set() # wire connections
 
         if rect is not None:
             self.make_by_rect()
@@ -67,7 +69,7 @@ class Design:
         self.change_to_readonly()
         self.rect.design = self
 
-        jsn = json.loads(lines[3].split(':', maxsplit=1)[1])
+        jsn = json.loads(lines[4].split(':', maxsplit=1)[1])
         for idx, p in enumerate(jsn):
             pn = Pin()
             pn.name = self.pins[idx]
@@ -75,7 +77,7 @@ class Design:
             pn.setDesign(self)
             self.Pins.append(pn)
 
-        for sym_line in lines[4:]:
+        for sym_line in lines[5:]:
             jsn = json.loads(sym_line.split(':', maxsplit=1)[1])
             symbol = SchInst()
             symbol.make_by_JSON(jsn, self.scene)
@@ -87,6 +89,12 @@ class Design:
             wire = Wire(self)
             wire.make_by_JSON(wr)
             self.wireList.append(wire, check=False)
+
+        jsn = json.loads(lines[3].split(':', maxsplit=1)[1])
+        for cnn in jsn:
+            conn = WireConnection()
+            conn.make_by_JSON(cnn)
+            self.connections.add(conn)
 
     def delete(self):
         if self.readonly:
@@ -158,7 +166,20 @@ class Design:
             f.write(json.dumps(wires))
             f.write('\n')
 
-            # part 4: Pins
+            #part 4: connections of wires
+            f.write('Connections:')
+            conns = set()
+            for wire in self.wireList.wirelist:
+                for seg in wire.getSegments():
+                    conns.update(seg.connections)
+            conns_list=[]
+            for conn in conns:
+                conns_list.append(conn.toPrevJSON(centerX, centerY))
+            f.write(json.dumps(conns_list))
+            f.write('\n')
+
+
+            # part 5: Pins
             f.write('Pins:')
             pins=[]
             for pin in self.Pins:
@@ -166,7 +187,7 @@ class Design:
             f.write(json.dumps(pins))
             f.write("\n")
 
-            #part 5: symbols
+            #part 6: symbols
             scale = self.scene.scale
             for symbol in self.symbols:
                 f.write('Symbol:')

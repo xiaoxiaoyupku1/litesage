@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QMainWindow, QMenuBar, QMenu, QWidget, QGraphicsView, QMessageBox
 )
 from PySide6.QtGui import (
-    QAction, QKeySequence
+    QAction, QKeySequence, QPainter
 )
 
 from src.waveform import WaveformViewer
@@ -13,6 +13,9 @@ from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog
 from src.hmi.image import getIcon
 from src.tool.status import setStatus
+from src.tool.design import Design
+from src.hmi.group import SchInst
+from src.hmi.rect import DesignBorder
 
 
 class FoohuEda(QMainWindow):
@@ -157,10 +160,24 @@ class FoohuEda(QMainWindow):
         self.actNetlist.setShortcut(QKeySequence('ctrl+n'))
         self.actNetlist.triggered.connect(self.showNetlist)
 
+
+        self.actRotate = QAction(text='Rotate')
+        self.actRotate.setObjectName('actRotate')
+        self.actRotate.setShortcut(QKeySequence('ctrl+w'))
+        self.actRotate.triggered.connect(self.rotateSymbol)
+
+        self.actMirror = QAction(text='Mirror')
+        self.actMirror.setObjectName('actMirror')
+        self.actMirror.setShortcut(QKeySequence('ctrl+e'))
+        self.actMirror.triggered.connect(self.mirrorSymbol)
+
         self.actOpenWave = QAction(text='Open Wave')
         self.actOpenWave.triggered.connect(self.openWave)
         self.actOpenLayout = QAction(text='Open Layout')
         self.actOpenLayout.triggered.connect(self.openLayout)
+
+
+
 
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
@@ -188,6 +205,8 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actGrid) 
         self.menuEdit.addAction(self.actRun)
         self.menuEdit.addAction(self.actNetlist)
+        self.menuEdit.addAction(self.actRotate)
+        self.menuEdit.addAction(self.actMirror)
 
         self.menuWave = QMenu(self.menuBar)
         self.menuWave.setTitle('Wave')
@@ -216,7 +235,7 @@ class FoohuEda(QMainWindow):
             msgBox.setText("There is no design in editing")
             msgBox.exec()
             return
-        dialog = DesignFileDialog(self, 'Save Design as ...', mode='save')
+        dialog = DesignFileDialog(self, 'Save Design as ...', mode='save', directory='./project/')
         result = dialog.exec()
         if result != dialog.accepted:
             return False
@@ -227,7 +246,7 @@ class FoohuEda(QMainWindow):
 
     def loadDesign(self, _):
         self.schScene.cleanCursorSymb()
-        dialog = DesignFileDialog(self, 'Load Design from ...', mode='load')
+        dialog = DesignFileDialog(self, 'Load Design from ...', mode='load', directory='./project/')
         result = dialog.exec()
         if result != dialog.accepted:
             return False
@@ -339,6 +358,47 @@ class FoohuEda(QMainWindow):
 
     def showNetlist(self):
         self.schScene.showNetlist()
+
+    def rotateSymbol(self):
+        for item in self.schScene.selectedItems():
+            if type(item) is SchInst:
+                #p = item.paramText
+                #text = p.toPlainText()
+                #item.removeFromGroup(p)
+                item.setRotation(item.rotation()+90)
+                #p.setPos(item.pos())
+                #item.addToGroup(p)
+                #text = text.replace('\n', ' ')
+                #p.setPlainText(text)
+
+    def mirrorSymbol(self):
+        for item in self.schScene.selectedItems():
+            if type(item) is SchInst:
+                t = item.transform()
+                t.scale(-1,1)
+                item.setTransform(t)
+                #p = item.paramText
+                #tp = p.transform()
+                #tp.scale(-1,1)
+                #p.setTransform(tp)
+
+            elif type(item) is DesignBorder:
+                if not item.design.readonly:
+                    continue
+
+                design = item.design
+                t = item.transform()
+                t.scale(-1,1)
+                item.setTransform(t)
+                for pin in design.Pins:
+                    pin.setTransform(t)
+                for sym in design.symbols:
+                    sym.setTransform(t)
+                for wire in design.wireList.wirelist:
+                    for seg in wire.getSegments():
+                        seg.setTransform(t)
+                for conn in design.connections:
+                    conn.setTransform(t)
 
     def openWave(self):
         if self.schScene.wavWin is not None:

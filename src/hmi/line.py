@@ -6,6 +6,7 @@ from src.hmi.dialog import WireDialog
 from src.hmi.text import WireNameText
 from src.hmi.rect import  SymbolPin
 from src.hmi.polygon import Pin
+from src.hmi.ellipse import WireConnection
 
 
 class Line(QGraphicsLineItem):
@@ -31,7 +32,10 @@ class WireSegment(Line):
         self.pins = set() #SymbolPins or Pins (design)
         self.text = WireNameText()
         self.wire = None # included in this wire
+        self.connections = []
+
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
+
     def addPin(self,pin):
         self.pins.add(pin)
     def removePin(self,pin):
@@ -58,6 +62,10 @@ class WireSegment(Line):
             self.text.setPos(event.pos())
 
     def delete(self):
+        for conn in self.connections:
+            self.scene().removeItem(conn)
+        self.connections = []
+
         for pin in self.getPins():
             pin.setDisConnected()
             pin.getParent().conns[pin.name] = pin.getParent().initial_conns[pin.name]
@@ -83,10 +91,22 @@ class WireSegment(Line):
                     y=self.line()
                 if y.y1() == x.y1() or y.y2() == x.y1() or x.x1() == y.x1() or x.x2() == y.x1():
                     # ⊥ or ∟
+                    self.__drawConnection(other)
                     return True
                 else:
                     #cross
                     return False
+
+    def __drawConnection(self,other):
+        _, p = self.line().intersects(other.line())
+        r = 25 / self.scene().scale
+        connection = WireConnection(p.x()-r, p.y()-r, r*2, r*2)
+        self.scene().addItem(connection)
+        self.connections.append(connection)
+        other.connections.append(connection)
+        connection.lines.append(self)
+        connection.lines.append(other)
+
     def __getDirection(self):
         if self.line().x1() == self.line().x2():
             return 'y_direct'

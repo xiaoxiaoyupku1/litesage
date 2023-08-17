@@ -226,6 +226,10 @@ class SchScene(QGraphicsScene):
             self.addItem(pn)
             self.cursorSymb.append(pn)
 
+        for conn in design.connections:
+            self.addItem(conn)
+            self.cursorSymb.append(conn)
+
         for sym in self.cursorSymb:
             sym.setPos(event.scenePos())
 

@@ -25,7 +25,8 @@ class DesignBorder(Rect):
         self.design = design
 
     def delete(self):
-        self.design.delete()
+        if self.design is not None:
+            self.design.delete()
 
 
     def contextMenuEvent(self, event):
