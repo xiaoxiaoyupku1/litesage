@@ -1,14 +1,14 @@
-import re
 import json
 
 from PySide6.QtCore import (Qt)
 from src.hmi.line import WireList, WireSegment, Wire
-from src.hmi.rect import Rect, DesignBorder
+from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon, Pin
 from src.hmi.ellipse import Circle
 from src.hmi.text import ParameterText
-from src.hmi.group import SchInst
+from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.ellipse import WireConnection
+from PySide6.QtWidgets import (QGraphicsItemGroup, QGraphicsItem)
 
 
 class Design:
@@ -18,6 +18,9 @@ class Design:
         self.pins = []  # pin names
         self.conns = {}  # pin name -> wire name
         self.initial_conns = {}
+
+        self.group = None
+        self.show = Qt.Checked
 
         # design status
         self.readonly = False
@@ -194,3 +197,77 @@ class Design:
                 sym = symbol.toPrevJSON(centerX,centerY)
                 f.write(json.dumps(sym))
                 f.write("\n")
+
+    def setScale(self, scale: float):
+        self.group.setScale(scale)
+
+    def make_group(self):
+        if self.group is None:
+            self.group = DesignGroup()
+            self.group.setDesign(self)
+            self.scene.addItem(self.group)
+
+            for sym in self.symbols:
+                self.group.addToGroup(sym)
+
+            self.group.addToGroup(self.rect)
+
+            for wire in self.wireList.wirelist:
+                for seg in wire.getSegments():
+                    self.group.addToGroup(seg)
+
+            for pn in self.Pins:
+                self.group.addToGroup(pn)
+
+            for conn in self.connections:
+                self.group.addToGroup(conn)
+
+    def setScale_bk(self, scale: float):
+        self.scale = scale
+
+        for sym in self.symbols:
+            sym.setScale(scale)
+
+        self.rect.setScale(scale)
+
+        for wire in self.wireList.wirelist:
+            for seg in wire.getSegments():
+                seg.setScale(scale)
+
+        for pn in self.Pins:
+            pn.setScale(scale)
+
+        for conn in self.connections:
+            conn.setScale(scale)
+
+
+    def setShow(self, show):
+        self.show = show
+        if self.show == Qt.Unchecked:
+            for sym in self.symbols:
+                sym.setOpacity(0)
+
+
+            for wire in self.wireList.wirelist:
+                for seg in wire.getSegments():
+                    seg.setOpacity(0)
+
+            for conn in self.connections:
+                conn.setOpacity(0)
+
+        elif self.show == Qt.Checked:
+            for sym in self.symbols:
+                if type(sym) is SymbolPin:
+                    if sym.status is False:
+                        sym.setOpacity(1)
+                    else:
+                        pass
+                else:
+                    sym.setOpacity(1)
+
+            for wire in self.wireList.wirelist:
+                for seg in wire.getSegments():
+                    seg.setOpacity(1)
+
+            for conn in self.connections:
+                conn.setOpacity(1)

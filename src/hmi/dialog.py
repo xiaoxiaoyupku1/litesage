@@ -6,7 +6,7 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QDialog, QFormLayout, QLineEdit, 
     QDialogButtonBox, QVBoxLayout, QGridLayout,
-    QFileDialog, QListView, QLabel, QTabWidget
+    QFileDialog, QListView, QLabel, QTabWidget, QCheckBox
 )
 from src.hmi.text import NetlistText
 from src.tool.num import EngNum
@@ -18,10 +18,20 @@ class DesignDialog(QDialog):
         self.designRect = designRect
         if self.designRect.design.readonly:
             self.setWindowTitle('Enter Name:')
+
             layout = QVBoxLayout()
             formLayout = QFormLayout()
+
             self.name = QLineEdit(self.designRect.design.name)
             formLayout.addRow('Name:', self.name)
+
+            self.scale_percentage = QLineEdit(str(designRect.scale() * 100))
+            formLayout.addRow("Scale(%):", self.scale_percentage)
+
+            self.show = QCheckBox("Show Details")
+            self.show.setCheckState(self.designRect.design.show)
+            formLayout.addRow(self.show)
+
             layout.addLayout(formLayout)
         else:
             self.setWindowTitle('Enter Model Name:')
@@ -42,6 +52,9 @@ class DesignDialog(QDialog):
     def accept(self) -> None:
         if self.designRect.design.readonly:
             self.designRect.design.name = self.name.text()
+            self.designRect.design.setScale(float(self.scale_percentage.text())/100)
+            if self.designRect.design.show != self.show.checkState():
+                self.designRect.design.setShow(self.show.checkState())
         else:
             self.designRect.design.model = self.model.text()
         super().accept()

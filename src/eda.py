@@ -13,8 +13,7 @@ from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog
 from src.hmi.image import getIcon
 from src.tool.status import setStatus
-from src.tool.design import Design
-from src.hmi.group import SchInst
+from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.rect import DesignBorder
 
 
@@ -361,45 +360,50 @@ class FoohuEda(QMainWindow):
         self.schScene.showNetlist()
 
     def rotateSymbol(self):
-        for item in self.schScene.selectedItems():
-            if type(item) is SchInst:
-                #p = item.paramText
-                #text = p.toPlainText()
-                #item.removeFromGroup(p)
-                item.setRotation(item.rotation()+90)
-                #p.setPos(item.pos())
-                #item.addToGroup(p)
-                #text = text.replace('\n', ' ')
-                #p.setPlainText(text)
+        item =  self.schScene.cursorSymb
+        if isinstance(item, SchInst):
+            #p = item.paramText
+            #text = p.toPlainText()
+            #item.removeFromGroup(p)
+            item.setRotation(item.rotation()+90)
+            #p.setPos(item.pos())
+            #item.addToGroup(p)
+            #text = text.replace('\n', ' ')
+            #p.setPlainText(text)
 
     def mirrorSymbol(self):
-        for item in self.schScene.selectedItems():
-            if type(item) is SchInst:
-                t = item.transform()
-                t.scale(-1,1)
-                item.setTransform(t)
-                #p = item.paramText
-                #tp = p.transform()
-                #tp.scale(-1,1)
-                #p.setTransform(tp)
+        item = self.schScene.cursorSymb
+        if isinstance(item, SchInst):
+            t = item.transform()
+            t.scale(-1,1)
+            item.setTransform(t)
+            #p = item.paramText
+            #tp = p.transform()
+            #tp.scale(-1,1)
+            #p.setTransform(tp)
 
-            elif type(item) is DesignBorder:
-                if not item.design.readonly:
-                    continue
+        elif isinstance(item, DesignBorder):
+            if not item.design.readonly:
+                return
 
-                design = item.design
-                t = item.transform()
-                t.scale(-1,1)
-                item.setTransform(t)
-                for pin in design.Pins:
-                    pin.setTransform(t)
-                for sym in design.symbols:
-                    sym.setTransform(t)
-                for wire in design.wireList.wirelist:
-                    for seg in wire.getSegments():
-                        seg.setTransform(t)
-                for conn in design.connections:
-                    conn.setTransform(t)
+            design = item.design
+            t = item.transform()
+            t.scale(-1,1)
+            item.setTransform(t)
+            for pin in design.Pins:
+                pin.setTransform(t)
+            for sym in design.symbols:
+                sym.setTransform(t)
+            for wire in design.wireList.wirelist:
+                for seg in wire.getSegments():
+                    seg.setTransform(t)
+            for conn in design.connections:
+                conn.setTransform(t)
+
+        elif isinstance(item, DesignGroup):
+            t = item.transform()
+            t.scale(-1,1)
+            item.setTransform(t)
 
     def openWave(self):
         if self.schScene.wavWin is not None:

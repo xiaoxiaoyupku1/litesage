@@ -9,8 +9,8 @@ from src.hmi.rect import SymbolPin
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
 from src.tool.device import DeviceParam
+from src.hmi.dialog import DesignDialog
 import re
-
 
 class SchInst(QGraphicsItemGroup):
     def __init__(self, *args, **kwargs):
@@ -293,3 +293,24 @@ class SchInst(QGraphicsItemGroup):
         t.scale(jsn.get('m11'), jsn.get('m22'))
         t.translate(-jsn.get('distx'), -jsn.get('disty'))
         self.setTransform(t)
+
+
+
+class DesignGroup(QGraphicsItemGroup):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.design = None
+
+    def setDesign(self, design):
+        self.design = design
+
+    def design(self):
+        return self.design
+
+    def contextMenuEvent(self, event):
+        if self.design is None:
+            return
+
+        dialog = DesignDialog(parent=None,designRect=self)
+        dialog.exec()

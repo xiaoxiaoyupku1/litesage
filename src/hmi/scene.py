@@ -210,7 +210,7 @@ class SchScene(QGraphicsScene):
             self.currentWire = Wire(self)
             setStatus('Add wire')
 
-    def drawDesign(self, event):
+    def drawDesign_bk(self, event):
         if self.cursorSymb is not None:
             self.designs.append(self.cursorDesign)
         self.cursorSymb = []
@@ -239,6 +239,18 @@ class SchScene(QGraphicsScene):
 
         for sym in self.cursorSymb:
             sym.setPos(event.scenePos())
+
+
+    def drawDesign(self, event):
+        if self.cursorSymb is not None:
+            self.designs.append(self.cursorDesign)
+        self.cursorSymb = None
+        design = Design(self)
+        self.cursorDesign = design
+        design.make_by_lines(self.designTextLines, self.getNextNetIndex())
+        design.make_group()
+        self.cursorSymb=design.group
+        self.cursorSymb.setPos(event.scenePos())
 
     def drawDesign_bk(self, event):
         self.cursorSymb = []
