@@ -473,7 +473,7 @@ class SchScene(QGraphicsScene):
 
         self.gateway = Gateway()
         self.remoteNetlistPath = runSimulation(self.gateway, self.netlist)
-        setStatus('Send netlist for simulation')
+        setStatus('Start simulation', timeout=0)
 
         self.threadPool = QThread(self)
         self.simTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
