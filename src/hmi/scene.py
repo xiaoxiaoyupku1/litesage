@@ -508,7 +508,7 @@ class SchScene(QGraphicsScene):
         self.netlist = createNetlist(self)
 
         checked = self.checkUserRight()
-        self.simTrackThread = checked
+        self.simTrackThread.checked = checked
         if not checked:
             return
 
