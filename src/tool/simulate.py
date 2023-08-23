@@ -1,26 +1,44 @@
 import os
+from time import sleep
 from tempfile import NamedTemporaryFile
-from src.tool.network import Gateway
+from PySide6.QtCore import QObject, Signal
+
+
 from src.tool.network import getIpAddr
+from src.tool.sys import getCurrentTime
+from src.tool.status import setStatus
+from src.tool.config import RETR_SIM_STATUS_INTVL
 
-HOST = '127.0.0.1'
-PORT = 8080
-USER = 'admin'
-PASSWD = 'password'
 
-def runSimulation(netlist):
+class SimTrackThread(QObject):
+    success = Signal(int)
+
+    def __init__(self):
+        super().__init__()
+        self.gateway = None
+        self.remoteNetlistPath = None
+
+    def setTrack(self, gateway, remoteNetlistPath):
+        self.gateway = gateway
+        self.remoteNetlistPath = remoteNetlistPath
+
+    def trackSim(self):
+        resp = getSimStatus(self.gateway, self.remoteNetlistPath)
+        self.success.emit(resp)
+
+
+def runSimulation(gateway, netlist):
     localPath = ''
     fp = NamedTemporaryFile(delete=False) 
     try:
         fp.write(bytes('\n'.join(netlist), encoding='utf-8'))
         fp.seek(0)
         localPath = fp.name
-        baseName = os.path.basename(localPath)
-        remotePath = '{}_{}.sp'.format(getIpAddr(), baseName)
+        remotePath = '{}_{}_{}.sp'.format(getCurrentTime(),
+                                          getIpAddr(public=True), 
+                                          getIpAddr(public=False))
 
-        gtw = Gateway(HOST, PORT, USER, PASSWD)
-        gtw.upload(localPath, remotePath)
-        gtw.end()
+        gateway.uploadFile(localPath, remotePath)
     finally:
         fp.close()
         if os.path.isfile(localPath):
@@ -29,13 +47,40 @@ def runSimulation(netlist):
     return remotePath
 
 
-def getSimResult(remoteNetlistPath):
-    assert remoteNetlistPath.endswith('.sp')
+def getSimStatus(gateway, remoteNetlistPath):
+    # 0: success, -1: failure
+    success = None
+    interval = RETR_SIM_STATUS_INTVL
+
+    def _readStatusFile(interval, success):
+        for line in gateway.readFile(remoteStatusPath):
+            if line.startswith('Simulation left time'):
+                lefttime = float(line.split('left time')[1].strip())  # left time always in seconds
+                interval = lefttime / 10.0
+                setStatus(line, timeout=0)
+            elif line.startswith('Simulation success'):
+                success = 0
+                setStatus(line)
+            elif line.startswith('Simulation failed'):
+                success = -1
+                setStatus(line)
+        return interval, success
+
+    name = os.path.splitext(remoteNetlistPath)[0]
+    remoteStatusPath = name + '.status'
+
+    while success is None:
+        sleep(interval)
+        interval, success = _readStatusFile(interval, success)
+
+    return success
+
+
+def getSimResult(gateway, remoteNetlistPath):
     remoteDir = os.path.dirname(remoteNetlistPath)
     remoteWavePath = os.path.join(remoteDir, 'waveform.ac0')
     localWave = NamedTemporaryFile(delete=False, suffix='.ac0')
     localWavePath = localWave.name
-    gtw = Gateway(HOST, PORT, USER, PASSWD)
-    gtw.downloadFile(localWavePath, remoteWavePath)
-    gtw.end()
+    gateway.downloadFile(localWavePath, remoteWavePath)
     return localWavePath
+    # return waveInfo

@@ -1,8 +1,6 @@
-from PySide6.QtCore import (Qt, QPointF, QEvent)
+from PySide6.QtCore import (Qt, QPointF, QThread)
 from PySide6.QtGui import (QPolygonF, QPen, QColor)
-from PySide6.QtWidgets import (
-    QGraphicsScene, QInputDialog, QLineEdit, QGraphicsTextItem,
-)
+from PySide6.QtWidgets import (QGraphicsScene)
 
 from src.hmi.text import ParameterText, SimulationCommandText
 from src.hmi.dialog import NetlistDialog, SimulationCommandDialog
@@ -16,7 +14,9 @@ from src.tool.device import getDeviceInfos
 from src.tool.netlist import createNetlist
 from src.tool.design import Design
 from src.tool.status import setStatus
+from src.tool.simulate import SimTrackThread
 from src.tool.simulate import runSimulation, getSimResult
+from src.tool.network import Gateway
 from src.waveform import WaveformViewer
 
 
@@ -58,6 +58,13 @@ class SchScene(QGraphicsScene):
 
         self.wavWin = None
         self.layWin = None
+
+        self.threadPool = QThread()
+        self.simTrackThread = SimTrackThread()
+        self.gateway = None
+        self.remoteNetlistPath = None
+        self.waveInfo = None
+        self.setSimTrack = False
 
     def initBasicDevices(self):
         if self.basicSymbols is None or self.basicDevInfo is None:
@@ -460,17 +467,29 @@ class SchScene(QGraphicsScene):
         setStatus('Create netlist')
         dialog.exec()
 
-    def runSimulation(self, genNet=True):
+    def runSim(self, genNet=True):
         if genNet:
             self.netlist = createNetlist(self)
-        remoteNetlistPath = runSimulation(self.netlist)
+
+        self.gateway = Gateway()
+        self.remoteNetlistPath = runSimulation(self.gateway, self.netlist)
         setStatus('Send netlist for simulation')
-        localWavePath = getSimResult(remoteNetlistPath)
-        if localWavePath is None:
+
+        self.threadPool = QThread(self)
+        self.simTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
+        self.simTrackThread.moveToThread(self.threadPool)
+        self.simTrackThread.success.connect(self.showSimResult)
+        self.threadPool.start()
+
+    def showSimResult(self, success):
+        if success == 0:
+            setStatus('Simulation finished and open waveform')
+            self.waveInfo = getSimResult(self.gateway, self.remoteNetlistPath)
+            self.wavWin = WaveformViewer(self.waveInfo, delWaveFile=True)
+        elif success == -1:
             setStatus('Simulation failed')
         else:
-            self.wavWin = WaveformViewer(localWavePath, delWaveFile=True)
-            setStatus('Simulation finished')
+            assert 0, 'invalid output format from getSimStatus'
 
     def clear(self):
         self.symbols = []

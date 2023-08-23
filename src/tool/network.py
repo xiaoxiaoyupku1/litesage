@@ -2,15 +2,18 @@ import functools
 from threading import Lock
 from ftplib import FTP
 from urllib.request import urlopen
+from json import load
 from socket import gethostbyname
 from socket import socket, AF_INET, SOCK_DGRAM
+from src.tool.config import HOST, PORT, USER, PASSWD
 
 
 @functools.lru_cache(maxsize=None)
 def getIpAddr(public=True, url=None):
     if public:
         if url is None:
-            return urlopen('http://ip.42.pl/raw').read().decode('utf-8')
+            # return urlopen('http://ip.42.pl/raw').read().decode('utf-8')
+            return load(urlopen('http://httpbin.org/ip'))['origin']
         else:
             return gethostbyname(url)
     else:
@@ -24,7 +27,7 @@ def getIpAddr(public=True, url=None):
 class Gateway(FTP):
     _instance_lock = Lock()
 
-    def __init__(self, host, port, user, passwd):
+    def __init__(self, host=HOST, port=PORT, user=USER, passwd=PASSWD):
         super().__init__()
         self.set_debuglevel(2)
         self.host = host  # str
@@ -59,11 +62,26 @@ class Gateway(FTP):
         self.retrbinary('RETR ' + remotePath, fp.write, bufsize)
         fp.close()
 
-    def upload(self, localPath, remotePath):
+    def isFile(self, remotePath):
+        try:
+            self.size(remotePath)
+            return True
+        except:
+            return False
+
+    def uploadFile(self, localPath, remotePath):
         bufsize = 1024
         fp = open(localPath, 'rb')
         self.storbinary('STOR ' + remotePath, fp, bufsize)
         fp.close()
+
+    def readFile(self, remotePath):
+        fileLines = []
+        def _lineCallback(line):
+            fileLines.append(line)
+        if self.isFile(remotePath):
+            self.retrlines('RETR ' + remotePath, _lineCallback)
+        return fileLines
 
     def end(self):
         self.quit()

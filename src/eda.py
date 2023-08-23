@@ -261,6 +261,7 @@ class FoohuEda(QMainWindow):
             self.schScene = SchScene()
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
+            self.actRun.triggered.connect(self.schScene.simTrackThread.trackSim)
 
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
@@ -354,7 +355,7 @@ class FoohuEda(QMainWindow):
         setStatus('Toggle background grid points')
 
     def runSim(self):
-        self.schScene.runSimulation()
+        self.schScene.runSim()
 
     def showNetlist(self):
         self.schScene.showNetlist()

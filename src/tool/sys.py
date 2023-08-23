@@ -1,5 +1,6 @@
 from json import loads
 from subprocess import getoutput
+from datetime import datetime
 
 def getApps():
 	cmd = 'powershell -ExecutionPolicy Bypass "Get-StartApps|convertto-json"'
@@ -16,3 +17,7 @@ def findApp(app_name):
 			return each,apps[each]
 	else:
 		return "Application not found!"
+
+def getCurrentTime():
+	now = datetime.now()
+	return now.strftime('%Y%m%d%H%M%S')
