@@ -15,6 +15,7 @@ class SimTrackThread(QObject):
 
     def __init__(self):
         super().__init__()
+        self.checked = False
         self.gateway = None
         self.remoteNetlistPath = None
 
@@ -23,8 +24,9 @@ class SimTrackThread(QObject):
         self.remoteNetlistPath = remoteNetlistPath
 
     def trackSim(self):
-        resp = getSimStatus(self.gateway, self.remoteNetlistPath)
-        self.success.emit(resp)
+        if self.checked:
+            resp = getSimStatus(self.gateway, self.remoteNetlistPath)
+            self.success.emit(resp)
 
 
 def runSimulation(gateway, netlist):

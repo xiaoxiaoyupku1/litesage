@@ -11,7 +11,7 @@ from src.hmi.ellipse import Circle
 from src.hmi.symbol import Symbol
 from src.hmi.group import SchInst
 from src.tool.device import getDeviceInfos
-from src.tool.netlist import createNetlist
+from src.tool.netlist import createNetlist, getAllUsedModels
 from src.tool.design import Design
 from src.tool.status import setStatus
 from src.tool.simulate import SimTrackThread
@@ -21,8 +21,9 @@ from src.waveform import WaveformViewer
 
 
 class SchScene(QGraphicsScene):
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__()
+        self.user = None if parent is None else parent.user
 
         self.enableDel = False  # delete mode
         self.cursorSymb = None  # SchInst or Pin or Design
@@ -479,9 +480,37 @@ class SchScene(QGraphicsScene):
         setStatus('Create netlist')
         dialog.exec()
 
-    def runSim(self, genNet=True):
-        if genNet:
-            self.netlist = createNetlist(self)
+    def checkUserRight(self):
+        bannedModels = []
+        found = []
+        if self.user.getLevel() == 3:
+            # no need to check
+            return
+        elif self.user.getLevel() == 2:
+            bannedModels = list(self.ipSymbols.keys())
+        elif self.user.getLevel()  == 1:
+            bannedModels = list(self.pdkSymbols.keys()) + list(self.ipSymbols.keys())
+        
+        for model in getAllUsedModels():
+            if model in bannedModels:
+                found.append(model)
+        
+        if len(found) > 0:
+            setStatus('Cannot run simulation with {}, '.format(' '.join(found)) +
+                      'please update your account',
+                      timeout=0)
+            return False
+        return True
+
+    def runSim(self):
+        self.initPdkDevices()
+        self.initIpDevices()
+        self.netlist = createNetlist(self)
+
+        checked = self.checkUserRight()
+        self.simTrackThread = checked
+        if not checked:
+            return
 
         self.gateway = Gateway()
         self.remoteNetlistPath = runSimulation(self.gateway, self.netlist)

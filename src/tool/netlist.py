@@ -1,16 +1,21 @@
 from src.hmi.group import SchInst
 from src.tool.design import Design
 
+ALL_USED_MODELS = []
+
 def createNetlist(scene):
     """ SPICE format """
     netlist = []
     subckts, knownDesigns = [], []
+    global ALL_USED_MODELS
+    ALL_USED_MODELS = []
 
     for design in scene.designs:
         line = design.name
         for pin in design.pins:
             line += ' {}'.format(design.conns[pin])
         line += ' {}'.format(design.model)
+        ALL_USED_MODELS.append(design.model)
         netlist.append(line)
 
         if design.model not in knownDesigns:
@@ -30,6 +35,7 @@ def createNetlist(scene):
 
 
 def _createInstNetlist(parent):
+    global ALL_USED_MODELS
     netlist = []
 
     net_pin_mapping = {}
@@ -44,6 +50,7 @@ def _createInstNetlist(parent):
         for p in inst.pins:
             line += ' {}'.format(net_pin_mapping.get(inst.conns[p], inst.conns[p]))
         line += ' {}'.format(inst.model)
+        ALL_USED_MODELS.append(inst.model)
         for param in inst.params:
             if param.isUsedInNetlist():
                 if len(param.name) > 0:
@@ -54,3 +61,8 @@ def _createInstNetlist(parent):
         netlist.append(line)
 
     return netlist
+
+
+def getAllUsedModels():
+    global ALL_USED_MODELS
+    return list(set(ALL_USED_MODELS))

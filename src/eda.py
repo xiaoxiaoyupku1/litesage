@@ -6,23 +6,28 @@ from PySide6.QtGui import (
     QAction, QKeySequence, QPainter
 )
 
-from src.waveform import WaveformViewer
 from src.layout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
-from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog
+from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog, UserAccountDialog
 from src.hmi.image import getIcon
 from src.tool.status import setStatus
 from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.rect import DesignBorder
+from src.tool.account import UserAccount
 
 
 class FoohuEda(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.initUser()
         self.initUi()
         self.setupUi()
         self.initSchScene()
+        self.openUser(skip=True)
+
+    def initUser(self):
+        self.user = UserAccount()
 
     def initUi(self):
         # Windows
@@ -36,7 +41,8 @@ class FoohuEda(QMainWindow):
         self.menuBar = None
         self.menuFile = None
         self.menuEdit = None
-        self.menuWave = None
+        self.menuUser = None
+        # self.menuWave = None
         self.menuLayout = None
 
         # Menu File
@@ -59,8 +65,11 @@ class FoohuEda(QMainWindow):
         self.actRun = None
         self.actNetlist = None
 
+        # Menu User Account
+        self.actLogin = None
+
         # Menu Wave
-        self.actOpenWave = None
+        # self.actOpenWave = None
 
         # Menu Layout
         self.actOpenLayout = None
@@ -170,13 +179,12 @@ class FoohuEda(QMainWindow):
         self.actMirror.setShortcut(QKeySequence('ctrl+e'))
         self.actMirror.triggered.connect(self.mirrorSymbol)
 
-        self.actOpenWave = QAction(text='Open Wave')
-        self.actOpenWave.triggered.connect(self.openWave)
+        self.actLogin = QAction(text='Sign Up/In')
+        self.actLogin.triggered.connect(self.openUser)
+        # self.actOpenWave = QAction(text='Open Wave')
+        # self.actOpenWave.triggered.connect(self.openWave)
         self.actOpenLayout = QAction(text='Open Layout')
         self.actOpenLayout.triggered.connect(self.openLayout)
-
-
-
 
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
@@ -207,9 +215,12 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actRotate)
         self.menuEdit.addAction(self.actMirror)
 
-        self.menuWave = QMenu(self.menuBar)
-        self.menuWave.setTitle('Wave')
-        self.menuWave.addAction(self.actOpenWave)
+        self.menuUser = QMenu(self.menuBar)
+        self.menuUser.setTitle('Guest (Lvl1)')
+        self.menuUser.addAction(self.actLogin)
+        # self.menuWave = QMenu(self.menuBar)
+        # self.menuWave.setTitle('Wave')
+        # self.menuWave.addAction(self.actOpenWave)
 
         self.menuLayout = QMenu(self.menuBar)
         self.menuLayout.setTitle('Layout')
@@ -217,7 +228,8 @@ class FoohuEda(QMainWindow):
 
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
-        self.menuBar.addAction(self.menuWave.menuAction())
+        self.menuBar.addAction(self.menuUser.menuAction())
+        # self.menuBar.addAction(self.menuWave.menuAction())
         self.menuBar.addAction(self.menuLayout.menuAction())
 
         self.centralWidget = QWidget(self)
@@ -257,7 +269,7 @@ class FoohuEda(QMainWindow):
 
     def initSchScene(self):
         if self.schScene is None:
-            self.schScene = SchScene()
+            self.schScene = SchScene(self)
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
             self.actRun.triggered.connect(self.schScene.simTrackThread.trackSim)
@@ -405,12 +417,25 @@ class FoohuEda(QMainWindow):
             t.scale(-1,1)
             item.setTransform(t)
 
-    def openWave(self):
-        if self.schScene.wavWin is not None:
-            self.schScene.wavWin.destroy()
-        wavefile = 'examples/wave/waveform.tr0'
-        self.schScene.wavWin = WaveformViewer(wavefile)
-        setStatus('Open waveform viewer')
+    def openUser(self, skip=False):
+        dialog = UserAccountDialog(self.user, skip=skip)
+        result = dialog.exec()
+        if result != dialog.accepted:
+            return
+        self.user.update(*dialog.info)
+        if self.user.getLevel() == 2:
+            self.menuUser.setTitle('{} (Lvl2)'.format(self.user.name))
+            setStatus('Sign in as registered account: you can simulate with Standard & PDK components')
+        elif self.user.getLevel() == 3:
+            self.menuUser.setTitle('{} (Lvl3)'.format(self.user.name))
+            setStatus('Sign in with authenticated account: you can simulate with all components')
+
+    # def openWave(self):
+    #     if self.schScene.wavWin is not None:
+    #         self.schScene.wavWin.destroy()
+    #     wavefile = 'examples/wave/waveform.tr0'
+    #     self.schScene.wavWin = WaveformViewer(wavefile)
+    #     setStatus('Open waveform viewer')
 
     def openLayout(self):
         gdsfile = 'examples/layout/reference.gds'

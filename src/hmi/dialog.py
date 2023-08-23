@@ -4,7 +4,7 @@ from PySide6.QtCore import (
     QStringListModel, Qt
 )
 from PySide6.QtWidgets import (
-    QDialog, QFormLayout, QLineEdit, 
+    QDialog, QFormLayout, QLineEdit, QPushButton,
     QDialogButtonBox, QVBoxLayout, QGridLayout,
     QFileDialog, QListView, QLabel, QTabWidget, QCheckBox
 )
@@ -407,3 +407,82 @@ class SimCmdDialog_CUSTOMIZE(QDialog):
 
     def getCommand(self):
         return self.text.text().strip()
+
+
+class UserAccountDialog(QDialog):
+    def __init__(self, user, skip=False):
+        self.user = user
+        self.info = []
+        super().__init__()
+        self.setWindowTitle('User Account Sign Up/In')
+        self.accepted = QDialog.Accepted
+
+        form = QFormLayout()
+
+        self.name = QLineEdit('')
+        self.name.setText(self.user.name)
+        self.name.setClearButtonEnabled(True)
+        form.addRow('Name:', self.name)
+
+        self.phone = QLineEdit('')
+        self.phone.setText(self.user.phone)
+        self.phone.setClearButtonEnabled(True)
+        form.addRow('Phone:', self.phone)
+
+        self.passwd = QLineEdit('')
+        self.passwd.setText(self.user.passwd)
+        self.passwd.setClearButtonEnabled(True)
+        self.passwd.setEchoMode(QLineEdit.Password)
+        form.addRow('Password:', self.passwd)
+
+        self.org = QLineEdit('')
+        self.org.setText(self.user.org)
+        self.org.setClearButtonEnabled(True)
+        form.addRow('Organization:', self.org)
+
+        self.role = QLineEdit('')
+        self.role.setText(self.user.role)
+        self.role.setClearButtonEnabled(True)
+        form.addRow('Role:', self.role)
+
+        self.errMsg = QLabel()
+        self.errMsg.setStyleSheet('color: red;')
+        self.errMsg.hide()
+
+        if skip:
+            btn = QDialogButtonBox(QDialogButtonBox.Ok,)
+            skipBtn = QPushButton('Skip', self)
+            btn.addButton(skipBtn, QDialogButtonBox.RejectRole)
+        else:
+            btn = QDialogButtonBox()
+            btn.setStandardButtons(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
+        btn.accepted.connect(self.accept)
+        btn.rejected.connect(self.close)
+
+        layout = QVBoxLayout()
+        layout.addLayout(form)
+        layout.addWidget(self.errMsg)
+        layout.addWidget(btn)
+        self.setLayout(layout)
+
+    def accept(self):
+        name = self.name.text().strip()
+        phone = self.phone.text().strip()
+        passwd = self.passwd.text().strip()
+        org = self.org.text().strip()
+        role = self.role.text().strip()
+
+        if len(name) == 0:
+            self.errMsg.setText('empty user name')
+            self.errMsg.show()
+            return
+        elif len(phone) != 11 or not phone.isnumeric():
+            self.errMsg.setText('invalid phone number: {}'.format(phone))
+            self.errMsg.show()
+            return
+        elif len(passwd) == 0:
+            self.errMsg.setText('empty password')
+            self.errMsg.show()
+            return
+        self.info = [name, phone, passwd, org, role]
+        super().accept()
