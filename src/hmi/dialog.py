@@ -52,11 +52,13 @@ class DesignDialog(QDialog):
     def accept(self) -> None:
         if self.designRect.design.readonly:
             self.designRect.design.name = self.name.text()
+            self.designRect.design.updateInfo()
             self.designRect.design.setScale(float(self.scale_percentage.text())/100)
             if self.designRect.design.show != self.show.checkState():
                 self.designRect.design.setShow(self.show.checkState())
         else:
             self.designRect.design.model = self.model.text()
+            self.designRect.design.updateInfo()
         super().accept()
 
 
@@ -234,10 +236,17 @@ class DeviceChoiceDialog(QDialog):
 
     def selDevice(self, event):
         self.device = event.data()
-        prompt = self.devInfo[self.device].getPrompt()
+        if self.devInfo is not None:
+            prompt = self.devInfo[self.device].getPrompt()
+        else:
+            prompt = ''
+
         self.description.setText(prompt)
         self.thumbnailScene.clear()
-        self.thumbnailScene.drawSymbol([0, 0], 
+        if self.symbType == 'design':
+            self.thumbnailScene.drawDesign([0,0], self.device)
+        else:
+            self.thumbnailScene.drawSymbol([0, 0],
                                        self.device, 
                                        symbType=self.symbType)
         self.thumbnailView.fitInView(self.thumbnailScene.cursorSymb.boundingRect(),
@@ -255,6 +264,8 @@ class DeviceChoiceDialog(QDialog):
             self.thumbnailScene.initPdkDevices()
         elif self.symbType == 'ip':
             self.thumbnailScene.initIpDevices()
+        elif self.symbType == 'design':
+            self.thumbnailScene.initDesignDevices()
         self.thumbnailScene.gridOn = False
         self.thumbnailScene.isThumbnail = True
         self.thumbnailView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

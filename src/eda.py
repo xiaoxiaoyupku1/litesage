@@ -53,6 +53,7 @@ class FoohuEda(QMainWindow):
         self.actBasic = None
         self.actPdk = None
         self.actIp = None
+        self.actDesign = None
         self.actRes = None
         # self.actGnd = None
         self.actVsrc = None
@@ -111,6 +112,11 @@ class FoohuEda(QMainWindow):
         self.actIp.setObjectName('actIp')
         self.actIp.setShortcut(QKeySequence('f4'))
         self.actIp.triggered.connect(self.addIpDev)
+
+        self.actDesign = QAction(text='Add Design Component...')
+        self.actDesign.setObjectName('actDesign')
+        self.actDesign.setShortcut(QKeySequence('f5'))
+        self.actDesign.triggered.connect(self.addDesignDev)
 
         self.actRes = QAction(getIcon('res'), '&', self, 
                               text='Resistor')
@@ -201,6 +207,7 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actBasic)
         self.menuEdit.addAction(self.actPdk)
         self.menuEdit.addAction(self.actIp)
+        self.menuEdit.addAction(self.actDesign)
         self.menuEdit.addAction(self.actRes)
         # self.menuEdit.addAction(self.actGnd)
         self.menuEdit.addAction(self.actVsrc)
@@ -253,6 +260,8 @@ class FoohuEda(QMainWindow):
         designFile = dialog.selectedFiles()[0]
         self.schScene.editDesign.dumpDesign(designFile)
         self.schScene.editDesign.change_to_readonly()
+        self.schScene.editDesign.info.setPosInDesign()
+        self.schScene.editDesign.make_group()
         setStatus('Save Design to {}'.format(designFile))
 
     def loadDesign(self, _):
@@ -266,6 +275,11 @@ class FoohuEda(QMainWindow):
         with open(designFile, 'r') as filePort:
             self.schScene.designTextLines = filePort.read().splitlines()
         setStatus('Load Design from {}'.format(designFile))
+
+    def drawDesign(self, model):
+        self.schScene.cleanCursorSymb()
+        self.schScene.insertSymbType = 'Design'
+        self.schScene.designTextLines = self.schScene.designSymbols[model]
 
     def initSchScene(self):
         if self.schScene is None:
@@ -317,7 +331,22 @@ class FoohuEda(QMainWindow):
             return False
         self.drawSymbol(dialog.device, 'ip')
         setStatus('Select IP device {}'.format(dialog.device))
-        
+
+    def addDesignDev(self):
+        self.schScene.cleanCursorSymb()
+        self.schScene.initDesignDevices()
+        devices = sorted(self.schScene.designSymbols.keys())
+        devInfo = None
+        dialog = DeviceChoiceDialog(self, 'Add Design Component',
+                                    devices=devices,
+                                    devInfo=devInfo,
+                                    symbType='design')
+        result = dialog.exec()
+        if result != dialog.accepted:
+            return False
+        self.drawDesign(dialog.device)
+        setStatus('Select Design device {}'.format(dialog.device))
+
     def drawRes(self):
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbType = 'R'

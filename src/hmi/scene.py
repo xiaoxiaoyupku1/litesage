@@ -56,6 +56,7 @@ class SchScene(QGraphicsScene):
         self.pdkDevInfo = None
         self.ipSymbols = None  # ip symbols
         self.ipDevInfo = None
+        self.designSymbols = None # all designs in ./project/
 
         self.wavWin = None
         self.layWin = None
@@ -81,6 +82,10 @@ class SchScene(QGraphicsScene):
         if self.ipSymbols is None or self.ipDevInfo is None:
             self.ipSymbols = Symbol.parse('ip')
             self.ipDevInfo = getDeviceInfos('ip')
+
+    def initDesignDevices(self):
+        if self.designSymbols is None:
+            self.designSymbols = Design.loadAllDesigns()
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
@@ -242,16 +247,22 @@ class SchScene(QGraphicsScene):
             sym.setPos(event.scenePos())
 
 
-    def drawDesign(self, event):
+    def drawDesign(self, event, designModel=None):
         if self.cursorSymb is not None:
             self.designs.append(self.cursorDesign)
         self.cursorSymb = None
         design = Design(self)
         self.cursorDesign = design
-        design.make_by_lines(self.designTextLines, self.getNextNetIndex())
+        if designModel is None:
+            design.make_by_lines(self.designTextLines, self.getNextNetIndex())
+        else:
+            design.make_by_lines(self.designSymbols[designModel], self.getNextNetIndex())
         design.make_group()
         self.cursorSymb=design.group
-        self.cursorSymb.setPos(event.scenePos())
+        if type(event) is list:
+            self.cursorSymb.setPos(*event)
+        else:
+            self.cursorSymb.setPos(event.scenePos())
 
     def drawDesign_bk(self, event):
         self.cursorSymb = []

@@ -1,11 +1,12 @@
 import json
+import os
 
 from PySide6.QtCore import (Qt)
 from src.hmi.line import WireList, WireSegment, Wire
 from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon, Pin
 from src.hmi.ellipse import Circle
-from src.hmi.text import ParameterText
+from src.hmi.text import ParameterText, DesignInfo
 from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.ellipse import WireConnection
 from PySide6.QtWidgets import (QGraphicsItemGroup, QGraphicsItem)
@@ -32,9 +33,14 @@ class Design:
         self.rect = rect
         self.Pins = []  # Pins
         self.connections = set() # wire connections
+        self.info = DesignInfo(design=self) #
 
         if rect is not None:
             self.make_by_rect()
+
+    def updateInfo(self):
+        self.info.setPlainText(self.model+'\n'+self.name)
+
 
     def change_to_editable(self):
         self.readonly = False
@@ -98,6 +104,9 @@ class Design:
             conn = WireConnection()
             conn.make_by_JSON(cnn)
             self.connections.add(conn)
+
+        self.updateInfo()
+        self.info.setPosInDesign()
 
     def delete(self):
         if self.readonly:
@@ -222,23 +231,8 @@ class Design:
             for conn in self.connections:
                 self.group.addToGroup(conn)
 
-    def setScale_bk(self, scale: float):
-        self.scale = scale
+            self.group.addToGroup(self.info)
 
-        for sym in self.symbols:
-            sym.setScale(scale)
-
-        self.rect.setScale(scale)
-
-        for wire in self.wireList.wirelist:
-            for seg in wire.getSegments():
-                seg.setScale(scale)
-
-        for pn in self.Pins:
-            pn.setScale(scale)
-
-        for conn in self.connections:
-            conn.setScale(scale)
 
 
     def setShow(self, show):
@@ -254,6 +248,8 @@ class Design:
 
             for conn in self.connections:
                 conn.setOpacity(0)
+
+            self.info.setOpacity(1)
 
         elif self.show == Qt.Checked:
             for sym in self.symbols:
@@ -271,3 +267,18 @@ class Design:
 
             for conn in self.connections:
                 conn.setOpacity(1)
+
+            self.info.setOpacity(0)
+
+
+    @classmethod
+    def loadAllDesigns(cls, directory: str = './project/') -> dict:
+        designSymbols = {}
+        for file in os.listdir(directory):
+            if file.endswith('.dsgn'):
+                with open(directory+'/'+file, 'r') as filePort:
+                    lines = filePort.read().splitlines()
+                    model = json.loads(lines[0].split(':',maxsplit=1)[1])['model']
+                    designSymbols[model] = lines
+
+        return designSymbols

@@ -12,6 +12,16 @@ class Text(QGraphicsTextItem):
         self.dimension = dimension
 
 
+class DesignInfo(QGraphicsTextItem):
+    def __init__(self, design=None, text=''):
+        super().__init__(text)
+        self.design = design
+        self.setOpacity(0)
+
+    def setPosInDesign(self):
+        rect = self.design.rect.rect()
+        self.setPos(rect.x(), rect.y())
+
 class ParameterText(QGraphicsTextItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
