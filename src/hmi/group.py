@@ -19,6 +19,7 @@ class SchInst(QGraphicsItemGroup):
         self.nameHead = None
         self.nameId = None
         self.name = None
+        self.lib = None # basic, pdk, ip
         self.model = None
         self.pins = []
         self.conns = {} # pin name -> wire name
@@ -150,13 +151,15 @@ class SchInst(QGraphicsItemGroup):
         self.setScale(float(dialog.scale_percentage.text()) / 100)
 
     def draw(self, scene, model, shapes, devinfo, nextNetIndex, isThumbnail=False):
-        nameHead = devinfo[model].head
-        params = devinfo[model].getParamList()
+        dev = devinfo[model]
+        nameHead = dev.head
+        params = dev.getParamList()
         nameId = self.getAutoNameId(scene, nameHead)
         self.setInstName(nameHead, nameId)
+        self.lib = dev.lib
         self.name = nameHead + str(nameId)
         self.model = model
-        self.pins = devinfo[model].pins
+        self.pins = dev.pins
         self.conns = {p:'net{}'.format(nextNetIndex+idx) for idx, p in enumerate(self.pins)}
         self.initial_conns = self.conns.copy()
         for shape_params in shapes:
@@ -258,6 +261,9 @@ class SchInst(QGraphicsItemGroup):
             pass
 
         return p
+
+    def isModelVisible(self):
+        return self.lib != 'basic'
 
     def make_by_JSON(self, jsn, scene):
         for k in ['nameHead', 'nameId','name','model','pins','conns','initial_conns','space']:

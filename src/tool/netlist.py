@@ -49,7 +49,8 @@ def _createInstNetlist(parent):
         line = inst.name
         for p in inst.pins:
             line += ' {}'.format(net_pin_mapping.get(inst.conns[p], inst.conns[p]))
-        line += ' {}'.format(inst.model)
+        if inst.isModelVisible():
+            line += ' {}'.format(inst.model)
         ALL_USED_MODELS.append(inst.model)
         for param in inst.params:
             if param.isUsedInNetlist():
