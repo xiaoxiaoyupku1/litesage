@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QWidget, QListWidget, QGridLayout, QGraphicsScene
 from PySide6.QtCharts import (QChart, QLineSeries)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
 from PySide6.QtGui import QPainter, QFont, QFontMetrics, QPainterPath, QColor
-from src.wavefile.wavefile import getWaveFileHandler
+from src.tool.wave import WaveInfo
 
 
 class WaveformViewer(QWidget):
@@ -32,12 +32,10 @@ class WaveformViewer(QWidget):
         self.show()
 
     def parseWaveFile(self):
-        handler = getWaveFileHandler(self.waveFile)
-        handler.parseWaveFile()
-
-        self.simType = self.waveFile.split('.')[-1][:2]
-        self.sigNames = handler.getSigNames()
-        self.sigValues = handler.getSigVals(self.simType)
+        wave = WaveInfo(self.waveFile)
+        self.simType = wave.get_sim_type()
+        self.sigNames= wave.get_trace_names()
+        self.sigValues = wave.get_waves()
 
     def setupUi(self):
         # Left side: wave name list

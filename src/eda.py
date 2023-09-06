@@ -462,7 +462,8 @@ class FoohuEda(QMainWindow):
     # def openWave(self):
     #     if self.schScene.wavWin is not None:
     #         self.schScene.wavWin.destroy()
-    #     wavefile = 'examples/wave/waveform.tr0'
+    #     wavefile = 'examples/wave/waveform.raw' # ltspice raw file
+    #     from src.waveform import WaveformViewer
     #     self.schScene.wavWin = WaveformViewer(wavefile)
     #     setStatus('Open waveform viewer')
 
