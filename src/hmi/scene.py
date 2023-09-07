@@ -1,6 +1,6 @@
-from PySide6.QtCore import (Qt, QPointF, QThread)
-from PySide6.QtGui import (QPolygonF, QPen, QColor)
-from PySide6.QtWidgets import (QGraphicsScene)
+from PySide6.QtCore import (Qt, QPointF, QThread, QEvent)
+from PySide6.QtGui import (QPolygonF, QPen, QColor, QMouseEvent,QCursor,QKeyEvent)
+from PySide6.QtWidgets import (QGraphicsScene, QGraphicsSceneMouseEvent)
 
 from src.hmi.text import ParameterText, SimulationCommandText
 from src.hmi.dialog import NetlistDialog, SimulationCommandDialog
@@ -89,8 +89,25 @@ class SchScene(QGraphicsScene):
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
-            self.cancelWire()
-            self.cleanCursorSymb()
+            if self.insertSymbType == 'W':
+                '''
+                pos, scenePos = self.draw_wire_move_event_pos
+                new_event = QGraphicsSceneMouseEvent(QGraphicsSceneMouseEvent.GraphicsSceneMouseDoubleClick)
+                new_event.setPos(pos)
+                new_event.setScenePos(scenePos)
+                new_event.setButton(Qt.MouseButton.LeftButton)
+                main = self.views()[0].parent()
+                new_event = QMouseEvent(type=QEvent.MouseButtonDblClick, localPos=main.pos(), button=Qt.LeftButton, buttons=Qt.LeftButton, modifiers=Qt.KeyboardModifier.NoModifier)
+                app = main.app
+                app.sendEvent(main,new_event)
+                #self.sendEvent(self, new_event)
+                '''
+                if self.widgetMouseMove is not None:
+                    self.removeItem(self.widgetMouseMove)
+                self.endWire()
+                self.cleanCursorSymb()
+            else:
+                self.cleanCursorSymb()
         elif event.key() == Qt.Key_Delete:
             self.delSymb()
 
@@ -184,6 +201,7 @@ class SchScene(QGraphicsScene):
             elif self.insertSymbType in ['basic', 'pdk', 'ip']:
                 self.drawSymbol(event, self.insertSymbName, self.insertSymbType)
             elif self.insertSymbType == 'W':
+                #self.draw_wire_move_event_pos = (event.pos(), event.scenePos())
                 self.drawWire(event, mode='move')
             elif self.insertSymbType == 'RECT':
                 self.drawRect(event, mode='move')
@@ -385,6 +403,7 @@ class SchScene(QGraphicsScene):
 
     def drawWire(self, event, mode=None):
         # mode: 'press', 'move'
+        #if type(event) == QKeyEvent:
         curPos = event.scenePos()
         curX, curY = self.roundPos(curPos.x(), curPos.y())
 
