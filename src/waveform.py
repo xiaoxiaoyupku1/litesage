@@ -5,14 +5,13 @@ from PySide6.QtWidgets import (QWidget, QListWidget, QGridLayout, QGraphicsScene
 from PySide6.QtCharts import (QChart, QLineSeries)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
 from PySide6.QtGui import QPainter, QFont, QFontMetrics, QPainterPath, QColor
-from src.tool.wave import WaveInfo
 
 
 class WaveformViewer(QWidget):
-    def __init__(self, waveFile, delWaveFile=False):
+    def __init__(self, inputObj, mode='full'):
         super().__init__()
-        self.waveFile = waveFile
-        self.delWaveFile = delWaveFile
+        self.inputObj = inputObj
+        self.waveInfo = None
         self.simType = None
         self.sigNames = None
         self.sigValues = None
@@ -20,7 +19,11 @@ class WaveformViewer(QWidget):
         self.chartView = None # wave signal chart
         self.layout = None  # window layout of widgets
 
-        self.parseWaveFile()
+        self.selSigIdx = None   # selected signal index
+        self.selSigName = None  # selected signal name
+        self.selSigValues = None  # selected signal values
+
+        self.parseInputObj(mode)
         self.setupUi()
 
         # TODO: make self an embedded window instead of an independent window
@@ -31,11 +34,21 @@ class WaveformViewer(QWidget):
         self.setLayout(self.layout)
         self.show()
 
-    def parseWaveFile(self):
-        wave = WaveInfo(self.waveFile)
-        self.simType = wave.get_sim_type()
-        self.sigNames= wave.get_trace_names()
-        self.sigValues = wave.get_waves()
+    def parseInputObj(self, mode):
+        if mode == 'full':
+            self.waveInfo = self.inputObj
+            self.simType = self.waveInfo.get_sim_type()
+            self.sigNames= self.waveInfo.get_trace_names()
+            self.sigValues = self.waveInfo.get_waves()
+        elif mode == 'names':
+            self.sigNames = self.inputObj
+            self.sigValues = NDArray((len(self.sigNames)))
+            raise
+
+    def updSignal(self, data):
+        # self.sigValues
+        # TODO
+        raise
 
     def setupUi(self):
         # Left side: wave name list
@@ -54,11 +67,13 @@ class WaveformViewer(QWidget):
         self.layout.setColumnStretch(1, 1)
 
         # Select 1st wave
-        self.changeWave(None, sigName=self.sigNames[1])
+        if self.sigValues is not None:
+            self.changeWave(None, sigName=self.sigNames[1])
 
     def changeWave(self, selItem, sigName=None):
         if sigName is None or not isinstance(sigName, str):
             sigName = selItem.text()
+            self.selSigName = sigName
         index = self.sigNames.index(sigName)
         self.series = QLineSeries()
         self.series.appendNp(NDArray(self.sigValues[0])*1e3,
@@ -79,8 +94,6 @@ class WaveformViewer(QWidget):
         self.chartView.delta.setHtml("")
 
     def closeEvent(self, event):
-        if self.delWaveFile and os.path.isfile(self.waveFile):
-            os.remove(self.waveFile)
         return super().closeEvent(event)
 
 

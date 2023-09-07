@@ -1,6 +1,7 @@
 import os
 from time import sleep
 from tempfile import NamedTemporaryFile
+from pickle import load
 from PySide6.QtCore import QObject, Signal
 
 
@@ -12,6 +13,7 @@ from src.tool.config import RETR_SIM_STATUS_INTVL
 
 class SimTrackThread(QObject):
     success = Signal(int)
+    sigprep = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -27,6 +29,10 @@ class SimTrackThread(QObject):
         if self.checked:
             resp = getSimStatus(self.gateway, self.remoteNetlistPath)
             self.success.emit(resp)
+
+    def trackSig(self):
+        resp = getSigResult(self.gateway, self.remoteNetlistPath)
+        self.sigprep.emit(resp)
 
 
 def runSimulation(gateway, netlist):
@@ -78,11 +84,38 @@ def getSimStatus(gateway, remoteNetlistPath):
     return success
 
 
+def getSigResult(gateway, remoteNetlistPath):
+    sigprep = None
+
+    def _readSigFile(sigprep):
+        for line in gateway.readFile(remoteSigPath):
+            if line.startswith('finish dump all'):
+                sigprep = 1
+            elif line.startswith('finish dump names'):
+                sigprep = 2
+            elif line.startswith('finish dump single'):
+                sigprep = 3
+        return sigprep
+
+    name = os.path.splitext(remoteNetlistPath)[0]
+    remoteSigPath = name + '.sigStatus'
+
+    while sigprep is None:
+        sleep(1)
+        sigprep = _readSigFile(sigprep)
+
+    return sigprep
+
+
 def getSimResult(gateway, remoteNetlistPath):
-    remoteDir = os.path.dirname(remoteNetlistPath)
-    remoteWavePath = os.path.join(remoteDir, 'waveform.ac0')
-    localWave = NamedTemporaryFile(delete=False, suffix='.ac0')
-    localWavePath = localWave.name
-    gateway.downloadFile(localWavePath, remoteWavePath)
-    return localWavePath
-    # return waveInfo
+    name = os.path.splitext(remoteNetlistPath)[0]
+    remoteSigPath = name + '.sig'
+    localSig = NamedTemporaryFile(delete=False, suffix='.sig')
+    localSigPath = localSig.name
+    gateway.downloadFile(localSigPath, remoteSigPath)
+
+    assert os.path.isfile(localSigPath)
+    assert os.access(localSigPath, os.R_OK)
+    with open(localSigPath, 'rb') as fport:
+        data = load(fport)
+    return data

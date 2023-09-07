@@ -10,6 +10,7 @@ from src.hmi.text import ParameterText, DesignInfo
 from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.ellipse import WireConnection
 from PySide6.QtWidgets import (QGraphicsItemGroup, QGraphicsItem)
+from src.tool.sys import readFile
 
 
 class Design:
@@ -274,11 +275,12 @@ class Design:
     @classmethod
     def loadAllDesigns(cls, directory: str = './project/') -> dict:
         designSymbols = {}
+        if not os.path.isdir(directory):
+            os.makedirs(directory, exist_ok=True)
         for file in os.listdir(directory):
             if file.endswith('.dsgn'):
-                with open(directory+'/'+file, 'r') as filePort:
-                    lines = filePort.read().splitlines()
-                    model = json.loads(lines[0].split(':',maxsplit=1)[1])['model']
-                    designSymbols[model] = lines
-
+                filePath = os.path.join(directory, file)
+                lines = [line for line in readFile(filePath)]
+                model = json.loads(lines[0].split(':', maxsplit=1)[1])['model']
+                designSymbols[model] = lines
         return designSymbols

@@ -15,6 +15,7 @@ from src.tool.status import setStatus
 from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.rect import DesignBorder
 from src.tool.account import UserAccount
+from src.tool.sys import readFile
 
 
 class FoohuEda(QMainWindow):
@@ -272,8 +273,7 @@ class FoohuEda(QMainWindow):
             return False
         designFile = dialog.selectedFiles()[0]
         self.schScene.insertSymbType = 'Design'
-        with open(designFile, 'r') as filePort:
-            self.schScene.designTextLines = filePort.read().splitlines()
+        self.schScene.designTextLines = [line for line in readFile(designFile)]
         setStatus('Load Design from {}'.format(designFile))
 
     def drawDesign(self, model):
