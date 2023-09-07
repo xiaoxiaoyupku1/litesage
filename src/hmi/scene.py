@@ -510,7 +510,8 @@ class SchScene(QGraphicsScene):
         setStatus('Create netlist')
         dialog.exec()
 
-    def checkUserRight(self):
+    def checkPreSim(self):
+        # check used models and user rights
         bannedModels = []
         found = []
         if self.user.getLevel() == 3:
@@ -530,6 +531,16 @@ class SchScene(QGraphicsScene):
                       'please update your account',
                       timeout=0)
             return False
+
+        # check simulation analysis
+        found = [line for line in self.netlist
+                 if line.lower().startswith(('.tran ', '.ac ', '.dc '))]
+        if len(found) == 0:
+            setStatus('Cannot find any analysis, please add simulation commnd')
+            return False
+        elif len(found) > 1:
+            setStatus('Multiple analyses found, please use only one')
+            return False
         return True
 
     def runSim(self):
@@ -537,7 +548,7 @@ class SchScene(QGraphicsScene):
         self.initIpDevices()
         self.netlist = createNetlist(self)
 
-        checked = self.checkUserRight()
+        checked = self.checkPreSim()
         self.simTrackThread.checked = checked
         if not checked:
             return

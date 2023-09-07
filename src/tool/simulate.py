@@ -60,10 +60,10 @@ def getSimStatus(gateway, remoteNetlistPath):
                 lefttime = float(line.split('left time')[1].strip())  # left time always in seconds
                 interval = lefttime / 10.0
                 setStatus(line, timeout=0)
-            elif line.startswith('Simulation success'):
+            elif line == 'success':
                 success = 0
                 setStatus(line)
-            elif line.startswith('Simulation failed'):
+            elif line == 'fail':
                 success = -1
                 setStatus(line)
         return interval, success
