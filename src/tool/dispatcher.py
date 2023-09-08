@@ -24,8 +24,10 @@ class GatewayHandler(FileSystemEventHandler):
             return
         elif not os.path.isfile(statusFile):
             return
-        elif not os.access(statusFile, os.R_OK):
-            return self.on_modified(event)
+
+        while not os.access(statusFile, os.R_OK):
+            print('... waiting for reading permission of {}'.format(statusFile))
+            sleep(0.5)
 
         baseName = os.path.basename(statusFile)
         baseName = os.path.splitext(baseName)[0]

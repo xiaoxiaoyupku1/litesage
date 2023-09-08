@@ -46,7 +46,7 @@ def _createInstNetlist(parent):
     for inst in parent.symbols:
         if not isinstance(inst, SchInst):
             continue
-        line = inst.name
+        line = 'x' + inst.name if inst.isXInst() else inst.name
         for p in inst.pins:
             line += ' {}'.format(net_pin_mapping.get(inst.conns[p], inst.conns[p]))
         if inst.isModelVisible():

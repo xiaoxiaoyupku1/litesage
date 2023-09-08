@@ -266,6 +266,9 @@ class SchInst(QGraphicsItemGroup):
     def isModelVisible(self):
         return self.lib != 'basic'
 
+    def isXInst(self):
+        return self.lib == 'pdk'
+
     def make_by_JSON(self, jsn, scene):
         for k in ['nameHead', 'nameId','name','model','pins','conns','initial_conns','space']:
             setattr(self, k, jsn[k])
