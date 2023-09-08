@@ -133,7 +133,7 @@ class SchScene(QGraphicsScene):
             elif isinstance(shape, Pin):
                 shape.delete()
             elif isinstance(shape, SimulationCommandText):
-                shape.delete()
+                self.removeItem(shape)
                 self.simtexts.remove(shape)
             else:
                 self.removeItem(shape)
@@ -470,7 +470,7 @@ class SchScene(QGraphicsScene):
         self.cursorSymb = []
         if mode != 'move':
             return False
-        dialog = SimulationCommandDialog(None)
+        dialog = SimulationCommandDialog(None, text='')
         result = dialog.exec()
         if result != dialog.accepted:
             return False

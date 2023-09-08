@@ -1,4 +1,3 @@
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGraphicsTextItem, QTextBrowser,QGraphicsItem
 
 class Text(QGraphicsTextItem):
@@ -48,3 +47,12 @@ class SimulationCommandText(QGraphicsTextItem):
         self.font = self.font()
         self.font.setPixelSize(size)
         self.setFont(self.font)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+
+    def contextMenuEvent(self, event):
+        from src.hmi.dialog import SimulationCommandDialog
+        dialog = SimulationCommandDialog(None, text=self.toPlainText())
+        result = dialog.exec()
+        if result != dialog.accepted:
+            return
+        self.setPlainText(dialog.command)

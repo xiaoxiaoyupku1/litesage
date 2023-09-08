@@ -293,10 +293,11 @@ class NetlistDialog(QDialog):
 
 
 class SimulationCommandDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, text=''):
         super().__init__(parent)
         self.init()
         self.setup()
+        self.parseText(text)
 
     def init(self):
         self.setWindowTitle('SPICE Analysis')
@@ -334,6 +335,22 @@ class SimulationCommandDialog(QDialog):
         else:
             super().accept()
 
+    def parseText(self, text):
+        if len(text) == 0:
+            return
+        elif text.lower().startswith('.tran '):
+            tabId = 0
+        elif text.lower().startswith('.ac '):
+            tabId = 1
+        elif text.lower().startswith('.dc '):
+            tabId = 2
+        elif text.lower() == '.op':
+            tabId = 3
+        else:
+            tabId = 4
+        self.tab.setCurrentIndex(tabId)
+        self.dialogs[tabId].setCommand(text)
+
         
 class SimCmdDialog_TRAN(QDialog):
     def __init__(self, parent=None):
@@ -353,6 +370,24 @@ class SimCmdDialog_TRAN(QDialog):
         stop = self.stop.text().strip()
         step = self.step.text().strip()
         return '.tran {} {}{}'.format(step, stop, start)
+
+    def setCommand(self, text):
+        """
+        Syntax: .TRAN <Tstep> <Tstop> [Tstart [dTmax]] [modifiers]
+        .TRAN <Tstop> [modifiers]
+        """ 
+        items = text.split()
+        length = len(items)
+
+        if length == 1:
+            return
+        if length > 1:
+            self.step.setText(items[1])
+        if length > 2:
+            self.stop.setText(items[2])
+        if length > 3:
+            self.start.setText(' '.join(items[3]))
+
 
 class SimCmdDialog_AC(QDialog):
     def __init__(self, parent=None):
@@ -375,6 +410,25 @@ class SimCmdDialog_AC(QDialog):
         stop = self.stop.text().strip()
         return '.ac {} {} {} {}'.format(sweep, num, start, stop)
 
+    def setCommand(self, text):
+        """
+        Syntax: .ac <oct, dec, lin> <Nsteps> <StartFreq> <EndFreq>
+        .ac list <FirstFreq> [<NextFreq> [<NextFreq> ...]]
+        """
+        items = text.split()
+        length = len(items)
+
+        if length == 1:
+            return
+        if length > 1:
+            self.sweep.setText(items[1])
+        if length > 2:
+            self.num.setText(items[2])
+        if length > 3:
+            self.start.setText(items[3])
+        if length > 4:
+            self.stop.setText(' '.join(items[4:]))
+
 class SimCmdDialog_DC(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -396,6 +450,26 @@ class SimCmdDialog_DC(QDialog):
         step = self.step.text().strip()
         return '.dc {} {} {} {}'.format(sweep, start, stop, step)
 
+    def setCommand(self, text):
+        """
+        Syntax: .dc <srcnam> <Vstart> <Vstop> <Vincr>
+        + [<srcnam2> <Vstart2> <Vstop2> <Vincr2>]
+        """
+        items = text.split()
+        length = len(items)
+
+        if length == 1:
+            return
+        if length > 1:
+            self.sweep.setText(items[1])
+        if length > 2:
+            self.start.setText(items[2])
+        if length > 3:
+            self.stop.setText(items[3])
+        if length > 4:
+            self.step.setText(' '.join(items[4:]))
+
+
 class SimCmdDialog_DCOP(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -408,6 +482,9 @@ class SimCmdDialog_DCOP(QDialog):
     def getCommand(self):
         return '.op'
 
+    def setCommand(self, text):
+        return
+
 class SimCmdDialog_CUSTOMIZE(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -418,6 +495,9 @@ class SimCmdDialog_CUSTOMIZE(QDialog):
 
     def getCommand(self):
         return self.text.text().strip()
+    
+    def setCommand(self, text):
+        self.text.setText(text)
 
 
 class UserAccountDialog(QDialog):
