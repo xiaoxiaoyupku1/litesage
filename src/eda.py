@@ -9,7 +9,7 @@ from PySide6.QtGui import (
 from src.layout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
-from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog, UserAccountDialog
+from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog, UserAccountDialog, Confirmation
 from src.hmi.image import getIcon
 from src.tool.status import setStatus
 from src.hmi.group import (SchInst, DesignGroup)
@@ -98,6 +98,12 @@ class FoohuEda(QMainWindow):
 
         self.actLoad = QAction(text='Load Design')
         self.actLoad.triggered.connect(self.loadDesign)
+
+        self.actSaveSch = QAction(text='Save Schematic')
+        self.actSaveSch.triggered.connect(self.saveSch)
+
+        self.actLoadSch = QAction(text='Load Schematic')
+        self.actLoadSch.triggered.connect(self.loadSch)
 
         self.actBasic = QAction(text='Add Standard Component...')
         self.actBasic.setObjectName('actBasic')
@@ -201,6 +207,8 @@ class FoohuEda(QMainWindow):
         self.menuFile.setTitle('File')
         self.menuFile.addAction(self.actSave)
         self.menuFile.addAction(self.actLoad)
+        self.menuFile.addAction(self.actSaveSch)
+        self.menuFile.addAction(self.actLoadSch)
 
         self.menuEdit = QMenu(self.menuBar)
         self.menuEdit.setTitle('Edit')
@@ -263,6 +271,8 @@ class FoohuEda(QMainWindow):
         self.schScene.editDesign.change_to_readonly()
         self.schScene.editDesign.info.setPosInDesign()
         self.schScene.editDesign.make_group()
+        self.schScene.designs.append(self.schScene.editDesign)
+        self.schScene.editDesign = None
         setStatus('Save Design to {}'.format(designFile))
 
     def loadDesign(self, _):
@@ -275,6 +285,46 @@ class FoohuEda(QMainWindow):
         self.schScene.insertSymbType = 'Design'
         self.schScene.designTextLines = [line for line in readFile(designFile)]
         setStatus('Load Design from {}'.format(designFile))
+
+    def saveSch(self):
+        if self.schScene is None:
+            return
+        if self.schScene.editDesign is not None:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Alert")
+            msgBox.setText("A design is in editing, please save it firstly")
+            msgBox.exec()
+            return
+
+        dialog = DesignFileDialog(self, 'Save Schematic as ...', mode='save', directory='./project/', type='sch')
+        result = dialog.exec()
+        if result != dialog.accepted:
+            return False
+        schFile = dialog.selectedFiles()[0]
+        self.schScene.dumpSch(schFile)
+        setStatus('Save Schematic to {}'.format(schFile))
+
+
+    def loadSch(self):
+        if len(self.schScene.items()) > 0:
+            confirm = Confirmation("This will clean up current schematic, do you want to continue?")
+            if confirm.exec():
+                self.do_loadSch()
+            else:
+                pass
+        else:
+            self.do_loadSch()
+
+    def do_loadSch(self):
+        dialog = DesignFileDialog(self, 'Load Schematic from ...', mode='load', directory='./project/', type='sch')
+        result = dialog.exec()
+        if result != dialog.accepted:
+            return False
+        schFile = dialog.selectedFiles()[0]
+        self.schScene = None
+        self.initSchScene()
+        self.schScene.makeSch([line for line in readFile(schFile)])
+        setStatus('Load Schematic from {}'.format(schFile))
 
     def drawDesign(self, model):
         self.schScene.cleanCursorSymb()

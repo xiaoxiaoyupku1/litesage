@@ -21,7 +21,7 @@ class Design:
         self.conns = {}  # pin name -> wire name
         self.initial_conns = {}
 
-        self.group = None
+        self.group: QGraphicsItemGroup = None
         self.show = Qt.Checked
 
         # design status
@@ -273,7 +273,7 @@ class Design:
 
 
     @classmethod
-    def loadAllDesigns(cls, directory: str = './project/') -> dict:
+    def loadAllDesigns(cls, directory: str = './project/') -> dict[str, list]:
         designSymbols = {}
         if not os.path.isdir(directory):
             os.makedirs(directory, exist_ok=True)

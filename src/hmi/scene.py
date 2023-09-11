@@ -7,7 +7,7 @@ from src.hmi.dialog import NetlistDialog, SimulationCommandDialog
 from src.hmi.line import Line, Wire, WireSegment, WireList
 from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon, Pin
-from src.hmi.ellipse import Circle
+from src.hmi.ellipse import Circle,WireConnection
 from src.hmi.symbol import Symbol
 from src.hmi.group import SchInst
 from src.tool.device import getDeviceInfos
@@ -19,6 +19,7 @@ from src.tool.simulate import runSimulation, getSimResult
 from src.tool.network import Gateway
 from src.waveform import WaveformViewer
 from src.tool.wave import WaveInfo
+import json
 
 
 class SchScene(QGraphicsScene):
@@ -33,8 +34,9 @@ class SchScene(QGraphicsScene):
         self.insertSymbName = None  # insert symbol name (from lib file)
         self.widgetMouseMove = None  # widget with moving mouse
         self.designTextLines = None  # list of strings: user-defined design in rectangle
-        self.symbols = []  # list of all symbols, a symbol = list of shapes
-        self.designs = [] # list of saved designs (not in editing)
+        self.symbols: list[SchInst] = []  # list of all symbols, a symbol = list of shapes
+        self.designs: list[Design] = [] # list of saved designs (not in editing)
+        self.editDesign: Design = None
         self.simtexts = [] # list of simulation command texts
         self.netlist = [] # list of netlist text lines
 
@@ -57,7 +59,7 @@ class SchScene(QGraphicsScene):
         self.pdkDevInfo = None
         self.ipSymbols = None  # ip symbols
         self.ipDevInfo = None
-        self.designSymbols = None # all designs in ./project/
+        self.designSymbols: dict = None # all designs in ./project/
 
         self.wavWin = None
         self.layWin = None
@@ -633,3 +635,103 @@ class SchScene(QGraphicsScene):
                     except:
                         continue
         return idx
+
+
+
+    def dumpSch(self, filePath : str) -> None:
+        centerX: float = 0
+        centerY: float = 0
+
+        with open(filePath, 'w') as f:
+
+            f.write('Wires:')
+            wires = []
+            for wire in self.wireList.wirelist:
+                wires.append(wire.toPrevJSON(centerX, centerY))
+            f.write(json.dumps(wires))
+            f.write('\n')
+
+            f.write('Connections:')
+            conns = set()
+            for wire in self.wireList.wirelist:
+                for seg in wire.getSegments():
+                    conns.update(seg.connections)
+            conns_list = []
+            for conn in conns:
+                conns_list.append(conn.toPrevJSON(centerX, centerY))
+            f.write(json.dumps(conns_list))
+            f.write('\n')
+
+            f.write("Designs:")
+            design_list = []
+            for design in self.designs:
+                design_dict = {'model':design.model,
+                               'name':design.name,
+                               'x':design.group.x(),
+                               'y':design.group.y(),
+                               'scale':design.group.scale(),
+                               'm11':design.group.transform().m11(),
+                               'm22':design.group.transform().m22(),
+                               'show':design.show.value
+                               }
+                design_list.append(design_dict)
+            f.write(json.dumps(design_list))
+            f.write('\n')
+
+            scale = self.scale
+            for symbol in self.symbols:
+                f.write('Symbol:')
+                sym = symbol.toPrevJSON(centerX, centerY)
+                f.write(json.dumps(sym))
+                f.write("\n")
+
+
+    def makeSch(self, lines: list) -> None:
+
+        #symbols
+        for sym_line in lines[3:]:
+            jsn = json.loads(sym_line.split(':', maxsplit=1)[1])
+            symbol = SchInst()
+            symbol.make_by_JSON(jsn, self)
+            self.symbols.append(symbol)
+            self.addItem(symbol)
+
+        #wires
+        jsn = json.loads(lines[0].split(':', maxsplit=1)[1])
+        self.wireList = WireList(self)
+        for wr in jsn:
+            wire = Wire(self)
+            wire.make_by_JSON(wr)
+            self.wireList.append(wire, check=False)
+
+        for wire in self.wireList.wirelist:
+            for seg in wire.getSegments():
+                self.addItem(seg)
+
+        #connections of wires
+        jsn = json.loads(lines[1].split(':', maxsplit=1)[1])
+        for cnn in jsn:
+            conn = WireConnection()
+            conn.make_by_JSON(cnn)
+            self.addItem(conn)
+
+        #designs
+        jsn = json.loads(lines[2].split(':', maxsplit=1)[1])
+        if len(jsn) > 0:
+            self.initDesignDevices()
+            for design_dict in jsn:
+                for model, lines in self.designSymbols.items():
+                    if model == design_dict['model']:
+                        design = Design(self)
+                        design.make_by_lines(lines, self.getNextNetIndex())
+                        design.make_group()
+                        design.group.setPos(design_dict['x'], design_dict['y'])
+                        design.name = design_dict['name']
+                        design.setScale(design_dict['scale'])
+                        t = design.group.transform()
+                        t.scale(design_dict['m11'], design_dict['m22'])
+                        design.group.setTransform(t)
+                        design.setShow(Qt.CheckState(design_dict['show']))
+                        self.designs.append(design)
+                        break
+

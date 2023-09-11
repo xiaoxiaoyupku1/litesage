@@ -166,6 +166,7 @@ class ParameterDialog(QDialog):
 class DesignFileDialog(QFileDialog):
     def __init__(self, *args, **kwargs):
         mode = kwargs.pop('mode', 'load')       # load or save
+        type = kwargs.pop('type', 'design')
         directory = kwargs.get('directory')
 
         if not os.path.exists(directory):
@@ -174,10 +175,12 @@ class DesignFileDialog(QFileDialog):
         super().__init__(*args, **kwargs)
         self.accepted = QDialog.Accepted
 
-        #filters=["Design Files (*.dsgn)",
-        #         "Any files (*)"
-        #         ]
-        filters="Design Files (*.dsgn)"
+        if type == 'design':
+            filters="Design Files (*.dsgn)"
+        elif type == 'sch':
+            filters = "Schematic Files (*.sch)"
+        else:
+            pass
         self.setNameFilter(filters)
 
         if mode == 'load':
@@ -577,3 +580,21 @@ class UserAccountDialog(QDialog):
             return
         self.info = [name, phone, passwd, org, role]
         super().accept()
+
+
+class Confirmation(QDialog):
+    def __init__(self, warn: str):
+        super().__init__()
+        self.setWindowTitle("Alert:")
+
+        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.layout = QVBoxLayout()
+        message = QLabel(warn)
+        self.layout.addWidget(message)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)

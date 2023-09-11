@@ -124,7 +124,7 @@ class WireSegment(Line):
 class Wire(): # Wire is a list of WireSegment
     def __init__(self,parent):
         self.parent = parent #scene or design
-        self.segments = []
+        self.segments: list[WireSegment] = []
         self.name = None
 
 
@@ -236,7 +236,7 @@ class Wire(): # Wire is a list of WireSegment
 
 class WireList():
     def __init__(self,parent):
-        self.wirelist=[]
+        self.wirelist: list[Wire] = []
         #parent is the main scene or a design
         self.parent = parent
 
