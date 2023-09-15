@@ -37,7 +37,7 @@ class SchScene(QGraphicsScene):
         self.symbols: list[SchInst] = []  # list of all symbols, a symbol = list of shapes
         self.designs: list[Design] = [] # list of saved designs (not in editing)
         self.editDesign: Design = None
-        self.simtexts = [] # list of simulation command texts
+        self.simtexts: list[SimulationCommandText] = [] # list of simulation command texts
         self.netlist = [] # list of netlist text lines
 
         self.wireStartPos = None  # starting point for adding wire
@@ -678,6 +678,13 @@ class SchScene(QGraphicsScene):
             f.write(json.dumps(design_list))
             f.write('\n')
 
+            f.write("Simulation:")
+            sim_list=[]
+            for sim in self.simtexts:
+                sim_list.append(sim.toPrevJSON())
+            f.write(json.dumps(sim_list))
+            f.write('\n')
+
             scale = self.scale
             for symbol in self.symbols:
                 f.write('Symbol:')
@@ -688,8 +695,16 @@ class SchScene(QGraphicsScene):
 
     def makeSch(self, lines: list) -> None:
 
+        #simulations:
+        jsn = json.loads(lines[3].split(':', maxsplit=1)[1])
+        if len(jsn) > 0:
+            for sim in jsn:
+                item = SimulationCommandText(sim['text'])
+                item.setPos(sim['x'],sim['y'])
+                self.addItem(item)
+                self.simtexts.append(item)
         #symbols
-        for sym_line in lines[3:]:
+        for sym_line in lines[4:]:
             jsn = json.loads(sym_line.split(':', maxsplit=1)[1])
             symbol = SchInst()
             symbol.make_by_JSON(jsn, self)
@@ -734,4 +749,5 @@ class SchScene(QGraphicsScene):
                         design.setShow(Qt.CheckState(design_dict['show']))
                         self.designs.append(design)
                         break
+
 

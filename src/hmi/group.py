@@ -39,7 +39,8 @@ class SchInst(QGraphicsItemGroup):
                                              'pins',
                                              'conns',
                                              'initial_conns',
-                                             'space']}
+                                             'space',
+                                             'lib']}
         ret['scale'] = self.scale()
         ret['rotation'] = self.rotation()
         ret['m11'] = self.transform().m11()
@@ -270,7 +271,7 @@ class SchInst(QGraphicsItemGroup):
         return self.lib == 'pdk'
 
     def make_by_JSON(self, jsn, scene):
-        for k in ['nameHead', 'nameId','name','model','pins','conns','initial_conns','space']:
+        for k in ['nameHead', 'nameId','name','model','pins','conns','initial_conns','space','lib']:
             setattr(self, k, jsn[k])
         for p in jsn['params']:
             param = DeviceParam()
