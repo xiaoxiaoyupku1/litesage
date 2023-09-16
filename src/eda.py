@@ -198,6 +198,8 @@ class FoohuEda(QMainWindow):
         # self.actOpenWave.triggered.connect(self.openWave)
         self.actOpenLayout = QAction(text='Open Layout')
         self.actOpenLayout.triggered.connect(self.openLayout)
+        self.actOpenFLayout = QAction(text='Open FLayout')
+        self.actOpenFLayout.triggered.connect(self.openFLayout)
 
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
@@ -241,6 +243,7 @@ class FoohuEda(QMainWindow):
         self.menuLayout = QMenu(self.menuBar)
         self.menuLayout.setTitle('Layout')
         self.menuLayout.addAction(self.actOpenLayout)
+        self.menuLayout.addAction(self.actOpenFLayout)
 
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
@@ -521,3 +524,6 @@ class FoohuEda(QMainWindow):
         gdsfile = 'examples/layout/reference.gds'
         runLayout(gdsfile)
         setStatus('Open layout editor')
+
+    def openFLayout(self):
+        print("foohu layout")
