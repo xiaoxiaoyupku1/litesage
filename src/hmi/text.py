@@ -56,3 +56,6 @@ class SimulationCommandText(QGraphicsTextItem):
         if result != dialog.accepted:
             return
         self.setPlainText(dialog.command)
+
+    def toPrevJSON(self):
+        return {'text':self.toPlainText(),'x':self.pos().x(),'y':self.pos().y()}
