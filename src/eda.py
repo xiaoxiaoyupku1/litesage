@@ -6,7 +6,7 @@ from PySide6.QtGui import (
     QAction, QKeySequence, QPainter
 )
 
-from src.layout import runLayout
+from src.klayout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog, UserAccountDialog, Confirmation
