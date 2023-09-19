@@ -6,7 +6,6 @@ from PySide6.QtGui import (
     QAction, QKeySequence, QPainter
 )
 
-from src.klayout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog, UserAccountDialog, Confirmation
@@ -16,6 +15,7 @@ from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.rect import DesignBorder
 from src.tool.account import UserAccount
 from src.tool.sys import readFile
+from src.layout.manage import LayoutApplication
 
 
 class FoohuEda(QMainWindow):
@@ -37,6 +37,7 @@ class FoohuEda(QMainWindow):
         self.schView = None         # view to put scene on
         self.schScene = None        # scene to put symbols on
         self.cursorSymb = None      # symbol to insert
+        self.layView = None
 
         # Menus
         self.menuBar = None
@@ -198,8 +199,6 @@ class FoohuEda(QMainWindow):
         # self.actOpenWave.triggered.connect(self.openWave)
         self.actOpenLayout = QAction(text='Open Layout')
         self.actOpenLayout.triggered.connect(self.openLayout)
-        self.actOpenFLayout = QAction(text='Open FLayout')
-        # self.actOpenFLayout.triggered.connect(self.openFLayout)
 
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
@@ -243,7 +242,6 @@ class FoohuEda(QMainWindow):
         self.menuLayout = QMenu(self.menuBar)
         self.menuLayout.setTitle('Layout')
         self.menuLayout.addAction(self.actOpenLayout)
-        self.menuLayout.addAction(self.actOpenFLayout)
 
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
@@ -340,6 +338,8 @@ class FoohuEda(QMainWindow):
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
             self.actRun.triggered.connect(self.schScene.simTrackThread.trackSim)
+            self.layView = LayoutApplication(self)
+            self.actOpenLayout.triggered.connect(self.layView.open)
 
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
@@ -521,11 +521,5 @@ class FoohuEda(QMainWindow):
     #     setStatus('Open waveform viewer')
 
     def openLayout(self):
-        gdsfile = 'examples/layout/reference.gds'
-        runLayout(gdsfile)
-        setStatus('Open layout editor')
-
-    def openFLayout(self):
-        from src.layout.manage import LayoutApplication
-        LayoutApplication(self)
-        print("foohu layout")
+        self.layView.show()
+        setStatus("Open layout editor")

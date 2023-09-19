@@ -21,8 +21,16 @@ Supported features:
 
 #### Waveform Viewer
 To display all the signals in a waveform file which is the result of SPICE circuit simulation.  
-The list of all the signal names are on the left, while the waveform of the chosen signal is on the right.  
+
+Supported features:
+- Merge two or more signal waves
+- Calculate differences between selected points
+- Conduct arithmetic calculation
 
 #### Layout Editor
-To open .gds file in editing mode:  
-> klayout.exe -e layout.gds
+To view and edit layout gds file.
+
+Supported features:
+- Display placement and routing, internal 
+- Select and modify nets
+- Sync with interactions on schematic
