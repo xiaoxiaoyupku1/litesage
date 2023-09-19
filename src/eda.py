@@ -199,7 +199,7 @@ class FoohuEda(QMainWindow):
         self.actOpenLayout = QAction(text='Open Layout')
         self.actOpenLayout.triggered.connect(self.openLayout)
         self.actOpenFLayout = QAction(text='Open FLayout')
-        self.actOpenFLayout.triggered.connect(self.openFLayout)
+        # self.actOpenFLayout.triggered.connect(self.openFLayout)
 
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
@@ -526,4 +526,6 @@ class FoohuEda(QMainWindow):
         setStatus('Open layout editor')
 
     def openFLayout(self):
+        from src.layout.manage import LayoutApplication
+        LayoutApplication(self)
         print("foohu layout")
