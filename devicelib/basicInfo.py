@@ -112,4 +112,10 @@ Model:DIODE
 Pins:T1,T2
 Descr:Breakdown Voltage(V) = 6
 ENDDEF
+
+DEF GND
+Type:
+Model:
+Pins:0
+ENDDEF
 """
