@@ -172,10 +172,10 @@ class FoohuEda(QMainWindow):
         self.actRun.setShortcut(QKeySequence('ctrl+r'))
         self.actRun.triggered.connect(self.runSim)
 
-        self.actNetlist = QAction(text='SPICE Netlist')
+        self.actNetlist = QAction(getIcon('netlist'), '&', self,
+                                  text='Netlist')
         self.actNetlist.setShortcut(QKeySequence('ctrl+n'))
         self.actNetlist.triggered.connect(self.showNetlist)
-
 
         self.actRotate = QAction(getIcon('rot'), '&', self,
                                  text='Rotate')
@@ -191,6 +191,7 @@ class FoohuEda(QMainWindow):
         self.actLogin.triggered.connect(self.openUser)
         # self.actOpenWave = QAction(text='Open Wave')
         # self.actOpenWave.triggered.connect(self.openWave)
+
         self.actOpenLayout = QAction(text='Open Layout')
         self.actOpenLayout.triggered.connect(self.openLayout)
 
@@ -200,10 +201,10 @@ class FoohuEda(QMainWindow):
 
         self.menuFile = QMenu(self.menuBar)
         self.menuFile.setTitle('File')
-        self.menuFile.addAction(self.actSave)
-        self.menuFile.addAction(self.actLoad)
         self.menuFile.addAction(self.actSaveSch)
         self.menuFile.addAction(self.actLoadSch)
+        self.menuFile.addAction(self.actSave)
+        self.menuFile.addAction(self.actLoad)
 
         self.menuEdit = QMenu(self.menuBar)
         self.menuEdit.setTitle('Edit')
@@ -212,6 +213,7 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actPdk)
         self.menuEdit.addAction(self.actIp)
         self.menuEdit.addAction(self.actDesign)
+        self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actRes)
         self.menuEdit.addAction(self.actGnd)
         self.menuEdit.addAction(self.actVsrc)
@@ -219,12 +221,14 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actPin)
         self.menuEdit.addAction(self.actRect)
         self.menuEdit.addAction(self.actSim)
+        self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actFit)
         self.menuEdit.addAction(self.actGrid) 
-        self.menuEdit.addAction(self.actRun)
-        self.menuEdit.addAction(self.actNetlist)
         self.menuEdit.addAction(self.actRotate)
         self.menuEdit.addAction(self.actMirror)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actRun)
+        self.menuEdit.addAction(self.actNetlist)
 
         self.menuUser = QMenu(self.menuBar)
         self.menuUser.setTitle('Guest (Lvl1)')
