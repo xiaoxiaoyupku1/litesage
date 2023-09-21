@@ -10,10 +10,14 @@ def createNetlist(scene):
     global ALL_USED_MODELS
     ALL_USED_MODELS = []
 
+    gndNets = getActualLevelGndNets(scene)
+
     for design in scene.designs:
         line = design.name
         for pin in design.pins:
-            line += ' {}'.format(design.conns[pin])
+            conn = design.conns[pin]
+            conn = '0' if conn in gndNets else conn
+            line += ' {}'.format(conn)
         line += ' {}'.format(design.model)
         ALL_USED_MODELS.append(design.model)
         netlist.append(line)
@@ -31,7 +35,8 @@ def createNetlist(scene):
     for simtext in scene.simtexts:
         netlist.append(simtext.toPlainText().strip())
 
-    return ['*'] + subckts + netlist
+    results = ['*'] + subckts + netlist
+    return [ln.upper() for ln in results]
 
 
 def _createInstNetlist(parent):
@@ -43,12 +48,17 @@ def _createInstNetlist(parent):
         for pin, net in parent.initial_conns.items():
             net_pin_mapping[net] = pin
 
+    gndNets = getActualLevelGndNets(parent, net_pin_mapping=net_pin_mapping)
+
     for inst in parent.symbols:
-        if not isinstance(inst, SchInst):
+        if not isinstance(inst, SchInst) or inst.model == 'GND':
             continue
-        line = 'x' + inst.name if inst.isXInst() else inst.name
+        line = 'X' + inst.name if inst.isXInst() else inst.name
         for p in inst.pins:
-            line += ' {}'.format(net_pin_mapping.get(inst.conns[p], inst.conns[p]))
+            conn = inst.conns[p]
+            conn = net_pin_mapping.get(conn, conn)
+            conn = '0' if conn in gndNets else conn
+            line += ' {}'.format(conn)
         if inst.isModelVisible():
             line += ' {}'.format(inst.model)
         ALL_USED_MODELS.append(inst.model)
@@ -67,3 +77,18 @@ def _createInstNetlist(parent):
 def getAllUsedModels():
     global ALL_USED_MODELS
     return list(set(ALL_USED_MODELS))
+
+
+def getActualLevelGndNets(parent, net_pin_mapping=None):
+    gndNets = []
+    if net_pin_mapping is None:
+        net_pin_mapping = {}
+        if isinstance(parent, Design):
+            for pin, net in parent.initial_conns.items():
+                net_pin_mapping[net] = pin
+
+    for inst in parent.symbols:
+        if inst.model == 'GND':
+            p = inst.pins[0]
+            gndNets.append(net_pin_mapping.get(inst.conns[p], inst.conns[p]))
+    return gndNets

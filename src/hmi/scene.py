@@ -194,9 +194,6 @@ class SchScene(QGraphicsScene):
                 elif self.insertSymbType == 'S':
                     self.drawSim(event)
                     setStatus('Add simulation command')
-                elif self.insertSymbType == 'G':
-                    self.drawGnd(event)
-                    setStatus('Add ground')
         return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -218,8 +215,6 @@ class SchScene(QGraphicsScene):
                 self.drawDesign(event)
             elif self.insertSymbType == 'S':
                 self.drawSim(event, mode='move')
-            elif self.insertSymbType == 'G':
-                self.drawGnd(event)
         else:
             curPos = event.scenePos()
             posx, posy = self.roundPos(curPos.x(), curPos.y())

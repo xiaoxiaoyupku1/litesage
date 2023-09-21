@@ -82,8 +82,6 @@ class FoohuEda(QMainWindow):
 
 
     def setupUi(self):
-        if not self.objectName():
-            self.setObjectName('Main')
         self.resize(800, 600)
         self.setWindowTitle('FOOHU EDA - Schematic Editor')
         self.cursorSymb = 'NA'
@@ -101,106 +99,91 @@ class FoohuEda(QMainWindow):
         self.actLoad.triggered.connect(self.loadDesign)
 
         self.actSaveSch = QAction(text='Save Schematic')
+        self.actSaveSch.setShortcut(QKeySequence('ctrl+s'))
         self.actSaveSch.triggered.connect(self.saveSch)
 
         self.actLoadSch = QAction(text='Load Schematic')
+        self.actLoadSch.setShortcut(QKeySequence('ctrl+o'))
         self.actLoadSch.triggered.connect(self.loadSch)
 
         self.actBasic = QAction(text='Add Standard Component...')
-        self.actBasic.setObjectName('actBasic')
         self.actBasic.setShortcut(QKeySequence('f2'))
         self.actBasic.triggered.connect(self.addBasicDev)
 
         self.actPdk = QAction(text='Add PDK Component...')
-        self.actPdk.setObjectName('actPdk')
         self.actPdk.setShortcut(QKeySequence('f3'))
         self.actPdk.triggered.connect(self.addPdkDev)
 
         self.actIp = QAction(text='Add IP Component...')
-        self.actIp.setObjectName('actIp')
         self.actIp.setShortcut(QKeySequence('f4'))
         self.actIp.triggered.connect(self.addIpDev)
 
         self.actDesign = QAction(text='Add Design Component...')
-        self.actDesign.setObjectName('actDesign')
         self.actDesign.setShortcut(QKeySequence('f5'))
         self.actDesign.triggered.connect(self.addDesignDev)
 
         self.actRes = QAction(getIcon('res'), '&', self, 
                               text='Resistor')
-        self.actRes.setObjectName('actRes')
         self.actRes.setShortcut(QKeySequence('r'))
         self.actRes.triggered.connect(self.drawRes)
 
         self.actVsrc = QAction(getIcon('vsrc'), '&', self, 
                                text='Voltage Source')
-        self.actVsrc.setObjectName('actVsrc')
         self.actVsrc.setShortcut(QKeySequence('v'))
         self.actVsrc.triggered.connect(self.drawVsrc)
 
         self.actGnd = QAction(getIcon('gnd'), '&', self,
                               text='Ground')
-        self.actGnd.setObjectName('actGnd')
         self.actGnd.setShortcut(QKeySequence('g'))
         self.actGnd.triggered.connect(self.drawGnd)
 
         self.actWire = QAction(getIcon('wire'), '&', self, 
                                text='Wire')
-        self.actWire.setObjectName('actWire')
         self.actWire.setShortcut(QKeySequence('w'))
         self.actWire.triggered.connect(self.drawWire)
 
         self.actPin = QAction(getIcon('pin'), '&', self, 
                               text='Pin')
-        self.actPin.setObjectName('actPin')
         self.actPin.setShortcut(QKeySequence('p'))
         self.actPin.triggered.connect(self.drawPin)
 
         self.actRect = QAction(getIcon('rect'), '&', self, 
                                text='Design Rectangle')
-        self.actRect.setObjectName('actRect')
         self.actRect.setShortcut(QKeySequence('t'))
         self.actRect.triggered.connect(self.drawRect)
 
         self.actSim = QAction(getIcon('sim'), '&', self,
                               text='Simulation Command')
-        self.actSim.setObjectName('actSim')
         self.actSim.setShortcut(QKeySequence('s'))
         self.actSim.triggered.connect(self.drawSim)
 
         self.actFit = QAction(getIcon('fit'), '&', self,
                               text='Fit')
-        self.actFit.setObjectName('actFit')
         self.actFit.setShortcut(QKeySequence('f'))
         self.actFit.triggered.connect(self.fit)
 
         self.actGrid = QAction(getIcon('grid'), '&', self,
                                text='Turn On/Off Grid')
-        self.actGrid.setObjectName('actGrid')
         self.actGrid.setShortcut(QKeySequence('ctrl+g'))
         self.actGrid.triggered.connect(self.toggleGrid)
 
         self.actRun = QAction(getIcon('run'), '&', self,
                               text='Run')
-        self.actRun.setObjectName('actRun')
         self.actRun.setShortcut(QKeySequence('ctrl+r'))
         self.actRun.triggered.connect(self.runSim)
 
         self.actNetlist = QAction(text='SPICE Netlist')
-        self.actNetlist.setObjectName('actNetlist')
         self.actNetlist.setShortcut(QKeySequence('ctrl+n'))
         self.actNetlist.triggered.connect(self.showNetlist)
 
 
         self.actRotate = QAction(getIcon('rot'), '&', self,
                                  text='Rotate')
-        self.actRotate.setObjectName('actRotate')
         self.actRotate.setShortcut(QKeySequence('ctrl+w'))
         self.actRotate.triggered.connect(self.rotateSymbol)
 
         self.actMirror = QAction(getIcon('mir'), '&', self,
                                  text='Mirror')
-        self.actMirror.setObjectName('actMirror')
         self.actMirror.setShortcut(QKeySequence('ctrl+e'))
         self.actMirror.triggered.connect(self.mirrorSymbol)
 

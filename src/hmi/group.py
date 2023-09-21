@@ -133,6 +133,8 @@ class SchInst(QGraphicsItemGroup):
         self.nameId = nameId 
 
     def contextMenuEvent(self, event):
+        if self.model == 'GND':
+            return
         dialog = ParameterDialog(parent=None, 
                                  item=self.paramText, 
                                  params=self.params)
