@@ -168,17 +168,20 @@ class FoohuEda(QMainWindow):
         self.actSim.setShortcut(QKeySequence('s'))
         self.actSim.triggered.connect(self.drawSim)
 
-        self.actFit = QAction(text='Fit')
+        self.actFit = QAction(getIcon('fit'), '&', self,
+                              text='Fit')
         self.actFit.setObjectName('actFit')
         self.actFit.setShortcut(QKeySequence('f'))
         self.actFit.triggered.connect(self.fit)
 
-        self.actGrid = QAction(text='Turn On/Off Grid')
+        self.actGrid = QAction(getIcon('grid'), '&', self,
+                               text='Turn On/Off Grid')
         self.actGrid.setObjectName('actGrid')
         self.actGrid.setShortcut(QKeySequence('ctrl+g'))
         self.actGrid.triggered.connect(self.toggleGrid)
 
-        self.actRun = QAction(text='Run')
+        self.actRun = QAction(getIcon('run'), '&', self,
+                              text='Run')
         self.actRun.setObjectName('actRun')
         self.actRun.setShortcut(QKeySequence('ctrl+r'))
         self.actRun.triggered.connect(self.runSim)
@@ -189,12 +192,14 @@ class FoohuEda(QMainWindow):
         self.actNetlist.triggered.connect(self.showNetlist)
 
 
-        self.actRotate = QAction(text='Rotate')
+        self.actRotate = QAction(getIcon('rot'), '&', self,
+                                 text='Rotate')
         self.actRotate.setObjectName('actRotate')
         self.actRotate.setShortcut(QKeySequence('ctrl+w'))
         self.actRotate.triggered.connect(self.rotateSymbol)
 
-        self.actMirror = QAction(text='Mirror')
+        self.actMirror = QAction(getIcon('mir'), '&', self,
+                                 text='Mirror')
         self.actMirror.setObjectName('actMirror')
         self.actMirror.setShortcut(QKeySequence('ctrl+e'))
         self.actMirror.triggered.connect(self.mirrorSymbol)
