@@ -112,9 +112,4 @@ Model:DIODE
 Pins:T1,T2
 Descr:Breakdown Voltage(V) = 6
 ENDDEF
-
-DEF PIN
-Type:Pin
-Model:
-ENDDEF
 """

@@ -176,6 +176,8 @@ class SchInst(QGraphicsItemGroup):
 
         self.params = params
         self.paramText = ParameterText()
+        if self.model == 'GND':
+            return
         self.setParamText()
         right = self.boundingRect().x() + self.boundingRect().width()
         self.paramText.setPos(right,self.boundingRect().y())

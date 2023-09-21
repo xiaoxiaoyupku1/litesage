@@ -53,6 +53,7 @@ class SchScene(QGraphicsScene):
         self.isThumbnail = False
 
         self.basicSymbols = None  # basic ideal symbols
+        self.basicSymbolNames = None  # to filter symbols for user to choose
         self.basicDevInfo = None
         self.initBasicDevices()
         self.pdkSymbols = None  # pdk symbols
@@ -75,6 +76,8 @@ class SchScene(QGraphicsScene):
         if self.basicSymbols is None or self.basicDevInfo is None:
             self.basicSymbols = Symbol.parse('basic')
             self.basicDevInfo = getDeviceInfos('basic')
+            self.basicSymbolNames = sorted(name for name in self.basicSymbols.keys()
+                                           if name != 'GND')
 
     def initPdkDevices(self):
         if self.pdkSymbols is None or self.pdkDevInfo is None:
@@ -177,7 +180,7 @@ class SchScene(QGraphicsScene):
                     self.wireStartPos = None
                     self.drawVsrc(event)
                     setStatus('Add device VSRC')
-                if self.insertSymbType == 'W':
+                elif self.insertSymbType == 'W':
                     self.drawWire(event)
                 elif self.insertSymbType == 'P':
                     self.drawPin(event)
@@ -191,6 +194,9 @@ class SchScene(QGraphicsScene):
                 elif self.insertSymbType == 'S':
                     self.drawSim(event)
                     setStatus('Add simulation command')
+                elif self.insertSymbType == 'G':
+                    self.drawGnd(event)
+                    setStatus('Add ground')
         return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -212,6 +218,8 @@ class SchScene(QGraphicsScene):
                 self.drawDesign(event)
             elif self.insertSymbType == 'S':
                 self.drawSim(event, mode='move')
+            elif self.insertSymbType == 'G':
+                self.drawGnd(event)
         else:
             curPos = event.scenePos()
             posx, posy = self.roundPos(curPos.x(), curPos.y())
@@ -376,16 +384,7 @@ class SchScene(QGraphicsScene):
         if self.cursorSymb is not None:
             self.cursorSymb.check_design(self.editDesign)
 
-        points = [[87.500000, 0.000000],
-                  [31.250000, 56.250000],
-                  [-31.250000, 56.250000],
-                  [-87.500000, 0.000000],
-                  [-31.250000, -56.250000],
-                  [31.250000, -56.250000]]
-        polygonf = QPolygonF()
-        for point in points:
-            polygonf.append(QPointF(point[0] / self.scale, point[1] / self.scale))
-        iopin = Pin(polygonf)
+        iopin = Pin(scale=self.scale)
         self.addItem(iopin)
         iopin.setPos(event.scenePos())
         self.cursorSymb = iopin
@@ -482,6 +481,9 @@ class SchScene(QGraphicsScene):
         self.addItem(item)
         self.cursorSymb.append(item)
         self.simtexts.append(item)
+
+    def drawGnd(self, event):
+        self.drawSymbol(event, 'GND', 'basic')
 
     def drawBackground(self, painter, rect):
         if self.gridPen is None:

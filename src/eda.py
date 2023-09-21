@@ -57,7 +57,7 @@ class FoohuEda(QMainWindow):
         self.actIp = None
         self.actDesign = None
         self.actRes = None
-        # self.actGnd = None
+        self.actGnd = None
         self.actVsrc = None
         self.actWire = None
         self.actPin = None
@@ -137,6 +137,12 @@ class FoohuEda(QMainWindow):
         self.actVsrc.setObjectName('actVsrc')
         self.actVsrc.setShortcut(QKeySequence('v'))
         self.actVsrc.triggered.connect(self.drawVsrc)
+
+        self.actGnd = QAction(getIcon('gnd'), '&', self,
+                              text='Ground')
+        self.actGnd.setObjectName('actGnd')
+        self.actGnd.setShortcut(QKeySequence('g'))
+        self.actGnd.triggered.connect(self.drawGnd)
 
         self.actWire = QAction(getIcon('wire'), '&', self, 
                                text='Wire')
@@ -219,7 +225,7 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actIp)
         self.menuEdit.addAction(self.actDesign)
         self.menuEdit.addAction(self.actRes)
-        # self.menuEdit.addAction(self.actGnd)
+        self.menuEdit.addAction(self.actGnd)
         self.menuEdit.addAction(self.actVsrc)
         self.menuEdit.addAction(self.actWire)
         self.menuEdit.addAction(self.actPin)
@@ -343,7 +349,7 @@ class FoohuEda(QMainWindow):
 
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
-        devices = sorted(self.schScene.basicSymbols.keys())
+        devices = self.schScene.basicSymbolNames
         devInfo = self.schScene.basicDevInfo
         dialog = DeviceChoiceDialog(self, 'Add Standard Component', 
                                     devices=devices, 
@@ -401,25 +407,23 @@ class FoohuEda(QMainWindow):
         setStatus('Select Design device {}'.format(dialog.device))
 
     def drawRes(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'R'
+        self.drawSymbol('RES', 'basic')
 
     def drawVsrc(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'V'
+        self.drawSymbol('VSRC', 'basic')
 
-    # def drawGnd(self):
-    #     self.schScene.cleanCursorSymb()
-    #     self.schScene.insertSymbType = 'G'
+    def drawGnd(self):
+        self.drawSymbol('GND', 'basic')
 
     def drawWire(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'W'
+        self.drawSymbol('NA', 'W')
         
     def drawPin(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'P'
+        self.drawSymbol('NA', 'P')
         
+    def drawSim(self):
+        self.drawSymbol('NA', 'S')
+
     def drawRect(self):
         self.schScene.cleanCursorSymb()
         if self.schScene.anyUnSavedDesign():
@@ -434,10 +438,6 @@ class FoohuEda(QMainWindow):
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbName = name
         self.schScene.insertSymbType = symbType
-
-    def drawSim(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'S'
 
     def fit(self):
         self.schView.fit(self.schScene)
