@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QGraphicsPolygonItem, QGraphicsItem)
 from PySide6.QtCore import (Qt, QPointF)
 from PySide6.QtGui import (QPen, QColor, QPolygonF)
-import json
+from devicelib.basicLib import BASIC_PIN
 
 
 class Polygon(QGraphicsPolygonItem):
@@ -16,8 +16,12 @@ class Polygon(QGraphicsPolygonItem):
 
 
 class Pin(Polygon):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, scale=15.0):
+        """ inputOutput pin by default """
+        polygonf = QPolygonF()
+        for point in BASIC_PIN:
+            polygonf.append(QPointF(point[0] / scale, point[1] / scale))
+        super().__init__(polygonf)
         self.name = 'pin1'
         self.setPen(QPen('red'))
         self.setBrush(QColor('red'))

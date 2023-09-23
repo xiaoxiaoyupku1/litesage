@@ -133,6 +133,8 @@ class SchInst(QGraphicsItemGroup):
         self.nameId = nameId 
 
     def contextMenuEvent(self, event):
+        if self.model == 'GND':
+            return
         dialog = ParameterDialog(parent=None, 
                                  item=self.paramText, 
                                  params=self.params)
@@ -176,6 +178,8 @@ class SchInst(QGraphicsItemGroup):
 
         self.params = params
         self.paramText = ParameterText()
+        if self.model == 'GND':
+            return
         self.setParamText()
         right = self.boundingRect().x() + self.boundingRect().width()
         self.paramText.setPos(right,self.boundingRect().y())

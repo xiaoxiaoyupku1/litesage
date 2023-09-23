@@ -6,7 +6,6 @@ from PySide6.QtGui import (
     QAction, QKeySequence, QPainter
 )
 
-from src.klayout import runLayout
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog, UserAccountDialog, Confirmation
@@ -16,6 +15,7 @@ from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.rect import DesignBorder
 from src.tool.account import UserAccount
 from src.tool.sys import readFile
+from src.layout.manage import LayoutApplication
 
 
 class FoohuEda(QMainWindow):
@@ -37,6 +37,7 @@ class FoohuEda(QMainWindow):
         self.schView = None         # view to put scene on
         self.schScene = None        # scene to put symbols on
         self.cursorSymb = None      # symbol to insert
+        self.layView = None
 
         # Menus
         self.menuBar = None
@@ -56,7 +57,7 @@ class FoohuEda(QMainWindow):
         self.actIp = None
         self.actDesign = None
         self.actRes = None
-        # self.actGnd = None
+        self.actGnd = None
         self.actVsrc = None
         self.actWire = None
         self.actPin = None
@@ -81,8 +82,6 @@ class FoohuEda(QMainWindow):
 
 
     def setupUi(self):
-        if not self.objectName():
-            self.setObjectName('Main')
         self.resize(800, 600)
         self.setWindowTitle('FOOHU EDA - Schematic Editor')
         self.cursorSymb = 'NA'
@@ -100,95 +99,91 @@ class FoohuEda(QMainWindow):
         self.actLoad.triggered.connect(self.loadDesign)
 
         self.actSaveSch = QAction(text='Save Schematic')
+        self.actSaveSch.setShortcut(QKeySequence('ctrl+s'))
         self.actSaveSch.triggered.connect(self.saveSch)
 
         self.actLoadSch = QAction(text='Load Schematic')
+        self.actLoadSch.setShortcut(QKeySequence('ctrl+o'))
         self.actLoadSch.triggered.connect(self.loadSch)
 
         self.actBasic = QAction(text='Add Standard Component...')
-        self.actBasic.setObjectName('actBasic')
         self.actBasic.setShortcut(QKeySequence('f2'))
         self.actBasic.triggered.connect(self.addBasicDev)
 
         self.actPdk = QAction(text='Add PDK Component...')
-        self.actPdk.setObjectName('actPdk')
         self.actPdk.setShortcut(QKeySequence('f3'))
         self.actPdk.triggered.connect(self.addPdkDev)
 
         self.actIp = QAction(text='Add IP Component...')
-        self.actIp.setObjectName('actIp')
         self.actIp.setShortcut(QKeySequence('f4'))
         self.actIp.triggered.connect(self.addIpDev)
 
         self.actDesign = QAction(text='Add Design Component...')
-        self.actDesign.setObjectName('actDesign')
         self.actDesign.setShortcut(QKeySequence('f5'))
         self.actDesign.triggered.connect(self.addDesignDev)
 
         self.actRes = QAction(getIcon('res'), '&', self, 
                               text='Resistor')
-        self.actRes.setObjectName('actRes')
         self.actRes.setShortcut(QKeySequence('r'))
         self.actRes.triggered.connect(self.drawRes)
 
         self.actVsrc = QAction(getIcon('vsrc'), '&', self, 
                                text='Voltage Source')
-        self.actVsrc.setObjectName('actVsrc')
         self.actVsrc.setShortcut(QKeySequence('v'))
         self.actVsrc.triggered.connect(self.drawVsrc)
 
-        self.actWire = QAction(getIcon('wire'), '&', self, 
+        self.actGnd = QAction(getIcon('gnd'), '&', self,
+                              text='Ground')
+        self.actGnd.setShortcut(QKeySequence('g'))
+        self.actGnd.triggered.connect(self.drawGnd)
+
+        self.actWire = QAction(getIcon('wire'), '&', self,
                                text='Wire')
-        self.actWire.setObjectName('actWire')
         self.actWire.setShortcut(QKeySequence('w'))
         self.actWire.triggered.connect(self.drawWire)
 
         self.actPin = QAction(getIcon('pin'), '&', self, 
                               text='Pin')
-        self.actPin.setObjectName('actPin')
         self.actPin.setShortcut(QKeySequence('p'))
         self.actPin.triggered.connect(self.drawPin)
 
         self.actRect = QAction(getIcon('rect'), '&', self, 
                                text='Design Rectangle')
-        self.actRect.setObjectName('actRect')
         self.actRect.setShortcut(QKeySequence('t'))
         self.actRect.triggered.connect(self.drawRect)
 
         self.actSim = QAction(getIcon('sim'), '&', self,
                               text='Simulation Command')
-        self.actSim.setObjectName('actSim')
         self.actSim.setShortcut(QKeySequence('s'))
         self.actSim.triggered.connect(self.drawSim)
 
-        self.actFit = QAction(text='Fit')
-        self.actFit.setObjectName('actFit')
+        self.actFit = QAction(getIcon('fit'), '&', self,
+                              text='Fit')
         self.actFit.setShortcut(QKeySequence('f'))
         self.actFit.triggered.connect(self.fit)
 
-        self.actGrid = QAction(text='Turn On/Off Grid')
-        self.actGrid.setObjectName('actGrid')
+        self.actGrid = QAction(getIcon('grid'), '&', self,
+                               text='Turn On/Off Grid')
         self.actGrid.setShortcut(QKeySequence('ctrl+g'))
         self.actGrid.triggered.connect(self.toggleGrid)
 
-        self.actRun = QAction(text='Run')
-        self.actRun.setObjectName('actRun')
+        self.actRun = QAction(getIcon('run'), '&', self,
+                              text='Run')
         self.actRun.setShortcut(QKeySequence('ctrl+r'))
         self.actRun.triggered.connect(self.runSim)
 
-        self.actNetlist = QAction(text='SPICE Netlist')
-        self.actNetlist.setObjectName('actNetlist')
+        self.actNetlist = QAction(getIcon('netlist'), '&', self,
+                                  text='Netlist')
         self.actNetlist.setShortcut(QKeySequence('ctrl+n'))
         self.actNetlist.triggered.connect(self.showNetlist)
 
-
-        self.actRotate = QAction(text='Rotate')
-        self.actRotate.setObjectName('actRotate')
+        self.actRotate = QAction(getIcon('rot'), '&', self,
+                                 text='Rotate')
         self.actRotate.setShortcut(QKeySequence('ctrl+w'))
         self.actRotate.triggered.connect(self.rotateSymbol)
 
-        self.actMirror = QAction(text='Mirror')
-        self.actMirror.setObjectName('actMirror')
+        self.actMirror = QAction(getIcon('mir'), '&', self,
+                                 text='Mirror')
         self.actMirror.setShortcut(QKeySequence('ctrl+e'))
         self.actMirror.triggered.connect(self.mirrorSymbol)
 
@@ -196,10 +191,9 @@ class FoohuEda(QMainWindow):
         self.actLogin.triggered.connect(self.openUser)
         # self.actOpenWave = QAction(text='Open Wave')
         # self.actOpenWave.triggered.connect(self.openWave)
+
         self.actOpenLayout = QAction(text='Open Layout')
         self.actOpenLayout.triggered.connect(self.openLayout)
-        self.actOpenFLayout = QAction(text='Open FLayout')
-        # self.actOpenFLayout.triggered.connect(self.openFLayout)
 
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
@@ -207,10 +201,10 @@ class FoohuEda(QMainWindow):
 
         self.menuFile = QMenu(self.menuBar)
         self.menuFile.setTitle('File')
-        self.menuFile.addAction(self.actSave)
-        self.menuFile.addAction(self.actLoad)
         self.menuFile.addAction(self.actSaveSch)
         self.menuFile.addAction(self.actLoadSch)
+        self.menuFile.addAction(self.actSave)
+        self.menuFile.addAction(self.actLoad)
 
         self.menuEdit = QMenu(self.menuBar)
         self.menuEdit.setTitle('Edit')
@@ -219,19 +213,22 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actPdk)
         self.menuEdit.addAction(self.actIp)
         self.menuEdit.addAction(self.actDesign)
+        self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actRes)
-        # self.menuEdit.addAction(self.actGnd)
+        self.menuEdit.addAction(self.actGnd)
         self.menuEdit.addAction(self.actVsrc)
         self.menuEdit.addAction(self.actWire)
         self.menuEdit.addAction(self.actPin)
         self.menuEdit.addAction(self.actRect)
         self.menuEdit.addAction(self.actSim)
+        self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actFit)
-        self.menuEdit.addAction(self.actGrid) 
-        self.menuEdit.addAction(self.actRun)
-        self.menuEdit.addAction(self.actNetlist)
+        self.menuEdit.addAction(self.actGrid)
         self.menuEdit.addAction(self.actRotate)
         self.menuEdit.addAction(self.actMirror)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actRun)
+        self.menuEdit.addAction(self.actNetlist)
 
         self.menuUser = QMenu(self.menuBar)
         self.menuUser.setTitle('Guest (Lvl1)')
@@ -243,7 +240,6 @@ class FoohuEda(QMainWindow):
         self.menuLayout = QMenu(self.menuBar)
         self.menuLayout.setTitle('Layout')
         self.menuLayout.addAction(self.actOpenLayout)
-        self.menuLayout.addAction(self.actOpenFLayout)
 
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
@@ -340,10 +336,12 @@ class FoohuEda(QMainWindow):
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
             self.actRun.triggered.connect(self.schScene.simTrackThread.trackSim)
+            self.layView = LayoutApplication(self)
+            self.actOpenLayout.triggered.connect(self.layView.open)
 
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
-        devices = sorted(self.schScene.basicSymbols.keys())
+        devices = self.schScene.basicSymbolNames
         devInfo = self.schScene.basicDevInfo
         dialog = DeviceChoiceDialog(self, 'Add Standard Component', 
                                     devices=devices, 
@@ -401,25 +399,23 @@ class FoohuEda(QMainWindow):
         setStatus('Select Design device {}'.format(dialog.device))
 
     def drawRes(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'R'
+        self.drawSymbol('RES', 'basic')
 
     def drawVsrc(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'V'
+        self.drawSymbol('VSRC', 'basic')
 
-    # def drawGnd(self):
-    #     self.schScene.cleanCursorSymb()
-    #     self.schScene.insertSymbType = 'G'
+    def drawGnd(self):
+        self.drawSymbol('GND', 'basic')
 
     def drawWire(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'W'
+        self.drawSymbol('NA', 'W')
         
     def drawPin(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'P'
+        self.drawSymbol('NA', 'P')
         
+    def drawSim(self):
+        self.drawSymbol('NA', 'S')
+
     def drawRect(self):
         self.schScene.cleanCursorSymb()
         if self.schScene.anyUnSavedDesign():
@@ -434,10 +430,6 @@ class FoohuEda(QMainWindow):
         self.schScene.cleanCursorSymb()
         self.schScene.insertSymbName = name
         self.schScene.insertSymbType = symbType
-
-    def drawSim(self):
-        self.schScene.cleanCursorSymb()
-        self.schScene.insertSymbType = 'S'
 
     def fit(self):
         self.schView.fit(self.schScene)
@@ -521,6 +513,5 @@ class FoohuEda(QMainWindow):
     #     setStatus('Open waveform viewer')
 
     def openLayout(self):
-        gdsfile = 'examples/layout/reference.gds'
-        runLayout(gdsfile)
-        setStatus('Open layout editor')
+        self.layView.show()
+        setStatus("Open layout editor")

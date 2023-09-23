@@ -109,12 +109,13 @@ ENDDEF
 DEF ZENER
 Type:Diode
 Model:DIODE
-Pins:T1,T2
+Pin::T1,T2
 Descr:Breakdown Voltage(V) = 6
 ENDDEF
 
-DEF PIN
-Type:Pin
+DEF GND
+Type:
 Model:
+Pin:GND
 ENDDEF
 """
