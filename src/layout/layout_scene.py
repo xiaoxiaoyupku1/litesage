@@ -42,12 +42,6 @@ class LayoutScene(QGraphicsScene):
         self.width()
         self.height()
         self.setSceneRect(min_x-self.width(),min_y-self.height(),self.width()*3,self.height()*3)
-        width = max_x-min_x
-        height = max_y-min_y
-        # self.bb_polygon_item = self.addRect(min_x, min_y, width, height)
-        # self.bb_polygon_item.scale()
-        # self.bb_polygon_item.boundingRect()
-        # self.blank_polygon_item = self.addRect(min_x-50*width, min_y-50*height, width*50, height*50)
         return
 
     def move_all_items(self, shift_x, shift_y):
