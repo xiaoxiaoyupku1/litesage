@@ -6,6 +6,6 @@ from src.layout.layout_main_window import LayoutMainWindow
 app = QApplication(sys.argv)
 eda = FoohuEda()
 layout_app = LayoutMainWindow(app, eda)
-eda.actOpenFLayout.triggered.connect(layout_app.show)
+eda.actOpenLayout.triggered.connect(layout_app.show)
 eda.show()
 app.exec()

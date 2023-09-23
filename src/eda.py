@@ -15,7 +15,6 @@ from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.rect import DesignBorder
 from src.tool.account import UserAccount
 from src.tool.sys import readFile
-from src.layout.manage import LayoutApplication
 
 
 class FoohuEda(QMainWindow):
@@ -193,7 +192,6 @@ class FoohuEda(QMainWindow):
         # self.actOpenWave.triggered.connect(self.openWave)
 
         self.actOpenLayout = QAction(text='Open Layout')
-        self.actOpenLayout.triggered.connect(self.openLayout)
 
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
@@ -336,8 +334,6 @@ class FoohuEda(QMainWindow):
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
             self.actRun.triggered.connect(self.schScene.simTrackThread.trackSim)
-            self.layView = LayoutApplication(self)
-            self.actOpenLayout.triggered.connect(self.layView.open)
 
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
