@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (QApplication, QDockWidget, QFrame, QGraphicsView,
     QMenu, QMenuBar, QSizePolicy, QSpacerItem,
     QStatusBar, QToolBar, QVBoxLayout, QWidget)
 from src.layout import logo_resource_rc
+from src.layout.layout_view import LayoutView
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -56,7 +57,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setStyleSheet(u"")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.graphicsView = QGraphicsView(self.centralwidget)
+        self.graphicsView = LayoutView(self.centralwidget)
         self.graphicsView.setObjectName(u"graphicsView")
 
         self.verticalLayout.addWidget(self.graphicsView)

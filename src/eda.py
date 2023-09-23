@@ -524,8 +524,3 @@ class FoohuEda(QMainWindow):
         gdsfile = 'examples/layout/reference.gds'
         runLayout(gdsfile)
         setStatus('Open layout editor')
-
-    def openFLayout(self):
-        from src.layout.manage import LayoutApplication
-        LayoutApplication(self)
-        print("foohu layout")
