@@ -1,10 +1,15 @@
 import os
 from numpy import array as NDArray
-from PySide6.QtGui import (QPainter)
-from PySide6.QtWidgets import (QWidget, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsTextItem)
+from PySide6.QtWidgets import (
+    QWidget, QMenu, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView,
+    QGraphicsItem, QGraphicsTextItem, QListWidgetItem
+)
 from PySide6.QtCharts import (QChart, QLineSeries)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
-from PySide6.QtGui import QPainter, QFont, QFontMetrics, QPainterPath, QColor
+from PySide6.QtGui import (
+    QPainter, QFont, QFontMetrics, QPainterPath, QColor,QAction,
+)
+from collections import defaultdict
 
 
 class WaveformViewer(QWidget):
@@ -15,13 +20,15 @@ class WaveformViewer(QWidget):
         self.simType = None
         self.sigNames = None
         self.sigValues = None
-        self.listView = None
+        self.listView: QListWidget = None
         self.chartView = None # wave signal chart
         self.layout = None  # window layout of widgets
 
         self.selSigIdx = None   # selected signal index
         self.selSigName = None  # selected signal name
         self.selSigValues = None  # selected signal values
+
+        self.name2names = defaultdict(set)
 
         self.parseInputObj(mode)
         self.setupUi()
@@ -52,7 +59,7 @@ class WaveformViewer(QWidget):
 
     def setupUi(self):
         # Left side: wave name list
-        self.listView = QListWidget()
+        self.listView = waveListWidget()
         self.listView.addItems(self.sigNames[1:])
         self.listView.currentItemChanged.connect(self.changeWave)
 
@@ -67,31 +74,16 @@ class WaveformViewer(QWidget):
         self.layout.setColumnStretch(1, 1)
 
         # Select 1st wave
-        if self.sigValues is not None:
-            self.changeWave(None, sigName=self.sigNames[1])
+        #if self.sigValues is not None:
+            #self.changeWave(None, sigName=self.sigNames[1])
 
-    def changeWave(self, selItem, sigName=None):
-        if sigName is None or not isinstance(sigName, str):
-            sigName = selItem.text()
-            self.selSigName = sigName
-        index = self.sigNames.index(sigName)
-        self.series = QLineSeries()
-        self.series.appendNp(NDArray(self.sigValues[0])*1e3,
-                             NDArray(self.sigValues[index]))
-        self.series.doubleClicked.connect(self.chartView.wave_clicked)
-        self.series.hovered.connect(self.chartView.wave_hovered)
-        self.chartView.chart.removeAllSeries()
-        self.chartView.chart.addSeries(self.series)
-        self.chartView.chart.setTitle(sigName)
-        self.chartView.chart.createDefaultAxes()
+    def changeWave(self, cur: QListWidgetItem, prev=None):
+
+        self.chartView.draw(cur.text(), *self.name2names[cur.text()])
+        self.chartView.chart.setTitle(cur.text())
         self.chartView.chart.axes()[0].setTitleText("Time")
         self.chartView.chart.axes()[1].setTitleText("Value")
 
-        for callout in self.chartView.callouts:
-            self.chartView.scene().removeItem(callout)
-        self.chartView.callouts = []
-        self.chartView.tooltip.hide()
-        self.chartView.delta.setHtml("")
 
     def closeEvent(self, event):
         return super().closeEvent(event)
@@ -118,6 +110,25 @@ class ChartView(QGraphicsView):
 
         self.tooltip = Callout(self.chart)
         self.callouts = []
+
+
+    def draw(self, *sigNames):
+        self.chart.removeAllSeries()
+        for sigName in sigNames:
+            index = self.parent().sigNames.index(sigName)
+            series = QLineSeries()
+            series.appendNp(NDArray(self.parent().sigValues[0]) * 1e3,
+                                 NDArray(self.parent().sigValues[index]))
+            series.doubleClicked.connect(self.wave_clicked)
+            series.hovered.connect(self.wave_hovered)
+            self.chart.addSeries(series)
+        self.chart.createDefaultAxes()
+
+        for callout in self.callouts:
+            self.scene().removeItem(callout)
+        self.callouts = []
+        self.tooltip.hide()
+        self.delta.setHtml("")
 
     def resizeEvent(self, event):
         self.scene().setSceneRect(QRectF(QPointF(0, 0), event.size()))
@@ -163,6 +174,23 @@ class ChartView(QGraphicsView):
             self.tooltip.show()
         else:
             self.tooltip.hide()
+
+    def contextMenuEvent(self, event):
+        cur = self.parent().listView.currentItem()
+        menu = QMenu(self)
+        actions=[]
+        for name in self.parent().sigNames[1:]:
+            if name == cur.text():
+                continue
+            action = waveAction(self, text=name)
+            if name in self.parent().name2names[cur.text()]:
+                font = QFont()
+                font.setBold(True)
+                action.setFont(font)
+            action.triggered.connect(action.act)
+            actions.append(action)
+        menu.addActions(actions)
+        menu.exec(event.globalPos())
 
 
 class Callout(QGraphicsItem):
@@ -269,3 +297,43 @@ class Callout(QGraphicsItem):
         self.prepareGeometryChange()
         self.setPos(self._chart.mapToPosition(
             self._anchor) + QPointF(10, -50))
+
+
+class waveListWidget(QListWidget):
+    def contextMenuEvent(self,event):
+        print('gg')
+        
+class waveMenu(QMenu):
+    def __int__(self):
+        super().__int__()
+        
+
+class waveAction(QAction):
+
+    def __init_(self, *args, **kwargs):
+        super().__init_(*args, **kwargs)
+
+    def act(self) -> None:
+        waveform: WaveformViewer = self.parent().parent()
+        cur = waveform.listView.currentItem()
+        if self.font().bold():
+            waveform.name2names[cur.text()].remove(self.text())
+            font = QFont()
+            font.setBold(False)
+            self.setFont(font)
+        else:
+            waveform.name2names[cur.text()].add(self.text())
+            font = QFont()
+            font.setBold(True)
+            self.setFont(font)
+
+        if len(waveform.name2names) > 0:
+            font = QFont()
+            font.setBold(True)
+            cur.setFont(font)
+        else:
+            font = QFont
+            font.setBold(False)
+            cur.setFont(font)
+
+        waveform.chartView.draw(cur.text(), *waveform.name2names[cur.text()])
