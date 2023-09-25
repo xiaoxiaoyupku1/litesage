@@ -273,7 +273,7 @@ class Design:
 
 
     @classmethod
-    def loadAllDesigns(cls, directory: str = './project/') -> dict[str, list]:
+    def loadAllDesigns(cls, directory='./project/'): # -> dict[str, list]:
         designSymbols = {}
         if not os.path.isdir(directory):
             os.makedirs(directory, exist_ok=True)
