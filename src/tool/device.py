@@ -156,6 +156,8 @@ class DeviceParam():
     def make_by_JSON(self, jsn):
         for k in self.__dict__:
             setattr(self, k, jsn[k])
+        self.minVal = None if self.minVal is None else EngNum(self.minVal)
+        self.maxVal = None if self.maxVal is None else EngNum(self.maxVal)
 
 
 DEVNAME_HEAD_MAPPING = {
