@@ -83,8 +83,6 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.routing_dialog.show()
         self.mode = LayoutMode.AddPolygon
 
-        print('hot key p')
-
     def keyPressEvent(self, event):
 
         if hasattr(self, "key_press_{}".format(event.text())):

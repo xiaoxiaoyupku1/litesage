@@ -290,4 +290,3 @@ class Config(configparser.ConfigParser):
             self.update_via_contact_order()
             self.update_global_parameter()
             self.update_metal_space_map()
-            print()

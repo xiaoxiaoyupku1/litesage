@@ -383,7 +383,6 @@ class LayoutScene(QGraphicsScene):
             for layer_id in selected_layer_id_list:
                 self.hide_layer_polygon(layer_id)
                 self.hide_label_by_layer_id(layer_id)
-        print()
 
     def key_press_o(self, event):
         if self.mode == SceneMode.Normal:
