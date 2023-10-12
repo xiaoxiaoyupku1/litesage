@@ -1,5 +1,7 @@
 from PySide6.QtWidgets import QGraphicsView
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPen
+from src.layout.layout_utils import LayoutType
 
 
 class LayoutView(QGraphicsView):
@@ -17,28 +19,41 @@ class LayoutView(QGraphicsView):
         self.zoom_out_sx = 1.0 / 1.2
         self.zoom_out_sy = 1.0 / 1.2
         self.layout_scene = None
-        self.canvas_zoom_coefficient = 1
-        self.canvas_zoom_variable_x = 0
-        self.canvas_zoom_variable_y = 0
-        self.canvas_enlarge_scale = 1.01
-        self.canvas_shrink_scale = 1/1.01
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
+
+    def resize_rectangle_pen_width(self):
+        pen_width = int(self.mapToScene(0, 0, 1, 1)[2].x() - self.mapToScene(0, 0, 1, 1)[0].x())
+        for item in [item for item in self.scene().items() if item.type() == LayoutType.Rectangle]:
+            pen = QPen(item.pen().color(), pen_width)
+            item.setPen(pen)
+
+    def resize_line_pen_width(self):
+        pen_width = int(self.mapToScene(0, 0, 1, 1)[2].x() - self.mapToScene(0, 0, 1, 1)[0].x())
+        for item in [item for item in self.scene().items() if item.type() == LayoutType.Line]:
+            pen = QPen(item.pen().color(), pen_width)
+            item.setPen(pen)
 
     def center_display(self):
+        self.resetTransform()
         width = self.layout_scene.width()
         height = self.layout_scene.height()
         if width > height:
-
-            scale = self.width()/width
+            scale = (self.width()/width)
         else:
-            scale = self.height() / width
-
+            scale = (self.height() / height)
         self.scale(scale, scale)
+        self.resize_rectangle_pen_width()
+        self.resize_line_pen_width()
+
+    def key_press_f(self, event):
+        self.center_display()
 
     def keyPressEvent(self, event):
 
-        if event.text() == 'f':
-            print('hot key f')
-            # self.center_display()
+        if hasattr(self, "key_press_{}".format(event.text())):
+            exec('self.key_press_{}(event)'.format(event.text()))
+        elif hasattr(self, "key_press_uppercase_{}".format(event.text().lower())):
+            exec('self.key_press_uppercase_{}(event)'.format(event.text().lower()))
         return super(LayoutView, self).keyPressEvent(event)
 
     def wheelEvent(self, event) -> None:
@@ -48,7 +63,7 @@ class LayoutView(QGraphicsView):
                 self.scale(self.zoom_in_sx, self.zoom_in_sy)
             else:
                 self.scale(self.zoom_out_sx, self.zoom_out_sy)
+            self.layout_scene.update()
             self.update()
-
-    def fit(self, scene):
-        self.fitInView(scene.itemsBoundingRect(), Qt.KeepAspectRatio)
+            self.resize_rectangle_pen_width()
+            self.resize_line_pen_width()

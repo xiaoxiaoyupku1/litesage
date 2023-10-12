@@ -1,34 +1,66 @@
-from src.layout.gds import GDSManage
+from src.layout.gds_manage import GDSManage
+from src.layout.config import Config
+from src.layout.layout_utils import Polygon
 
 
 class LayoutApplication(object):
 
-    def __init__(self):
+    def __init__(self, main_file_path):
         self.gds_manage = GDSManage()
         self.layer_list_view_data = []
         self.net_list_view_data = []
+        self.config = Config(main_file_path)
+        self.top_layout_cell = None
 
-    def load_gds(self, gds_path):
-        self.gds_manage.load_gds(gds_path)
+    def open_gds(self, gds_path):
+        self.top_layout_cell = self.gds_manage.open_gds(gds_path)
 
-    def get_layer_list_view_data(self):
-        if not self.layer_list_view_data:
-            layer_list = list(set(list(self.gds_manage.polygon_data.keys()) + list(self.gds_manage.label_data.keys())))
-            layer_list.sort(key=lambda x: int(x.replace('-', '')))
-            self.layer_list_view_data = layer_list
+    def save_data(self, polygon_list, text_list):
+        self.top_layout_cell.add_polygons(polygon_list)
+        self.top_layout_cell.add_cell_text(text_list)
 
-        return self.layer_list_view_data
+    def is_via(self, layer_id):
+        return layer_id in self.config.via_set
 
-    def get_net_list_view_data(self):
-        if not self.net_list_view_data:
-            layer_num_set = set([int(layer_id.split('-')[0]) for layer_id in self.gds_manage.polygon_data.keys()])
-            net_list_view_data = []
-            for layer_id, label_list in self.gds_manage.label_data.items():
-                label_num = int(layer_id.split('-')[0])
-                if label_num in layer_num_set:
-                    net_list_view_data.extend(list(set([label.text for label in label_list])))
-            net_list_view_data = list(set(net_list_view_data))
-            net_list_view_data.sort(key=lambda x: x)
-            self.net_list_view_data = net_list_view_data
+    def is_metal(self, layer_id):
+        return layer_id in self.config.metal_set
 
-        return self.net_list_view_data
+    def is_routing_layer(self, layer_id):
+        pass
+
+    def is_poly(self, layer_id):
+        pass
+
+    def save_gds(self, gds_path):
+
+        res, title, err_msg = True, '', ''
+
+        if not self.top_layout_cell:
+            res = False
+            err_msg = 'Save fail ,no gds content to save!'
+            title = "Empty Content"
+            return res, title, err_msg
+        try:
+            self.gds_manage.write_gds(gds_path, self.top_layout_cell)
+        except Exception as e:
+            print(e)
+            res = True
+            err_msg = 'Save Fail!'
+            title = 'System Err'
+        return res, title, err_msg
+
+    def get_via_bb_list(self, pg1: Polygon, pg2: Polygon):
+        via_bb_list = []
+        via_layer_id = self.config.get_between_via_layer_id(pg1.layer_id, pg2.layer_id)
+        if via_layer_id:
+            overlap_bb = Polygon.get_overlap_bb(pg1.bb, pg2.bb)
+            if overlap_bb:
+                via_bb_list = self.config.fab_contact_via_space_array_processor(overlap_bb, via_layer_id)
+        return via_bb_list, via_layer_id
+
+    def get_all_layer_id(self):
+
+        all_layer_id_list = list(self.gds_manage.polygon_data.keys())
+        all_layer_id_list.sort(key=lambda x: int(x.replace('-', '')))
+        return all_layer_id_list
+
