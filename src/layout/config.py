@@ -113,7 +113,7 @@ class Config(configparser.ConfigParser):
         if layer_id1 in self.metal_order and layer_id2 in self.metal_order:
             order1 = self.metal_order.index(layer_id1)
             order2 = self.metal_order.index(layer_id2)
-            if abs(order1-order2) <=1:
+            if abs(order1-order2) <= 1:
                 return True
         return False
 
@@ -197,7 +197,7 @@ class Config(configparser.ConfigParser):
                 if col_nums and left_width / col_nums >= 5:
                     v_add_value = OnGrid.on_grid_floor(self.on_grid, left_width / col_nums)
                 col_nums = col_nums + 1
-            res = [(item[0], item[1]+ idx * (size_width + y_space + v_add_value), item[2], item[3] + idx *
+            res = [(item[0], item[1] + idx * (size_width + y_space + v_add_value), item[2], item[3] + idx *
                     (size_width + y_space + v_add_value)) for idx in range(col_nums) for item in first_row]
         elif x_space:
             if (bb_length - size_length) % (size_length + x_space) == 0:
