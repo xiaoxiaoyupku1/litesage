@@ -263,7 +263,7 @@ Descr:高值电阻
 Descr:R=(L/W)*RS
 Descr:[解释：L-电阻长度；W-电阻宽度；RHR最小宽度限制：2U，电阻上走的电流越多，电阻需越宽；RS为方块电阻；RHR方块电阻1080;适用于5.4k-9.25k之间]
 Pin:T1,T2
-Param:value,y,str,8k,5.4k,9.25k,,,Value
+Param:value,y,str,8k,5.4k,1M,,,Value
 Param:wjb,y,str,2u,2u,,,,Width
 ENDDEF
 
