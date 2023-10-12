@@ -542,6 +542,8 @@ class SchScene(QGraphicsScene):
             setStatus('Multiple analyses found, please use only one')
             return False
         return True
+    def runSim_test(self):
+        self.wavWin = WaveformViewer(WaveInfo('test.raw', mode='full'))
 
     def runSim(self):
         self.initPdkDevices()

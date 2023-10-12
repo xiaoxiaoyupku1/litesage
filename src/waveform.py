@@ -1,4 +1,3 @@
-import os
 from numpy import array as NDArray
 from PySide6.QtWidgets import (
     QWidget, QMenu, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView,
@@ -10,7 +9,7 @@ from PySide6.QtGui import (
     QPainter, QFont, QFontMetrics, QPainterPath, QColor,QAction,
 )
 from collections import defaultdict
-
+from src.calculator import Calculator
 
 class WaveformViewer(QWidget):
     def __init__(self, inputObj, mode='full'):
@@ -101,7 +100,7 @@ class ChartView(QGraphicsView):
         self.chart.setAcceptHoverEvents(True)
         self.scene().addItem(self.chart)
 
-        self.delta = QGraphicsTextItem(self.chart)
+        self.delta = waveTextItem(self.chart)
         x, y = self.scene().sceneRect().bottomRight().toTuple()
         self.delta.setPos(x - 100, y - 100)
         self.delta.setZValue(15)
@@ -129,7 +128,11 @@ class ChartView(QGraphicsView):
         self.callouts = []
         self.tooltip.hide()
         self.delta.setHtml("")
-
+    def showCalculator(self):
+        x0, y0 = self.callouts[0].x, self.callouts[0].y
+        x1, y1 = self.callouts[1].x, self.callouts[1].y
+        self.calculator = Calculator(x0,y0,x1,y1)
+        self.calculator.show()
     def resizeEvent(self, event):
         self.scene().setSceneRect(QRectF(QPointF(0, 0), event.size()))
         self.chart.resize(event.size())
@@ -337,3 +340,8 @@ class waveAction(QAction):
             cur.setFont(font)
 
         waveform.chartView.draw(cur.text(), *waveform.name2names[cur.text()])
+
+
+class waveTextItem(QGraphicsTextItem):
+    def mouseDoubleClickEvent(self, event):
+        self.parentItem().scene().views()[0].showCalculator()

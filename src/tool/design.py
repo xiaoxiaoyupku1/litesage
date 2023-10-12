@@ -61,6 +61,8 @@ class Design:
                 self.scene.symbols.remove(item)
             elif type(item) is WireSegment:
                 wires.add(item.wire)
+            elif type(item) is WireConnection:
+                self.connections.add(item)
         for wire in wires:
             self.wireList.append(wire,check=False)
             self.scene.wireList.remove(wire, check=False)
