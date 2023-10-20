@@ -281,6 +281,7 @@ class NetlistDialog(QDialog):
     def __init__(self, parent=None, netlist=[]):
         super().__init__(parent)
         self.setWindowTitle('SPICE Netlist')
+        self.setFixedSize(680, 510)
 
         browser = NetlistText()
         browser.setText('\n'.join(netlist))

@@ -36,6 +36,19 @@ class SimTrackThread(QObject):
 
 
 def runSimulation(gateway, netlist):
+    liblines = [
+        '.lib "D:\\process\\btpr-c140\\current\\lib\\process\\btpr-c140.lib"',
+        '.lib "D:\\process\\btpr-c140\\current\\lib\\process\\btpr-c140_parasitic_devices.lib"',
+        '.lib "D:\\process\\btpr-c140\\current\\lib\\process\\btpr-c140_process_corner.lib"',
+        '.lib "D:\\process\\btpr-c140\\current\\lib\\ecs\\analog\\netlists\\btpr-c140.spi"',
+        '.lib "D:\\process\\btpr-c140\\current\\lib\\ecs\\analog\\ip.spi"',
+        '.param rel_mnl=0 rel_mpl=0 rel_RC=0',
+        '.param rel_bip=rel_mnl rel_DIO=rel_mnl',
+        '.param rel_mnh=rel_mnl rel_mph=rel_mpl',
+        '.options fastaccess list acct',
+    ]
+    netlist = ['*'] + liblines + netlist
+
     localPath = ''
     fp = NamedTemporaryFile(delete=False) 
     try:
@@ -45,6 +58,7 @@ def runSimulation(gateway, netlist):
         remotePath = '{}_{}_{}.sp'.format(getCurrentTime(),
                                           getIpAddr(public=True), 
                                           getIpAddr(public=False))
+        remotePath = os.path.join('/netlists', remotePath)
 
         gateway.uploadFile(localPath, remotePath)
     finally:
@@ -66,10 +80,10 @@ def getSimStatus(gateway, remoteNetlistPath):
                 lefttime = float(line.split('left time')[1].strip())  # left time always in seconds
                 interval = lefttime / 10.0
                 setStatus(line, timeout=0)
-            elif line == 'success':
+            elif 'success' in line.lower():
                 success = 0
                 setStatus(line)
-            elif line == 'fail':
+            elif 'fail' in line.lower():
                 success = -1
                 setStatus(line)
         return interval, success

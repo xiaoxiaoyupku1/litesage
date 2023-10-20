@@ -32,11 +32,13 @@ def createNetlist(scene):
 
     netlist += _createInstNetlist(scene)
 
-    for simtext in scene.simtexts:
-        netlist.append(simtext.toPlainText().strip())
+    if len(scene.simtexts) > 0:
+        netlist += ['']
+        for simtext in scene.simtexts:
+            netlist.append(simtext.toPlainText().strip())
 
     results = ['*'] + subckts + netlist
-    return [ln.upper() for ln in results]
+    return [ln.lower() for ln in results]
 
 
 def _createInstNetlist(parent):
@@ -60,6 +62,7 @@ def _createInstNetlist(parent):
             conn = '0' if conn in gndNets else conn
             line += ' {}'.format(conn)
         if inst.isModelVisible():
+            line = patchGlobalNodes(line, inst.lib, inst.model)
             line += ' {}'.format(inst.model)
         ALL_USED_MODELS.append(inst.model)
         for param in inst.params:
@@ -92,3 +95,13 @@ def getActualLevelGndNets(parent, net_pin_mapping=None):
             p = inst.pins[0]
             gndNets.append(net_pin_mapping.get(inst.conns[p], inst.conns[p]))
     return gndNets
+
+
+NO_PSB_LIST = [
+    'RHR', 'RMET1', 'RMET2', 'RPOLY1', 'RFUSEM2', 'RFUSEPOLY',
+    'ROPTION', 'RSMEAR', 'RSUB', 'IPROBE',
+]
+def patchGlobalNodes(line, lib, model):
+    if lib == 'pdk' and model not in NO_PSB_LIST:
+        line += ' $G_CSUB'
+    return line
