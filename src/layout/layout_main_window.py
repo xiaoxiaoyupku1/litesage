@@ -115,7 +115,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
 
     def net_diffusion(self):
         for metal_layer_id, txt_layer_id in self.layout_app.config.met_to_net_map.items():
-            if metal_layer_id in self.layout_app.gds_manage.polygon_data and txt_layer_id in self.layout_app.gds_manage.label_data:
+            if metal_layer_id in self.layout_app.gds_manage.polygon_data and txt_layer_id in \
+                    self.layout_app.gds_manage.label_data:
                 for pg in self.layout_app.gds_manage.polygon_data[metal_layer_id]:
                     pg_item = pg.get_temp_graphics_item(self.layout_scene.paintbrush_manage)
                     self.layout_scene.addItem(pg_item)
@@ -126,12 +127,13 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
                         item.polygon_instance.net_location = label.x, label.y
                 self.layout_scene.clear()
 
-    def open_gds(self):
-        file_tuple = QtWidgets.QFileDialog.getOpenFileName(self)
-        if file_tuple[0]:
+    def open_gds(self, file_path):
+        if not file_path:
+            file_path = QtWidgets.QFileDialog.getOpenFileName(self)[0]
+        if file_path:
             self.reset_view_model()
             self.layout_scene.reset()
-            self.layout_app.open_gds(file_tuple[0])
+            self.layout_app.open_gds(file_path)
             self.net_diffusion()
             self.show_detail_canvas()
             self.show_simple_canvas()
@@ -291,4 +293,3 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.ui.actionPath.triggered.connect(self.key_press_p)
         self.ui.actionVia.triggered.connect(self.layout_scene.key_press_o)
         self.ui.actionDele.triggered.connect(self.layout_scene.key_press_delete)
-

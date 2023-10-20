@@ -33,9 +33,8 @@ class GDSManage(object):
         self.gds_path = ''
         self.open_gds_flag = False
 
-    @staticmethod
-    def write_gds(gds_path, top_layout_cell: LayoutCell):
-        gdspy.current_library = gdspy.GdsLibrary()
+    def write_gds(self, gds_path, top_layout_cell: LayoutCell):
+        gdspy.current_library = gdspy.GdsLibrary(unit=self.gds_lib.unit, precision=self.gds_lib.precision)
         top_cell = top_layout_cell.get_gds_cell()
         for ref_cell in top_layout_cell.references:
             child_cell = ref_cell.get_gds_cell()
