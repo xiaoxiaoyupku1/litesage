@@ -32,8 +32,10 @@ def createNetlist(scene):
 
     netlist += _createInstNetlist(scene)
 
-    for simtext in scene.simtexts:
-        netlist.append(simtext.toPlainText().strip())
+    if len(scene.simtexts) > 0:
+        netlist += ['']
+        for simtext in scene.simtexts:
+            netlist.append(simtext.toPlainText().strip())
 
     results = ['*'] + subckts + netlist
     return [ln.lower() for ln in results]
