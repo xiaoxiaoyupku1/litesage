@@ -1,3 +1,4 @@
+import os
 import functools
 from threading import Lock
 from ftplib import FTP
@@ -70,17 +71,30 @@ class Gateway(FTP):
             return False
 
     def uploadFile(self, localPath, remotePath):
+        pwd = self.pwd()
         bufsize = 1024
         fp = open(localPath, 'rb')
+        remoteDir = os.path.dirname(remotePath)
+        if len(remoteDir) > 0:
+            self.cwd(remoteDir)
+            remotePath = os.path.basename(remotePath)
         self.storbinary('STOR ' + remotePath, fp, bufsize)
+        self.cwd(pwd)
         fp.close()
 
     def readFile(self, remotePath):
         fileLines = []
         def _lineCallback(line):
             fileLines.append(line)
+
+        pwd = self.pwd()
+        remoteDir = os.path.dirname(remotePath)
+        if len(remoteDir) > 0:
+            self.cwd(remoteDir)
+            remotePath = os.path.basename(remotePath)
         if self.isFile(remotePath):
             self.retrlines('RETR ' + remotePath, _lineCallback)
+        self.cwd(pwd)
         return fileLines
 
     def end(self):

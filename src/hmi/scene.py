@@ -516,7 +516,7 @@ class SchScene(QGraphicsScene):
         found = []
         if self.user.getLevel() == 3:
             # no need to check
-            return
+            return True
         elif self.user.getLevel() == 2:
             bannedModels = list(self.ipSymbols.keys())
         elif self.user.getLevel()  == 1:
@@ -542,6 +542,7 @@ class SchScene(QGraphicsScene):
             setStatus('Multiple analyses found, please use only one')
             return False
         return True
+
     def runSim_test(self):
         self.wavWin = WaveformViewer(WaveInfo('test.raw', mode='full'))
 
