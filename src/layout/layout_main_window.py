@@ -138,6 +138,7 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             self.show_detail_canvas()
             self.show_simple_canvas()
             self.update_list_view()
+            self.update_net_list_view()
             self.select_all_model_item(self.layer_list_view_model)
             self.ui.graphicsView.center_display()
             return
@@ -252,12 +253,15 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             os.remove(destination_file)
             QtWidgets.QMessageBox.information(self, 'save info', 'save success!')
 
-    def save_as(self):
-        file_tuple = QtWidgets.QFileDialog.getSaveFileName(self)
-        file_path = file_tuple[0]
-        if file_path:
+    def save_as(self, file_path=''):
+        show_info = False
+        if not file_path:
+            show_info = True
+            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self)
+            file_path = file_tuple[0]
             if '.gds' not in file_path:
                 file_path += '.gds'
+        if file_path:
             polygon_list = self.layout_scene.get_cell_polygons()
             text_list = self.layout_scene.get_cell_text()
             self.layout_app.save_data(polygon_list, text_list)
@@ -265,9 +269,15 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             if not res:
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                QtWidgets.QMessageBox.information(self, title, err_msg)
+                if show_info:
+                    QtWidgets.QMessageBox.information(self, title, err_msg)
                 return
-            QtWidgets.QMessageBox.information(self, 'save info', 'save success!')
+            if show_info:
+                QtWidgets.QMessageBox.information(self, 'save info', 'save success!')
+
+    def show_window_and_open_gds(self, file_path):
+        self.show()
+        self.open_gds(file_path)
 
     def setup_routing_dialog_ui(self):
         self.routing_dialog_ui.pushButtonConfirm.clicked.connect(self.add_polygon_accepted)
@@ -276,6 +286,19 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.routing_dialog_ui.pushButtonConfirm.setShortcut(Qt.Key.Key_Enter)
         self.routing_dialog.setWindowTitle("routing params input")
         self.routing_dialog_ui.radioButton_yes.setChecked(True)
+
+    def upload_gds(self):
+        from src.tool.network import Gateway
+        try:
+            gt = Gateway()
+            local_path = './project/layout/{}.metal.gds'.format(self.layout_app.top_layout_cell.name)
+            remote_path = '/F/LaGen/gdsS2/{}.metal.gds'.format(self.layout_app.top_layout_cell.name)
+            self.save_as(local_path)
+            gt.uploadFile(local_path, remote_path)
+            QtWidgets.QMessageBox.information(self, 'Upload info', 'upload success')
+        except Exception as e:
+            print(e)
+            QtWidgets.QMessageBox.information(self, 'Upload info', 'upload Fail!')
 
     def setup(self):
         self.setup_routing_dialog_ui()
@@ -293,3 +316,4 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.ui.actionPath.triggered.connect(self.key_press_p)
         self.ui.actionVia.triggered.connect(self.layout_scene.key_press_o)
         self.ui.actionDele.triggered.connect(self.layout_scene.key_press_delete)
+        self.ui.actionUpload.triggered.connect(self.upload_gds)

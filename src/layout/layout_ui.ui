@@ -116,10 +116,11 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionLoad"/>
+    <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="actionExport"/>
+    <addaction name="actionUpload"/>
     <addaction name="actionClose"/>
    </widget>
    <widget class="QMenu" name="menuAction">
@@ -233,9 +234,9 @@
     <string>open</string>
    </property>
   </action>
-  <action name="actionLoad">
+  <action name="actionOpen">
    <property name="text">
-    <string>Load</string>
+    <string>Open</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
@@ -287,6 +288,11 @@
   <action name="actionRuler">
    <property name="text">
     <string>Ruler</string>
+   </property>
+  </action>
+  <action name="actionUpload">
+   <property name="text">
+    <string>Upload</string>
    </property>
   </action>
  </widget>
