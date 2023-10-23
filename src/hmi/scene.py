@@ -15,7 +15,7 @@ from src.tool.netlist import createNetlist, getAllUsedModels
 from src.tool.design import Design
 from src.tool.status import setStatus
 from src.tool.simulate import SimTrackThread
-from src.tool.simulate import runSimulation, getSimResult
+from src.tool.simulate import runSimulation, getSigResult, getGdsResult
 from src.tool.network import Gateway
 from src.waveform import WaveformViewer
 from src.tool.wave import WaveInfo
@@ -570,31 +570,45 @@ class SchScene(QGraphicsScene):
 
     def showSimResult(self, success):
         if success == 0:
-            setStatus('Simulation finished')
+            setStatus(self.simTrackThread.message)
             self.simTrackThread.success.disconnect()
             self.simTrackThread.sigprep.connect(self.showSigResult)
+            self.simTrackThread.gdsprep.connect(self.showGdsResult)
             self.simTrackThread.trackSig()
+            self.simTrackThread.trackGds()
         elif success == -1:
-            setStatus('Simulation failed')
+            setStatus(self.simTrackThread.message)
+        elif success == 1:
+            setStatus(self.simTrackThread.message)
         else:
             assert 0, 'invalid output format from getSimStatus'
 
     def showSigResult(self, sigprep):
-        if sigprep == 1:
+        if sigprep == 0:
             self.simTrackThread.sigprep.disconnect()
-            self.threadPool.quit()
-            data = getSimResult(self.gateway, self.remoteNetlistPath)
+            data = getSigResult(self.gateway, self.remoteNetlistPath)
             self.wavWin = WaveformViewer(data, mode='full')
-        elif sigprep == 2:
-            self.simTrackThread.sigprep.disconnect()
+        # if sigprep == 1:
+        #     self.simTrackThread.sigprep.disconnect()
+        #     self.threadPool.quit()
+        #     data = getSimResult(self.gateway, self.remoteNetlistPath)
+        #     self.wavWin = WaveformViewer(data, mode='full')
+        # elif sigprep == 2:
+        #     self.simTrackThread.sigprep.disconnect()
+        #     self.threadPool.quit()
+        #     data = getSimResult(self.gateway, self.remoteNetlistPath)
+        #     self.wavWin = WaveformViewer(data, mode='names')
+        # elif sigprep == 3:
+        #     self.simTrackThread.sigprep.disconnect()
+        #     self.threadPool.quit()
+        #     data = getSimResult(self.gateway, self.remoteNetlistPath)
+        #     self.wavWin.updSignal(data)
+
+    def showGdsResult(self, gdsprep):
+        if gdsprep == 0:
+            self.simTrackThread.gdsprep.disconnect()
+            localGdsPath = getGdsResult(self.gateway, self.remoteNetlistPath)
             self.threadPool.quit()
-            data = getSimResult(self.gateway, self.remoteNetlistPath)
-            self.wavWin = WaveformViewer(data, mode='names')
-        elif sigprep == 3:
-            self.simTrackThread.sigprep.disconnect()
-            self.threadPool.quit()
-            data = getSimResult(self.gateway, self.remoteNetlistPath)
-            self.wavWin.updSignal(data)
 
     def clear(self):
         self.symbols = []

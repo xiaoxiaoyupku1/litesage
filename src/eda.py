@@ -36,14 +36,13 @@ class FoohuEda(QMainWindow):
         self.schView = None         # view to put scene on
         self.schScene = None        # scene to put symbols on
         self.cursorSymb = None      # symbol to insert
-        self.layView = None
 
         # Menus
         self.menuBar = None
         self.menuFile = None
         self.menuEdit = None
         self.menuUser = None
-        # self.menuWave = None
+        self.menuWave = None
         self.menuLayout = None
 
         # Menu File
@@ -71,7 +70,7 @@ class FoohuEda(QMainWindow):
         self.actLogin = None
 
         # Menu Wave
-        # self.actOpenWave = None
+        self.actOpenWave = None
 
         # Menu Layout
         self.actOpenLayout = None
@@ -188,10 +187,12 @@ class FoohuEda(QMainWindow):
 
         self.actLogin = QAction(text='Sign Up/In')
         self.actLogin.triggered.connect(self.openUser)
-        # self.actOpenWave = QAction(text='Open Wave')
-        # self.actOpenWave.triggered.connect(self.openWave)
+
+        self.actOpenWave = QAction(text='Open Wave')
+        self.actOpenWave.triggered.connect(self.openWave)
 
         self.actOpenLayout = QAction(text='Open Layout')
+        self.actOpenLayout.triggered.connect(self.openLayout)
 
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
@@ -231,9 +232,9 @@ class FoohuEda(QMainWindow):
         self.menuUser = QMenu(self.menuBar)
         self.menuUser.setTitle('Guest (Lvl1)')
         self.menuUser.addAction(self.actLogin)
-        # self.menuWave = QMenu(self.menuBar)
-        # self.menuWave.setTitle('Wave')
-        # self.menuWave.addAction(self.actOpenWave)
+        self.menuWave = QMenu(self.menuBar)
+        self.menuWave.setTitle('Wave')
+        self.menuWave.addAction(self.actOpenWave)
 
         self.menuLayout = QMenu(self.menuBar)
         self.menuLayout.setTitle('Layout')
@@ -242,7 +243,7 @@ class FoohuEda(QMainWindow):
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
         self.menuBar.addAction(self.menuUser.menuAction())
-        # self.menuBar.addAction(self.menuWave.menuAction())
+        self.menuBar.addAction(self.menuWave.menuAction())
         self.menuBar.addAction(self.menuLayout.menuAction())
 
         self.centralWidget = QWidget(self)
@@ -500,14 +501,23 @@ class FoohuEda(QMainWindow):
             self.menuUser.setTitle('{} (Lvl3)'.format(self.user.name))
             setStatus('Sign in with authenticated account: you can simulate with all components')
 
-    # def openWave(self):
-    #     if self.schScene.wavWin is not None:
-    #         self.schScene.wavWin.destroy()
-    #     wavefile = 'examples/wave/waveform.raw' # ltspice raw file
-    #     from src.waveform import WaveformViewer
-    #     self.schScene.wavWin = WaveformViewer(wavefile)
-    #     setStatus('Open waveform viewer')
+    def openWave(self):
+        if self.schScene.wavWin is not None:
+            self.schScene.wavWin.destroy()
+        dataFile = r"examples\wave\3855.sig"
+        from pickle import load
+        with open(dataFile, 'rb') as fport:
+            data = load(fport)
+        from src.waveform import WaveformViewer
+        self.schScene.wavWin = WaveformViewer(data, mode='full')
+        setStatus('Open waveform viewer')
 
     def openLayout(self):
-        self.layView.show()
+        if self.schScene.layWin is not None:
+            self.schScene.layWin.destroy()
+        dataFile = r"examples\layout\osc.gds"
+        dataFile = r""
+        from src.layout.layout_main_window import LayoutMainWindow
+        self.schScene.layWin = LayoutMainWindow()
+        self.schScene.layWin.show_window_and_open_gds(dataFile)
         setStatus("Open layout editor")

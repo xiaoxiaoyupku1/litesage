@@ -5,7 +5,7 @@ from src.layout.layout_utils import Polygon
 
 class LayoutApplication(object):
 
-    def __init__(self, main_file_path):
+    def __init__(self, main_file_path=''):
         self.gds_manage = GDSManage()
         self.layer_list_view_data = []
         self.net_list_view_data = []

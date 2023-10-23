@@ -1,5 +1,6 @@
 import os
 import functools
+from time import sleep
 from threading import Lock
 from ftplib import FTP
 from urllib.request import urlopen
@@ -65,8 +66,12 @@ class Gateway(FTP):
 
     def isFile(self, remotePath):
         try:
-            self.size(remotePath)
-            return True
+            while True:
+                size1 = self.size(remotePath)
+                sleep(0.1)
+                size2 = self.size(remotePath)
+                if size1 == size2:
+                    return True
         except:
             return False
 
