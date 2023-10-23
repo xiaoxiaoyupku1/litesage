@@ -8,9 +8,9 @@ class Config(configparser.ConfigParser):
     set ConfigParser options for case sensitive.
     """
 
-    def __init__(self, main_file_path, defaults=None):
+    def __init__(self, config_file_path, defaults=None):
         configparser.ConfigParser.__init__(self, defaults=defaults)
-        self.main_file_path = main_file_path
+        self.config_file_path = config_file_path
         self.met_to_net_map = {}
         self.poly_layer_id = ''
         self.met1_layer_id = ''
@@ -278,7 +278,8 @@ class Config(configparser.ConfigParser):
                 self.metal_space_map[getattr(self, layer_id_name)] = getattr(self, 'met{}_routing_space'.format(idx))
 
     def run(self):
-        file = self.main_file_path.replace('main.py', 'config.txt')
+        file = self.config_file_path
+
         if os.path.exists(file):
             self.read(file)
             self.sections()

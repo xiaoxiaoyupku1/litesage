@@ -10,11 +10,13 @@ from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog, UserAccountDialog, Confirmation
 from src.hmi.image import getIcon
-from src.tool.status import setStatus
 from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.rect import DesignBorder
+from src.tool.status import setStatus
 from src.tool.account import UserAccount
 from src.tool.sys import readFile
+from src.waveform import WaveformViewer
+from src.layout.layout_main_window import LayoutMainWindow
 
 
 class FoohuEda(QMainWindow):
@@ -335,6 +337,8 @@ class FoohuEda(QMainWindow):
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
             self.actRun.triggered.connect(self.schScene.simTrackThread.trackSim)
+            self.schScene.wavWin = WaveformViewer()
+            self.schScene.layWin = LayoutMainWindow()
 
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()
@@ -502,22 +506,13 @@ class FoohuEda(QMainWindow):
             setStatus('Sign in with authenticated account: you can simulate with all components')
 
     def openWave(self):
-        if self.schScene.wavWin is not None:
-            self.schScene.wavWin.destroy()
         dataFile = r"examples\wave\3855.sig"
-        from pickle import load
-        with open(dataFile, 'rb') as fport:
-            data = load(fport)
-        from src.waveform import WaveformViewer
-        self.schScene.wavWin = WaveformViewer(data, mode='full')
+        dataFile= r""
+        self.schScene.wavWin.showWindowAndOpenWave(dataFile)
         setStatus('Open waveform viewer')
 
     def openLayout(self):
-        if self.schScene.layWin is not None:
-            self.schScene.layWin.destroy()
         dataFile = r"examples\layout\osc.gds"
         dataFile = r""
-        from src.layout.layout_main_window import LayoutMainWindow
-        self.schScene.layWin = LayoutMainWindow()
         self.schScene.layWin.show_window_and_open_gds(dataFile)
         setStatus("Open layout editor")

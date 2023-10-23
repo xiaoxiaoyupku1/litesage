@@ -69,7 +69,6 @@ class SchScene(QGraphicsScene):
         self.simTrackThread = SimTrackThread()
         self.gateway = None
         self.remoteNetlistPath = None
-        self.waveInfo = None
         self.setSimTrack = False
 
     def initBasicDevices(self):
@@ -544,7 +543,8 @@ class SchScene(QGraphicsScene):
         return True
 
     def runSim_test(self):
-        self.wavWin = WaveformViewer(WaveInfo('test.raw', mode='full'))
+        self.wavWin = WaveformViewer()
+        self.wavWin.showWindowAndOpenWave('test.raw')
 
     def runSim(self):
         self.initPdkDevices()
