@@ -129,7 +129,8 @@ class Polygon(object):
         font = paintbrush_manage.get_text_font()
         text_item = LayoutTextItem(self.net_name)
         text_item.setFont(font)
-        text_item.setPos(self.net_location[0] - text_item.boundingRect().width() / 2, -self.net_location[1])
+        text_item.setPos(self.net_location[0] - text_item.boundingRect().width() / 2,
+                         -self.net_location[1] - text_item.boundingRect().height() / 2)
         if text_layer_id:
             text_item.layer_id = text_layer_id
         else:

@@ -24,14 +24,14 @@ class PaintBrushManage(object):
         self.high_light_net_container = {}
         self.highlight_net_colors_index = 0
 
-    def get_color(self, layer_id):
-        if layer_id not in self.colors_container:
+    def get_color(self, layer_num):
+        if layer_num not in self.colors_container:
             if len(self.colors) == self.colors_index:
                 self.colors_index = 0
             color = self.colors[self.colors_index]
             self.colors_index += 1
-            self.colors_container[layer_id] = color
-        return self.colors_container[layer_id]
+            self.colors_container[layer_num] = color
+        return self.colors_container[layer_num]
 
     def get_highlight_net_color(self, net_name):
         if net_name not in self.colors_container:
@@ -42,18 +42,18 @@ class PaintBrushManage(object):
             self.colors_container[net_name] = color
         return self.colors_container[net_name]
 
-    def get_paintbrush(self, layer_id):
-        if layer_id not in self.paintbrush_map:
-            color = self.get_color(layer_id)
+    def get_paintbrush(self, layer_id: str):
+        layer_num = layer_id.split('-')[0]
+        if layer_num not in self.paintbrush_map:
+            color = self.get_color(layer_num)
             pen = QPen()
             brush = QBrush()
             brush.setStyle(Qt.BrushStyle.BDiagPattern)
             brush.setColor(color)
             pen.setColor(color)
-            pen.setWidth(50)
-            self.paintbrush_map[layer_id] = (pen, brush)
+            self.paintbrush_map[layer_num] = (pen, brush)
 
-        return self.paintbrush_map[layer_id]
+        return self.paintbrush_map[layer_num]
 
     def get_highlight_net_paintbrush(self, net_name):
         if net_name not in self.high_light_net_container:

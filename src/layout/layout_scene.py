@@ -319,7 +319,7 @@ class LayoutScene(QGraphicsScene):
                 self.select_rectangle_area_item = self.addRect(x0, y0, width, height, pen=pen)
 
     def display_mouse_position(self, event):
-        txt = "{} : {}".format(int(round(event.scenePos().x())), int(round(event.scenePos().y())))
+        txt = "{} : {}".format(int(round(event.scenePos().x())), -int(round(event.scenePos().y())))
         self.main_window.ui.label.setText(txt)
 
     def mouseMoveEvent(self, event):
@@ -434,6 +434,7 @@ class LayoutScene(QGraphicsScene):
         for item in self.selected_item_list:
             item.delete()
         self.selected_item_list.clear()
+        self.main_window.update_layer_list_view()
 
     def key_press_enter(self, *args):
         if self.mode == SceneMode.AddPath:
@@ -627,8 +628,17 @@ class LayoutScene(QGraphicsScene):
             self.routing_item = self.addRect(start_x, event.scenePos().y(), 1, 1, pen, brush)
 
     def get_all_layer_id(self):
-
-        all_layer_id_list = list(self.polygon_obj_container.keys())+list(self.label_obj_container.keys())
+        all_layer_id_list = []
+        for layer_id, items in self.polygon_obj_container.items():
+            for item in items:
+                if not item.is_delete():
+                    all_layer_id_list.append(layer_id)
+                    break
+        for layer_id, items in self.label_obj_container.items():
+            for item in items:
+                if not item.is_delete():
+                    all_layer_id_list.append(layer_id)
+                    break
         all_layer_id_list.sort(key=lambda x: int(x.replace('-', '')))
         return all_layer_id_list
 
