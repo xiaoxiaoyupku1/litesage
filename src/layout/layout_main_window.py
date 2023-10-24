@@ -37,6 +37,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.setup()
 
     def update_layer_list_view(self):
+        had_select_layers = self.get_selected_layer_id_list()
+        self.layer_list_view_model.clear()
         item = QStandardItem('ALL')
         self.layer_list_view_model.appendRow(item)
         item.setCheckable(True)
@@ -44,6 +46,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             item = QStandardItem(layer_id)
             self.layer_list_view_model.appendRow(item)
             item.setCheckable(True)
+            if layer_id in had_select_layers:
+                item.setCheckState(Qt.CheckState.Checked)
 
     def add_polygon_accepted(self):
         net_name = self.routing_dialog_ui.lineEditNetName.text()
@@ -91,6 +95,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         return super(LayoutMainWindow, self).keyPressEvent(event)
 
     def update_net_list_view(self):
+        net_names = self.get_selected_net_name_list()
+        self.net_list_view_model.clear()
         item = QStandardItem('ALL')
         self.net_list_view_model.appendRow(item)
         item.setCheckable(True)
@@ -98,6 +104,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             item = QStandardItem(net_name)
             self.net_list_view_model.appendRow(item)
             item.setCheckable(True)
+            if net_name in net_names:
+                item.setCheckState(Qt.CheckState.Checked)
 
     def update_list_view(self):
         self.update_layer_list_view()
@@ -170,7 +178,7 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         for row in range(model.rowCount()):
             model.item(row, 0).setCheckState(Qt.CheckState.Checked)
 
-    def refresh_layer_list_view(self):
+    def refresh_layer_list_view(self, select_layer_id_list=None):
         selected_layer_id_list = self.get_selected_layer_id_list()
         all_layer_id_list = self.layout_scene.get_all_layer_id()
         self.layer_list_view_model.clear()
@@ -182,7 +190,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             item = QStandardItem(layer_id)
             item.setCheckable(True)
             self.layer_list_view_model.appendRow(item)
-            if layer_id in selected_layer_id_list:
+            if layer_id in selected_layer_id_list or \
+                    (select_layer_id_list is not None and layer_id in select_layer_id_list):
                 item.setCheckState(Qt.CheckState.Checked)
             else:
                 item.setCheckState(Qt.CheckState.Unchecked)
@@ -200,6 +209,15 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
                 selected_layer_id_list.append(select_item.text())
 
         return selected_layer_id_list
+
+    def get_selected_net_name_list(self):
+        selected_net_name_list = []
+        for row in range(self.net_list_view_model.rowCount()):
+            select_item = self.net_list_view_model.item(row, 0)
+            if select_item.text() != 'ALL' and select_item.checkState() == Qt.CheckState.Checked:
+                selected_net_name_list.append(select_item.text())
+
+        return selected_net_name_list
 
     def on_clicked_layer_list_view(self, item):
         select_item = self.layer_list_view_model.item(item.row(), item.column())
