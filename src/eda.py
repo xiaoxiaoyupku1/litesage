@@ -324,6 +324,7 @@ class FoohuEda(QMainWindow):
         self.schScene = None
         self.initSchScene()
         self.schScene.makeSch([line for line in readFile(schFile)])
+        self.schView.fit(self.schScene)
         setStatus('Load Schematic from {}'.format(schFile))
 
     def drawDesign(self, model):
@@ -336,7 +337,6 @@ class FoohuEda(QMainWindow):
             self.schScene = SchScene(self)
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
-            self.actRun.triggered.connect(self.schScene.simTrackThread.trackSim)
             self.schScene.wavWin = WaveformViewer()
             self.schScene.layWin = LayoutMainWindow()
 
