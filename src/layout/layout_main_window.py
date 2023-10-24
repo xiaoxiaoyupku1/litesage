@@ -257,6 +257,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             show_info = True
             file_tuple = QtWidgets.QFileDialog.getSaveFileName(self)
             file_path = file_tuple[0]
+            if not file_path:
+                return
             if '.gds' not in file_path:
                 file_path += '.gds'
         if file_path:
