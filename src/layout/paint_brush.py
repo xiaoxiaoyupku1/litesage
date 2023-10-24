@@ -51,7 +51,6 @@ class PaintBrushManage(object):
             brush.setStyle(Qt.BrushStyle.BDiagPattern)
             brush.setColor(color)
             pen.setColor(color)
-            pen.setWidth(50)
             self.paintbrush_map[layer_num] = (pen, brush)
 
         return self.paintbrush_map[layer_num]
