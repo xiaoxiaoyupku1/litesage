@@ -54,8 +54,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         is_add_net_text = self.routing_dialog_ui.radioButton_yes.isChecked()
         if not line_width:
             QtWidgets.QMessageBox.information(self, "invalid input", "please input line width!")
-        elif not layer_id:
-            QtWidgets.QMessageBox.information(self, "invalid input", "please select layer id!")
+        elif not layer_id or not self.layout_app.config.is_metal(layer_id):
+            QtWidgets.QMessageBox.information(self, "invalid input", "please input metal id!")
         elif not net_name:
             QtWidgets.QMessageBox.information(self, "invalid input", "please select net name!")
         else:
