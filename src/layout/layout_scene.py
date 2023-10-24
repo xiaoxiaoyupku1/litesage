@@ -319,7 +319,7 @@ class LayoutScene(QGraphicsScene):
                 self.select_rectangle_area_item = self.addRect(x0, y0, width, height, pen=pen)
 
     def display_mouse_position(self, event):
-        txt = "{} : {}".format(int(round(event.scenePos().x())), int(round(event.scenePos().y())))
+        txt = "{} : {}".format(int(round(event.scenePos().x())), -int(round(event.scenePos().y())))
         self.main_window.ui.label.setText(txt)
 
     def mouseMoveEvent(self, event):
