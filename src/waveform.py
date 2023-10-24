@@ -15,7 +15,7 @@ from src.calculator import Calculator
 from src.tool.wave import WaveInfo
 
 class WaveformViewer(QWidget):
-    def __init__(self):
+    def __init__(self, mode='full'):
         super().__init__()
         self.waveInfo = None
         self.simType = None
@@ -30,7 +30,7 @@ class WaveformViewer(QWidget):
         self.selSigValues = None  # selected signal values
 
         self.name2names = defaultdict(set)
-        self.parseData(None, 'full')
+        self.parseData(None, mode)
         self.setupUi()
 
         # TODO: make self an embedded window instead of an independent window
@@ -41,17 +41,26 @@ class WaveformViewer(QWidget):
         self.setLayout(self.layout)
 
     def showWindowAndOpenWave(self, dataFile, mode='full'):
+        # dataFile: WaveInfo, path string, empty string, None
+
         # full: signames and sigvalues
         # names: only signames
 
         data = None
-        if not dataFile or os.path.isfile(dataFile):
-            dataFile = QFileDialog.getOpenFileName(self)[0]
-        if dataFile.endswith('.sig'):
-            with open(dataFile, 'rb') as fport:
-                data = load(fport) # waveinfo
-        elif dataFile.endswith('.raw'):
-            data = WaveInfo(dataFile)
+        if isinstance(dataFile, WaveInfo):
+            data = dataFile
+        else:
+            if dataFile is None or not os.path.isfile(dataFile):
+                dataFile = QFileDialog.getOpenFileName(self, caption='Open Wave File',
+                                                       filter='Wave files (*.raw *.sig)')[0]
+            if dataFile.endswith('.sig'):
+                with open(dataFile, 'rb') as fport:
+                    data = load(fport) # waveinfo
+            elif dataFile.endswith('.raw'):
+                data = WaveInfo(dataFile)
+            else:
+                assert 0, 'wrong dataFile format: {}'.format(dataFile)
+
         self.parseData(data, mode)
         self.setupUi()
         self.setLayout(self.layout)

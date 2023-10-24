@@ -2,18 +2,15 @@ import os
 from time import sleep
 from tempfile import NamedTemporaryFile
 from pickle import load
-from PySide6.QtCore import QObject, Signal
-
+from PySide6.QtCore import QThread, Signal
 
 from src.tool.network import getIpAddr
 from src.tool.sys import getCurrentTime
 from src.tool.config import RETR_SIM_STATUS_INTVL
 
 
-class SimTrackThread(QObject):
-    success = Signal(int)
-    sigprep = Signal(int)
-    gdsprep = Signal(int)
+class SimTrackThread(QThread):
+    simprep = Signal(int)   # simulation status
 
     def __init__(self):
         super().__init__()
@@ -26,18 +23,44 @@ class SimTrackThread(QObject):
         self.gateway = gateway
         self.remoteNetlistPath = remoteNetlistPath
 
-    def trackSim(self):
+    def run(self):
         if self.checked:
             resp, self.message = checkSimStatus(self.gateway, self.remoteNetlistPath)
-            self.success.emit(resp)
+            self.simprep.emit(resp)
 
-    def trackSig(self):
+
+class SigTrackThread(QThread):
+    sigprep = Signal(int)
+
+    def __init__(self):
+        super().__init__()
+        self.gateway = None
+        self.remoteNetlistPath = None
+
+    def setTrack(self, gateway, remoteNetlistPath):
+        self.gateway = gateway
+        self.remoteNetlistPath = remoteNetlistPath
+
+    def run(self):
         resp = checkSigResult(self.gateway, self.remoteNetlistPath)
         self.sigprep.emit(resp)
 
-    def trackGds(self):
+
+class GdsTrackThread(QThread):
+    gdsprep = Signal(int)
+
+    def __init__(self):
+        super().__init__()
+        self.gateway = None
+        self.remoteNetlistPath = None
+
+    def setTrack(self, gateway, remoteNetlistPath):
+        self.gateway = gateway
+        self.remoteNetlistPath = remoteNetlistPath
+
+    def run(self):
         resp = checkGdsResult(self.gateway, self.remoteNetlistPath)
-        self.gdsprep.emit(resp)
+        self.sigprep.emit(resp)
 
 
 def runSimulation(gateway, netlist):
@@ -74,12 +97,13 @@ def runSimulation(gateway, netlist):
     return remotePath
 
 def checkSimStatus(gateway, remoteNetlistPath):
-    baseName = os.path.basename(remoteNetlistPath)
+    tag = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
     origNetlistPath = remoteNetlistPath
     origNetlistStatus = os.path.splitext(origNetlistPath)[0] + '.status'
-    failNetlistPath = os.path.join('simFailed', baseName)
-    failNetlistStatus = os.path.join('simFailed', )
-    passNetlistPath = os.path.join('simProcessed', baseName)
+    origNetlistStatus = os.path.join(r'/netlists', tag + '.status')
+    failNetlistPath = os.path.join(r'/simFailed', tag + '.sp')
+    failNetlistStatus = os.path.join(r'/simFailed', tag + '.status')
+    passNetlistPath = os.path.join(r'/simProcessed', tag + '.sp')
 
     result = None
     message = ''
@@ -91,12 +115,14 @@ def checkSimStatus(gateway, remoteNetlistPath):
             message = 'Simulation failed: ' + ' '.join(lines)
             result = -1
         elif gateway.isFile(passNetlistPath):
-            result = 0
             message = 'Simulation succeeded'
+            result = 0
         elif gateway.isFile(origNetlistPath) and gateway.isFile(origNetlistStatus):
-            result = 1 
-            # TODO: read origNetlistStatus and update interval value
+            lines = gateway.readFile(origNetlistStatus)
             message = 'Simulation on-going'
+            message = message + lines[0] if len(lines) > 0 else message
+            # TODO: read origNetlistStatus and update interval value
+            # setStatus(message)
         sleep(interval)
     return result, message
 
@@ -154,7 +180,7 @@ def checkSimStatus(gateway, remoteNetlistPath):
 def checkSigResult(gateway, remoteNetlistPath):
     # 0:success, -1: failure
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
-    sigFile = os.path.join('waves', baseName + '.sig')
+    sigFile = os.path.join(r'/waves', baseName + '.sig')
 
     interval = 0.5
     while True:
@@ -164,7 +190,7 @@ def checkSigResult(gateway, remoteNetlistPath):
 
 def getSigResult(gateway, remoteNetlistPath):
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
-    remoteSigPath = os.path.join('waves', baseName + '.sig')
+    remoteSigPath = os.path.join(r'/waves', baseName + '.sig')
     localSig = NamedTemporaryFile(delete=False, suffix='.sig')
     localSigPath = localSig.name
     gateway.downloadFile(localSigPath, remoteSigPath)
@@ -178,7 +204,7 @@ def getSigResult(gateway, remoteNetlistPath):
 def checkGdsResult(gateway, remoteNetlistPath):
     # 0:success, -1: failure
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
-    sigFile = os.path.join('LaGen', 'gdsS1', baseName + '.gds')
+    sigFile = os.path.join(r'/LaGen/gdsS1', baseName + '.gds')
 
     interval = 0.5
     while True:
@@ -188,7 +214,7 @@ def checkGdsResult(gateway, remoteNetlistPath):
 
 def getGdsResult(gateway, remoteNetlistPath):
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
-    remoteGdsPath = os.path.join('LaGen', 'gdsS1', baseName + '.gds')
+    remoteGdsPath = os.path.join(r'/LaGen/gdsS1', baseName + '.gds')
     localGds = NamedTemporaryFile(delete=False, suffix='.gds')
     localGdsPath = localGds.name
     gateway.downloadFile(localGdsPath, remoteGdsPath)

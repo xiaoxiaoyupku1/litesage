@@ -59,21 +59,36 @@ class Gateway(FTP):
         self.rmd(path)
 
     def downloadFile(self, localPath, remotePath):
+        pwd = self.pwd()
+        remoteDir = os.path.dirname(remotePath)
+        if len(remoteDir) > 0:
+            self.cwd(remoteDir)
+            remotePath = os.path.basename(remotePath)
         bufsize = 1024
         fp = open(localPath, 'wb')
         self.retrbinary('RETR ' + remotePath, fp.write, bufsize)
         fp.close()
+        self.cwd(pwd)
 
     def isFile(self, remotePath):
+        pwd = self.pwd()
+        remoteDir = os.path.dirname(remotePath)
         try:
+            if len(remoteDir) > 0:
+                self.cwd(remoteDir)
+                remotePath = os.path.basename(remotePath)
             while True:
                 size1 = self.size(remotePath)
                 sleep(0.1)
                 size2 = self.size(remotePath)
                 if size1 == size2:
+                    self.cwd(pwd)
                     return True
         except:
+            self.cwd(pwd)
             return False
+        finally:
+            self.cwd(pwd)
 
     def uploadFile(self, localPath, remotePath):
         pwd = self.pwd()
@@ -98,7 +113,10 @@ class Gateway(FTP):
             self.cwd(remoteDir)
             remotePath = os.path.basename(remotePath)
         if self.isFile(remotePath):
-            self.retrlines('RETR ' + remotePath, _lineCallback)
+            try:
+                self.retrlines('RETR ' + remotePath, _lineCallback)
+            except:
+                pass
         self.cwd(pwd)
         return fileLines
 
