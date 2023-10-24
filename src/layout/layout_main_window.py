@@ -255,12 +255,11 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         show_info = False
         if not file_path:
             show_info = True
-            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self)
+            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, filter='.gds')
             file_path = file_tuple[0]
             if not file_path:
                 return
-            if '.gds' not in file_path:
-                file_path += '.gds'
+            file_path += file_tuple[1]
         if file_path:
             polygon_list = self.layout_scene.get_cell_polygons()
             text_list = self.layout_scene.get_cell_text()
