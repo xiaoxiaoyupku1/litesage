@@ -1,20 +1,22 @@
+import os
 from numpy import array as NDArray
 from PySide6.QtWidgets import (
     QWidget, QMenu, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView,
-    QGraphicsItem, QGraphicsTextItem, QListWidgetItem
+    QGraphicsItem, QGraphicsTextItem, QListWidgetItem, QFileDialog
 )
 from PySide6.QtCharts import (QChart, QLineSeries)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
 from PySide6.QtGui import (
     QPainter, QFont, QFontMetrics, QPainterPath, QColor,QAction,
 )
+from pickle import load
 from collections import defaultdict
 from src.calculator import Calculator
+from src.tool.wave import WaveInfo
 
 class WaveformViewer(QWidget):
-    def __init__(self, inputObj, mode='full'):
+    def __init__(self):
         super().__init__()
-        self.inputObj = inputObj
         self.waveInfo = None
         self.simType = None
         self.sigNames = None
@@ -28,8 +30,7 @@ class WaveformViewer(QWidget):
         self.selSigValues = None  # selected signal values
 
         self.name2names = defaultdict(set)
-
-        self.parseInputObj(mode)
+        self.parseData(None, 'full')
         self.setupUi()
 
         # TODO: make self an embedded window instead of an independent window
@@ -38,16 +39,37 @@ class WaveformViewer(QWidget):
         self.resize(900, 500)
 
         self.setLayout(self.layout)
-        self.show()
 
-    def parseInputObj(self, mode):
-        if mode == 'full':
-            self.waveInfo = self.inputObj
+    def showWindowAndOpenWave(self, dataFile, mode='full'):
+        # full: signames and sigvalues
+        # names: only signames
+
+        data = None
+        if not dataFile or os.path.isfile(dataFile):
+            dataFile = QFileDialog.getOpenFileName(self)[0]
+        if dataFile.endswith('.sig'):
+            with open(dataFile, 'rb') as fport:
+                data = load(fport) # waveinfo
+        elif dataFile.endswith('.raw'):
+            data = WaveInfo(dataFile)
+        self.parseData(data, mode)
+        self.setupUi()
+        self.setLayout(self.layout)
+        self.show()
+            
+    def parseData(self, data, mode):
+        if data is None:
+            self.simType = 'dc'
+            self.sigNames = []
+            self.sigValues = NDArray(0)
+            return
+        elif mode == 'full':
+            self.waveInfo = data
             self.simType = self.waveInfo.get_sim_type()
             self.sigNames= self.waveInfo.get_trace_names()
             self.sigValues = self.waveInfo.get_waves()
         elif mode == 'names':
-            self.sigNames = self.inputObj
+            self.sigNames = data
             self.sigValues = NDArray((len(self.sigNames)))
             raise
 
@@ -58,26 +80,33 @@ class WaveformViewer(QWidget):
 
     def setupUi(self):
         # Left side: wave name list
-        self.listView = waveListWidget()
+        if self.listView is None:
+            self.listView = WaveListWidget()
+        else:
+            self.listView.clear()
         self.listView.addItems(self.sigNames[1:])
         self.listView.currentItemChanged.connect(self.changeWave)
 
         # Right side: wave signal chart
+        if self.chartView is not None:
+            self.chartView.destroy()
         self.chartView = ChartView()
 
         # Layout
-        self.layout = QGridLayout(self)
+        if self.layout is None:
+            self.layout = QGridLayout(self)
         self.layout.addWidget(self.listView, 1, 0)
         self.layout.setColumnStretch(0, 0)
         self.layout.addWidget(self.chartView, 1, 1)
         self.layout.setColumnStretch(1, 1)
-
         # Select 1st wave
         #if self.sigValues is not None:
             #self.changeWave(None, sigName=self.sigNames[1])
 
-    def changeWave(self, cur: QListWidgetItem, prev=None):
-
+    def changeWave(self):
+        cur = self.listView.currentItem()
+        if cur is None:
+            return
         self.chartView.draw(cur.text(), *self.name2names[cur.text()])
         self.chartView.chart.setTitle(cur.text())
         self.chartView.chart.axes()[0].setTitleText("Time")
@@ -185,7 +214,7 @@ class ChartView(QGraphicsView):
         for name in self.parent().sigNames[1:]:
             if name == cur.text():
                 continue
-            action = waveAction(self, text=name)
+            action = WaveAction(self, text=name)
             if name in self.parent().name2names[cur.text()]:
                 font = QFont()
                 font.setBold(True)
@@ -302,16 +331,16 @@ class Callout(QGraphicsItem):
             self._anchor) + QPointF(10, -50))
 
 
-class waveListWidget(QListWidget):
-    def contextMenuEvent(self,event):
-        print('gg')
+class WaveListWidget(QListWidget):
+    def contextMenuEvent(self, event):
+        pass
         
-class waveMenu(QMenu):
+class WaveMenu(QMenu):
     def __int__(self):
         super().__int__()
         
 
-class waveAction(QAction):
+class WaveAction(QAction):
 
     def __init_(self, *args, **kwargs):
         super().__init_(*args, **kwargs)

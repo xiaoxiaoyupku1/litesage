@@ -1,3 +1,4 @@
+import os
 from src.layout.gds_manage import GDSManage
 from src.layout.config import Config
 from src.layout.layout_utils import Polygon
@@ -5,11 +6,12 @@ from src.layout.layout_utils import Polygon
 
 class LayoutApplication(object):
 
-    def __init__(self, main_file_path):
+    def __init__(self, config_file_path='.'):
         self.gds_manage = GDSManage()
         self.layer_list_view_data = []
         self.net_list_view_data = []
-        self.config = Config(main_file_path)
+        config_file_path = os.path.join(os.path.dirname(__file__), 'config.txt')
+        self.config = Config(config_file_path)
         self.top_layout_cell = None
 
     def open_gds(self, gds_path):

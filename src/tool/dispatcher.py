@@ -36,8 +36,10 @@ class GatewayHandler(FileSystemEventHandler):
         name = os.path.splitext(statusFile)[0]
         rawFile = name + '.raw'
         spFile = name + '.sp'
+        statusFileNew = ''
 
-        for line in readFile(statusFile):
+        statusLines = [l for l in readFile(statusFile)]
+        for line in statusLines:
             line = line.lower()
             if line.startswith('success') and os.path.isfile(rawFile):
                 print('{} simulation success: {}'.format(now, spFile))
@@ -52,6 +54,7 @@ class GatewayHandler(FileSystemEventHandler):
                 rawFileNew = os.path.join(self.passPath, rawBaseName)
                 if os.path.isfile(rawFile) and not os.path.isfile(rawFileNew):
                     os.rename(rawFile, rawFileNew)
+                os.remove(statusFile)
                 break
 
             elif line.startswith('fail'):
@@ -61,8 +64,12 @@ class GatewayHandler(FileSystemEventHandler):
                 spFileNew = os.path.join(self.failPath, spBaseName)
                 if os.path.isfile(spFile) and not os.path.isfile(spFileNew):
                     os.rename(spFile, spFileNew)
+
+                statusBaseName = os.path.basename(statusFile)
+                statusFileNew = os.path.join(self.failPath, statusBaseName)
+                if os.path.isfile(statusFile) and not os.path.isfile(statusFileNew):
+                    os.rename(statusFile, statusFileNew)
                 break
-        os.remove(statusFile)
         return
 
 def run():

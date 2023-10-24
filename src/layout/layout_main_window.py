@@ -20,11 +20,9 @@ class LayoutMode(object):
 
 class LayoutMainWindow(QtWidgets.QMainWindow):
 
-    def __init__(self, main_app, eda, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.main_app = main_app
-        self.eda = eda
-        self.layout_app = LayoutApplication(self.main_app.arguments()[0])
+        self.layout_app = LayoutApplication()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.layout_scene = LayoutScene(self.layout_app, self.ui.graphicsView, self)
