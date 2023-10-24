@@ -127,7 +127,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
 
     def open_gds(self, file_path):
         if not file_path:
-            file_path = QtWidgets.QFileDialog.getOpenFileName(self)[0]
+            file_path = QtWidgets.QFileDialog.getOpenFileName(self, caption='Open Layout File',
+                                                              filter='Layout files (*.gds)')[0]
         if file_path:
             self.reset_view_model()
             self.layout_scene.reset()
