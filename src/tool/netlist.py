@@ -2,13 +2,17 @@ from src.hmi.group import SchInst
 from src.tool.design import Design
 
 ALL_USED_MODELS = []
+ALL_IP_INSTS = []
 
 def createNetlist(scene):
     """ SPICE format """
     netlist = []
+    comments = []
     subckts, knownDesigns = [], []
     global ALL_USED_MODELS
     ALL_USED_MODELS = []
+    global ALL_IP_INSTS
+    ALL_IP_INSTS = []
 
     gndNets = getActualLevelGndNets(scene)
 
@@ -25,23 +29,24 @@ def createNetlist(scene):
         if design.model not in knownDesigns:
             line = '.subckt {} {}'.format(design.model, ' '.join(design.pins))
             subckts.append(line)
-            insts = _createInstNetlist(design)
+            insts = _createInstNetlist(design, design.name)
             subckts += insts
             subckts += ['.ends', '']
             knownDesigns.append(design.model)
 
-    netlist += _createInstNetlist(scene)
+    netlist += _createInstNetlist(scene, '')
 
     if len(scene.simtexts) > 0:
         netlist += ['']
         for simtext in scene.simtexts:
             netlist.append(simtext.toPlainText().strip())
 
-    results = ['*'] + subckts + netlist
+    results = ['*'] + getIpInsts() + subckts + netlist
     return [ln.lower() for ln in results]
 
 
-def _createInstNetlist(parent):
+def _createInstNetlist(parent, parentName):
+    global ALL_IP_INSTS
     global ALL_USED_MODELS
     netlist = []
 
@@ -56,6 +61,12 @@ def _createInstNetlist(parent):
         if not isinstance(inst, SchInst) or inst.model == 'GND':
             continue
         line = 'X' + inst.name if inst.isXInst() else inst.name
+
+        if inst.isIp():
+            instName = '{}:{}'.format(parentName, line) \
+                       if len(parentName) > 0 else line
+            ALL_IP_INSTS.append(instName)
+
         for p in inst.pins:
             conn = inst.conns[p]
             conn = net_pin_mapping.get(conn, conn)
@@ -80,6 +91,12 @@ def _createInstNetlist(parent):
 def getAllUsedModels():
     global ALL_USED_MODELS
     return list(set(ALL_USED_MODELS))
+
+
+def getIpInsts():
+    global ALL_IP_INSTS
+    lines = ['* ip instance: '+i for i in ALL_IP_INSTS]
+    return lines + ['']
 
 
 def getActualLevelGndNets(parent, net_pin_mapping=None):

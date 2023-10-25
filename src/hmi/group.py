@@ -272,7 +272,10 @@ class SchInst(QGraphicsItemGroup):
         return self.lib != 'basic'
 
     def isXInst(self):
-        return self.lib == 'pdk'
+        return self.lib == 'pdk' or self.lib == 'ip'
+
+    def isIp(self):
+        return self.lib == 'ip'
 
     def make_by_JSON(self, jsn, scene):
         for k in ['nameHead', 'nameId','name','model','pins','conns','initial_conns','space','lib']:
