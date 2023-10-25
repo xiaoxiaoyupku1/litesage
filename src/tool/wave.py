@@ -9,6 +9,8 @@ from binascii import b2a_hex
 from logging import getLogger
 from argparse import ArgumentParser
 from pickle import dump
+from src.tool.sys import readFile
+
 _logger = getLogger('.rawWaveReadLog')
 
 def readFloat32(f):
@@ -945,15 +947,50 @@ class WaveInfo(object):
     #     df = self.to_dataframe(columns=columns, step=step)
     #     df.to_excel(filename, **kwargs)
 
+    def filter_traces(self, netlistFile):
+        """
+        Update results of self.get_trace_names() and self.get_waves()
+        """
+        insts = self.parse_filtered_insts(netlistFile)
+        new_traces = []
+        for trace in self._traces:
+            name = trace.name
+            if '(' in name and name.endswith(')'):
+                name = name.split('(')[1].split(')')[0]
+                if any(name.startswith(inst) for inst in insts):
+                    # signal inside IP module
+                    continue
+            new_traces.append(trace)
+        self._traces = new_traces
+
+    def parse_filtered_insts(self, netlistFile):
+        insts = []
+        for line in readFile(netlistFile):
+            line = line.lower()
+            if line.startswith('* ip instance:'):
+                # * ip instances: x1:x1
+                inst = line[14:].strip()
+                items = inst.split(':')
+                for idx, item in enumerate(items):
+                    while item[0] == 'x':
+                        item = item[1:]
+                    items[idx] = item
+                inst = ':'.join(items) + ':'
+                # 1:1:
+                insts.append(inst)
+        return insts
+
 
 def parseWave():
     parser = ArgumentParser()
     parser.add_argument('-input', type=str, default='')
     parser.add_argument('-output', type=str, default='')
+    parser.add_argument('-netlist', type=str, default='')
 
     args = parser.parse_args()
     inputFile = args.input  # .raw: must exist
     outputFile = args.output  # .sig: must not exist
+    netlistFile = args.netlist  # .sp: must exist
 
     if not os.path.isfile(inputFile):
         print('input file not exist: {}'.format(inputFile))
@@ -967,8 +1004,16 @@ def parseWave():
     elif os.path.isfile(outputFile):
         print('output file not .sig format: {}'.format(outputFile))
         sys.exit()
+    elif not os.path.isfile(netlistFile):
+        print('netlist file not exist: {}'.format(netlistFile))
+        sys.exit()
+    elif not netlistFile.endswith('.sp'):
+        print('netlist file not .sp format: {}'.format(netlistFile))
+        sys.exit()
 
     wave = WaveInfo(inputFile)
+    wave.filter_traces(netlistFile)
+
     # with open(outputFile, 'wb') as fport:
     #     if getsizeof(wave) < 102400000:  # 100MB
     #         dump(wave, fport)
@@ -979,6 +1024,7 @@ def parseWave():
     #         dump(sigNames, fport)
     #         with open(sigStatusFile, 'w') as f:
     #             f.write('finish dump names')
+
     with open(outputFile, 'wb') as fport:
         dump(wave, fport)
         print('finish wave parsing to {}'.format(outputFile))
