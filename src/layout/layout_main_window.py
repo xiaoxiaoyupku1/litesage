@@ -315,8 +315,9 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         from src.tool.network import Gateway
         try:
             gt = Gateway()
+            os.makedirs('./project/layout/', exist_ok=True)
             local_path = './project/layout/{}.gds'.format(self.layout_app.top_layout_cell.name)
-            remote_path = '/F/LaGen/gdsS2/{}.gds'.format(self.layout_app.top_layout_cell.name)
+            remote_path = '/LaGen/gdsS2/{}.gds'.format(self.layout_app.top_layout_cell.name)
             self.save_as(local_path)
             gt.uploadFile(local_path, remote_path)
             QtWidgets.QMessageBox.information(self, 'Upload info', 'upload success')

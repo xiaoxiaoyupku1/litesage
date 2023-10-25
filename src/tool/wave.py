@@ -1,12 +1,16 @@
 import os
+import sys
 import numpy as np
 from numpy import zeros, complex128, float32, float64, frombuffer
 from collections import OrderedDict
 from typing import Union, List, Tuple, Dict
 from struct import unpack
-from pathlib import Path
 from binascii import b2a_hex
 from logging import getLogger
+from argparse import ArgumentParser
+from pickle import dump
+from src.tool.sys import readFile
+
 _logger = getLogger('.rawWaveReadLog')
 
 def readFloat32(f):
@@ -33,7 +37,7 @@ class EncodingDetectError(Exception):
     pass
 
 
-def detect_encoding(file_path: Union[str, Path], expected_str: str = '') -> str:
+def detect_encoding(file_path, expected_str='') -> str:
     """
     Simple strategy to detect file encoding.  If an expected_str is given the function will scan through the possible
     encodings and return a match.
@@ -435,7 +439,7 @@ class WaveInfo(object):
 
     def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str, ...], None] = '*', **kwargs):
         self.verbose = kwargs.get('verbose', True)
-        raw_filename = Path(raw_filename)
+        raw_filename = os.path.abspath(raw_filename)
         if traces_to_read is not None:
             assert isinstance(traces_to_read, (str, list, tuple)), "traces_to_read must be a string, a list or None"
 
@@ -767,11 +771,11 @@ class WaveInfo(object):
         """
         return self.axis.get_len(step)
 
-    def _load_step_information(self, filename: Path):
+    def _load_step_information(self, filename):
         # Find the extension of the file
-        if not filename.suffix == ".raw":
+        if not filename.endswith(".raw"):
             raise SpiceReadException("Invalid Filename. The file should end with '.raw'")
-        logfile = filename.with_suffix(".log")
+        logfile = os.path.splitext(filename)[0] + ".log"
         try:
             encoding = detect_encoding(logfile, "Circuit:")
             log = open(logfile, 'r', errors='replace', encoding=encoding)
@@ -888,57 +892,139 @@ class WaveInfo(object):
                 data[col] += [self.steps[step][col]] * len(data[columns[0]])
         return data
 
-    def to_csv(self, filename: Union[str, Path], columns: list = None, step: Union[int, List[int]] = -1,
-               separator=',', **kwargs):
-        """
-        Saves the data to a CSV file.
+    # def to_csv(self, filename, columns: list = None, step: Union[int, List[int]] = -1,
+    #            separator=',', **kwargs):
+    #     """
+    #     Saves the data to a CSV file.
 
-        :param filename: Name of the file to save the data to
-        :type filename: str
-        :param columns: List of traces to use as columns. Default is all traces
-        :type columns: list
-        :param step: Step number to retrieve. If not given, it
-        :type step: int
-        :param separator: separator to use in the CSV file
-        :type separator: str
-        :param kwargs: Additional arguments to pass to the pandas.DataFrame.to_csv function
-        :type kwargs: \*\*dict
-        """
-        try:
-            import pandas as pd
-        except ImportError:
-            use_pandas = False
-        else:
-            use_pandas = True
+    #     :param filename: Name of the file to save the data to
+    #     :type filename: str
+    #     :param columns: List of traces to use as columns. Default is all traces
+    #     :type columns: list
+    #     :param step: Step number to retrieve. If not given, it
+    #     :type step: int
+    #     :param separator: separator to use in the CSV file
+    #     :type separator: str
+    #     :param kwargs: Additional arguments to pass to the pandas.DataFrame.to_csv function
+    #     :type kwargs: \*\*dict
+    #     """
+    #     try:
+    #         import pandas as pd
+    #     except ImportError:
+    #         use_pandas = False
+    #     else:
+    #         use_pandas = True
 
-        if use_pandas:
-            df = self.to_dataframe(columns=columns, step=step)
-            df.to_csv(filename, sep=separator, **kwargs)
-        else:
-            # Export to CSV using python built-in functions
-            data = self.export(columns=columns, step=step)
-            with open(filename, 'w') as f:
-                f.write(separator.join(data.keys()) + '\n')
-                for i in range(len(data[columns[0]])):
-                    f.write(separator.join([str(data[col][i]) for col in data.keys()]) + '\n')
+    #     if use_pandas:
+    #         df = self.to_dataframe(columns=columns, step=step)
+    #         df.to_csv(filename, sep=separator, **kwargs)
+    #     else:
+    #         # Export to CSV using python built-in functions
+    #         data = self.export(columns=columns, step=step)
+    #         with open(filename, 'w') as f:
+    #             f.write(separator.join(data.keys()) + '\n')
+    #             for i in range(len(data[columns[0]])):
+    #                 f.write(separator.join([str(data[col][i]) for col in data.keys()]) + '\n')
 
-    def to_excel(self, filename: Union[str, Path], columns: list = None, step: Union[int, List[int]] = -1,
-                 **kwargs):
+    # def to_excel(self, filename, columns: list = None, step: Union[int, List[int]] = -1,
+    #              **kwargs):
+    #     """
+    #     Saves the data to an Excel file.
+    #     :param filename: Name of the file to save the data to
+    #     :type filename: str
+    #     :param columns: List of traces to use as columns. Default is all traces
+    #     :type columns: list
+    #     :param step: Step number to retrieve. If not given, it
+    #     :type step: int
+    #     :param kwargs: Additional arguments to pass to the pandas.DataFrame.to_excel function
+    #     :type kwargs: \*\*dict
+    #     """
+    #     try:
+    #         import pandas as pd
+    #     except ImportError:
+    #         raise ImportError("The 'pandas' module is required to use this function.\n"
+    #                           "Use 'pip install pandas' to install it.")
+    #     df = self.to_dataframe(columns=columns, step=step)
+    #     df.to_excel(filename, **kwargs)
+
+    def filter_traces(self, netlistFile):
         """
-        Saves the data to an Excel file.
-        :param filename: Name of the file to save the data to
-        :type filename: str
-        :param columns: List of traces to use as columns. Default is all traces
-        :type columns: list
-        :param step: Step number to retrieve. If not given, it
-        :type step: int
-        :param kwargs: Additional arguments to pass to the pandas.DataFrame.to_excel function
-        :type kwargs: \*\*dict
+        Update results of self.get_trace_names() and self.get_waves()
         """
-        try:
-            import pandas as pd
-        except ImportError:
-            raise ImportError("The 'pandas' module is required to use this function.\n"
-                              "Use 'pip install pandas' to install it.")
-        df = self.to_dataframe(columns=columns, step=step)
-        df.to_excel(filename, **kwargs)
+        insts = self.parse_filtered_insts(netlistFile)
+        new_traces = []
+        for trace in self._traces:
+            name = trace.name
+            if '(' in name and name.endswith(')'):
+                name = name.split('(')[1].split(')')[0]
+                if any(name.startswith(inst) for inst in insts):
+                    # signal inside IP module
+                    continue
+            new_traces.append(trace)
+        self._traces = new_traces
+
+    def parse_filtered_insts(self, netlistFile):
+        insts = []
+        for line in readFile(netlistFile):
+            line = line.lower()
+            if line.startswith('* ip instance:'):
+                # * ip instances: x1:x1
+                inst = line[14:].strip()
+                items = inst.split(':')
+                for idx, item in enumerate(items):
+                    while item[0] == 'x':
+                        item = item[1:]
+                    items[idx] = item
+                inst = ':'.join(items) + ':'
+                # 1:1:
+                insts.append(inst)
+        return insts
+
+
+def parseWave():
+    parser = ArgumentParser()
+    parser.add_argument('-input', type=str, default='')
+    parser.add_argument('-output', type=str, default='')
+    parser.add_argument('-netlist', type=str, default='')
+
+    args = parser.parse_args()
+    inputFile = args.input  # .raw: must exist
+    outputFile = args.output  # .sig: must not exist
+    netlistFile = args.netlist  # .sp: must exist
+
+    if not os.path.isfile(inputFile):
+        print('input file not exist: {}'.format(inputFile))
+        sys.exit()
+    elif not inputFile.endswith('.raw'):
+        print('input file not .raw format: {}'.format(inputFile))
+        sys.exit()
+    elif os.path.isfile(outputFile):
+        print('output file already exist: {}'.format(outputFile))
+        sys.exit()
+    elif os.path.isfile(outputFile):
+        print('output file not .sig format: {}'.format(outputFile))
+        sys.exit()
+    elif not os.path.isfile(netlistFile):
+        print('netlist file not exist: {}'.format(netlistFile))
+        sys.exit()
+    elif not netlistFile.endswith('.sp'):
+        print('netlist file not .sp format: {}'.format(netlistFile))
+        sys.exit()
+
+    wave = WaveInfo(inputFile)
+    wave.filter_traces(netlistFile)
+
+    # with open(outputFile, 'wb') as fport:
+    #     if getsizeof(wave) < 102400000:  # 100MB
+    #         dump(wave, fport)
+    #         with open(sigStatusFile, 'w') as f:
+    #             f.write('finish dump all')
+    #     else:
+    #         sigNames = wave.get_trace_names()
+    #         dump(sigNames, fport)
+    #         with open(sigStatusFile, 'w') as f:
+    #             f.write('finish dump names')
+
+    with open(outputFile, 'wb') as fport:
+        dump(wave, fport)
+        print('finish wave parsing to {}'.format(outputFile))

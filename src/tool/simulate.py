@@ -60,7 +60,7 @@ class GdsTrackThread(QThread):
 
     def run(self):
         resp = checkGdsResult(self.gateway, self.remoteNetlistPath)
-        self.sigprep.emit(resp)
+        self.gdsprep.emit(resp)
 
 
 def runSimulation(gateway, netlist):
