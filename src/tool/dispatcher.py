@@ -58,12 +58,12 @@ class GatewayHandler(FileSystemEventHandler):
         mfile = event.src_path
         if self.fileInDir(mfile, self.netlistPath):
             self._on_modified_netlist(event)
-        elif self.fileInDir(mfile, self.fhWavePath):
-            self._on_modified_wave(event)
-        elif self.fileInDir(mfile, self.fhGdsS1Path):
-            self._on_modified_gdss1(event)
-        elif self.fileInDir(mfile, self.laGenS2Path):
-            self._on_modified_gdss2(event)
+        # elif self.fileInDir(mfile, self.fhWavePath):
+        #     self._on_modified_wave(event)
+        # elif self.fileInDir(mfile, self.fhGdsS1Path):
+        #     self._on_modified_gdss1(event)
+        # elif self.fileInDir(mfile, self.laGenS2Path):
+        #     self._on_modified_gdss2(event)
 
     def _on_modified_netlist(self, event):
         statusFile = event.src_path
@@ -123,71 +123,71 @@ class GatewayHandler(FileSystemEventHandler):
                 break
         return
     
-    def _on_modified_wave(self, event):
-        sigFile = event.src_path
-        now = getCurrentTime()
-        if not sigFile.endswith('.sig'):
-            return
-        elif not os.path.isfile(sigFile):
-            return
-        
-        while not os.access(sigFile, os.R_OK):
-            print('... waiting for reading permission of {}'.format(sigFile))
-            sleep(0.5)
+    # def _on_modified_wave(self, event):
+    #     sigFile = event.src_path
+    #     now = getCurrentTime()
+    #     if not sigFile.endswith('.sig'):
+    #         return
+    #     elif not os.path.isfile(sigFile):
+    #         return
+    #     
+    #     while not os.access(sigFile, os.R_OK):
+    #         print('... waiting for reading permission of {}'.format(sigFile))
+    #         sleep(0.5)
 
-        print('{} wave parsing success: {}'.format(now, sigFile))
-        sigBaseName = os.path.basename(sigFile)
-        sigFileNew = os.path.join(self.wavePath, sigBaseName)
-        if not os.path.isfile(sigFileNew):
-            copy(sigFile, sigFileNew)
+    #     print('{} wave parsing success: {}'.format(now, sigFile))
+    #     sigBaseName = os.path.basename(sigFile)
+    #     sigFileNew = os.path.join(self.wavePath, sigBaseName)
+    #     if not os.path.isfile(sigFileNew):
+    #         copy(sigFile, sigFileNew)
 
-    def _on_modified_gdss1(self, event):
-        gdsFile = event.src_path
-        now = getCurrentTime()
-        if not gdsFile.endswith('.gds'):
-            return
-        elif not os.path.isfile(gdsFile):
-            return
-        
-        while not os.access(gdsFile, os.R_OK):
-            print('... waiting for reading permission of {}'.format(gdsFile))
-            sleep(0.5)
+    # def _on_modified_gdss1(self, event):
+    #     gdsFile = event.src_path
+    #     now = getCurrentTime()
+    #     if not gdsFile.endswith('.gds'):
+    #         return
+    #     elif not os.path.isfile(gdsFile):
+    #         return
+    #     
+    #     while not os.access(gdsFile, os.R_OK):
+    #         print('... waiting for reading permission of {}'.format(gdsFile))
+    #         sleep(0.5)
 
-        print('{} gds s1 success: {}'.format(now, gdsFile))
-        gdsBaseName = os.path.basename(gdsFile)
-        gdsFileNew = os.path.join(self.laGenS1Path, gdsBaseName)
-        if not os.path.isfile(gdsFileNew):
-            copy(gdsFile, gdsFileNew)
+    #     print('{} gds s1 success: {}'.format(now, gdsFile))
+    #     gdsBaseName = os.path.basename(gdsFile)
+    #     gdsFileNew = os.path.join(self.laGenS1Path, gdsBaseName)
+    #     if not os.path.isfile(gdsFileNew):
+    #         copy(gdsFile, gdsFileNew)
 
-    def _on_modified_gdss2(self, event):
-        gdsFile = event.src_path
-        now = getCurrentTime()
-        if not gdsFile.endswith('.gds'):
-            return
-        elif not os.path.isfile(gdsFile):
-            return
-        
-        print('{} gds s2 success: {}'.format(now, gdsFile))
-        while not os.access(gdsFile, os.R_OK):
-            print('... waiting for reading permission of {}'.format(gdsFile))
-            sleep(0.5)
+    # def _on_modified_gdss2(self, event):
+    #     gdsFile = event.src_path
+    #     now = getCurrentTime()
+    #     if not gdsFile.endswith('.gds'):
+    #         return
+    #     elif not os.path.isfile(gdsFile):
+    #         return
+    #     
+    #     print('{} gds s2 success: {}'.format(now, gdsFile))
+    #     while not os.access(gdsFile, os.R_OK):
+    #         print('... waiting for reading permission of {}'.format(gdsFile))
+    #         sleep(0.5)
 
-        gdsBaseName = os.path.basename(gdsFile)
-        gdsFileNew = os.path.join(self.fhGdsS2Path, gdsBaseName)
-        if not os.path.isfile(gdsFileNew):
-            copy(gdsFile, gdsFileNew)
+    #     gdsBaseName = os.path.basename(gdsFile)
+    #     gdsFileNew = os.path.join(self.fhGdsS2Path, gdsBaseName)
+    #     if not os.path.isfile(gdsFileNew):
+    #         copy(gdsFile, gdsFileNew)
 
 
 def run():
     observer = Observer()
     handler1 = GatewayHandler()
     observer.schedule(handler1, handler1.netlistPath, recursive=True)
-    handler2 = GatewayHandler()
-    observer.schedule(handler2, handler2.fhWavePath, recursive=True)
-    handler3 = GatewayHandler()
-    observer.schedule(handler3, handler3.fhGdsS1Path, recursive=True)
-    handler4 = GatewayHandler()
-    observer.schedule(handler4, handler4.laGenS2Path, recursive=True)
+    # handler2 = GatewayHandler()
+    # observer.schedule(handler2, handler2.fhWavePath, recursive=True)
+    # handler3 = GatewayHandler()
+    # observer.schedule(handler3, handler3.fhGdsS1Path, recursive=True)
+    # handler4 = GatewayHandler()
+    # observer.schedule(handler4, handler4.laGenS2Path, recursive=True)
     observer.start()
     try:
         while True:
