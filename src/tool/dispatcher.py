@@ -1,6 +1,7 @@
 import os
 from shutil import copy
 from time import sleep
+import subprocess
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from src.tool.sys import getCurrentTime, readFile
@@ -37,6 +38,10 @@ class GatewayHandler(FileSystemEventHandler):
 
     def on_created(self, event):
         return
+    
+    def grantFilePerm(self, filePath):
+        command = 'icacls "{}" /grant Everyone:F /t /q'.format(filePath)
+        subprocess.run(command, shell=True)
 
     def fileInDir(self, filePath, dir):
         fileDir = os.path.dirname(filePath)
@@ -90,6 +95,7 @@ class GatewayHandler(FileSystemEventHandler):
                 if os.path.isfile(spFile) and not os.path.isfile(spFileNew):
                     spFilePost = os.path.join(self.fhPostPath, spBaseName)
                     copy(spFile, spFilePost)
+                    self.grantFilePerm(spFilePost)
                     os.rename(spFile, spFileNew)
 
                 rawBaseName = os.path.basename(rawFile)
@@ -97,6 +103,7 @@ class GatewayHandler(FileSystemEventHandler):
                 if os.path.isfile(rawFile) and not os.path.isfile(rawFileNew):
                     rawFilePost = os.path.join(self.fhPostPath, rawBaseName)
                     copy(rawFile, rawFilePost)
+                    self.grantFilePerm(rawFilePost)
                     os.rename(rawFile, rawFileNew)
                 os.remove(statusFile)
                 break
