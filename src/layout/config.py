@@ -32,6 +32,12 @@ class Config(configparser.ConfigParser):
         self.size_v2_equal = ''
         self.space_v2_min = ''
         self.overlap_v2_min = ''
+        self.size_v3_equal = ''
+        self.space_v3_min = ''
+        self.overlap_v3_min = ''
+        self.size_v4_equal = ''
+        self.space_v4_min = ''
+        self.overlap_v4_min = ''
         self.layer_id_order = []
         self.via_set = set()
         self.metal_set = set()
