@@ -628,17 +628,7 @@ class LayoutScene(QGraphicsScene):
             self.routing_item = self.addRect(start_x, event.scenePos().y(), 1, 1, pen, brush)
 
     def get_all_layer_id(self):
-        all_layer_id_list = []
-        for layer_id, items in self.polygon_obj_container.items():
-            for item in items:
-                if not item.is_delete():
-                    all_layer_id_list.append(layer_id)
-                    break
-        for layer_id, items in self.label_obj_container.items():
-            for item in items:
-                if not item.is_delete():
-                    all_layer_id_list.append(layer_id)
-                    break
+        all_layer_id_list = list(self.polygon_obj_container.keys())+list(self.label_obj_container.keys())
         all_layer_id_list.sort(key=lambda x: int(x.replace('-', '')))
         return all_layer_id_list
 

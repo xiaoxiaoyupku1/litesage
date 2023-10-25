@@ -174,6 +174,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
                     if net_name != 'ALL':
                         self.routing_dialog_ui.lineEditNetName.setText(net_name)
 
+        self.ui.graphicsView.resize_rectangle_pen_width()
+
     @staticmethod
     def select_all_model_item(model):
         for row in range(model.rowCount()):
@@ -194,8 +196,12 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             if layer_id in selected_layer_id_list or \
                     (select_layer_id_list is not None and layer_id in select_layer_id_list):
                 item.setCheckState(Qt.CheckState.Checked)
+                self.layout_scene.show_layer_polygon(layer_id)
+                self.layout_scene.show_label_by_layer_id(layer_id)
             else:
                 item.setCheckState(Qt.CheckState.Unchecked)
+                self.layout_scene.hide_layer_polygon(layer_id)
+                self.layout_scene.hide_label_by_layer_id(layer_id)
 
     @staticmethod
     def hide_all_model_item(model):
