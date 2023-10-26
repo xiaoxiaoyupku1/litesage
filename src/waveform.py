@@ -58,6 +58,8 @@ class WaveformViewer(QWidget):
                     data = load(fport) # waveinfo
             elif dataFile.endswith('.raw'):
                 data = WaveInfo(dataFile)
+            elif len(dataFile) == 0:
+                return
             else:
                 assert 0, 'wrong dataFile format: {}'.format(dataFile)
 
