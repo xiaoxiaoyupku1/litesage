@@ -2,17 +2,18 @@ import os
 from numpy import array as NDArray
 from PySide6.QtWidgets import (
     QWidget, QMenu, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView,
-    QGraphicsItem, QGraphicsTextItem, QListWidgetItem, QFileDialog
+    QGraphicsItem, QGraphicsTextItem, QFileDialog
 )
 from PySide6.QtCharts import (QChart, QLineSeries)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
 from PySide6.QtGui import (
-    QPainter, QFont, QFontMetrics, QPainterPath, QColor,QAction,
+    QPainter, QFont, QFontMetrics, QPainterPath, QColor, QAction, QCursor
 )
 from pickle import load
 from collections import defaultdict
 from src.calculator import Calculator
 from src.tool.wave import WaveInfo
+
 
 class WaveformViewer(QWidget):
     def __init__(self, mode='full'):
@@ -92,7 +93,7 @@ class WaveformViewer(QWidget):
     def setupUi(self):
         # Left side: wave name list
         if self.listView is None:
-            self.listView = WaveListWidget()
+            self.listView = WaveListWidget(self)
         else:
             self.listView.clear()
         self.listView.addItems(self.sigNames[1:])
@@ -101,7 +102,7 @@ class WaveformViewer(QWidget):
         # Right side: wave signal chart
         if self.chartView is not None:
             self.chartView.destroy()
-        self.chartView = ChartView()
+        self.chartView = ChartView(self)
 
         # Layout
         if self.layout is None:
@@ -129,8 +130,9 @@ class WaveformViewer(QWidget):
 
 
 class ChartView(QGraphicsView):
-    def __init__(self):
+    def __init__(self, wavWin):
         super().__init__()
+        self.wavWin = wavWin
 
         self.setScene(QGraphicsScene(self))
 
@@ -140,47 +142,54 @@ class ChartView(QGraphicsView):
         self.chart.setAcceptHoverEvents(True)
         self.scene().addItem(self.chart)
 
-        self.delta = waveTextItem(self.chart)
+        self.delta = WaveTextItem(self.chart)
         x, y = self.scene().sceneRect().bottomRight().toTuple()
         self.delta.setPos(x - 100, y - 100)
         self.delta.setZValue(15)
 
         self.setRenderHint(QPainter.Antialiasing)
+        self.setMouseTracking(True)
 
         self.tooltip = Callout(self.chart)
         self.callouts = []
 
-
     def draw(self, *sigNames):
         self.chart.removeAllSeries()
         for sigName in sigNames:
-            index = self.parent().sigNames.index(sigName)
+            index = self.wavWin.sigNames.index(sigName)
             series = QLineSeries()
-            series.appendNp(NDArray(self.parent().sigValues[0]) * 1e3,
-                                 NDArray(self.parent().sigValues[index]))
-            series.doubleClicked.connect(self.wave_clicked)
-            series.hovered.connect(self.wave_hovered)
+            series.setName(sigName)
+            series.appendNp(self.wavWin.sigValues[0] * 1e3,
+                            self.wavWin.sigValues[index])
             self.chart.addSeries(series)
         self.chart.createDefaultAxes()
+        self.bind_series_events()
 
         for callout in self.callouts:
             self.scene().removeItem(callout)
         self.callouts = []
         self.tooltip.hide()
         self.delta.setHtml("")
+
+    def bind_series_events(self):
+        for series in self.chart.series():
+            series.doubleClicked.connect(self.wave_doubleclicked)
+            series.hovered.connect(lambda p, s, name=series.name(): self.wave_hovered(p, s, name=name))
+
     def showCalculator(self):
         x0, y0 = self.callouts[0].x, self.callouts[0].y
         x1, y1 = self.callouts[1].x, self.callouts[1].y
         self.calculator = Calculator(x0,y0,x1,y1)
         self.calculator.show()
+
     def resizeEvent(self, event):
         self.scene().setSceneRect(QRectF(QPointF(0, 0), event.size()))
         self.chart.resize(event.size())
         x, y = self.scene().sceneRect().bottomRight().toTuple()
         self.delta.setPos(x - 100, y - 100)
-        QGraphicsView.resizeEvent(self, event)
+        super().resizeEvent(event)
 
-    def wave_clicked(self, point):
+    def wave_doubleclicked(self, point):
         if len(self.callouts) <= 1:
             self.callouts.append(self.tooltip)
         elif len(self.callouts) == 2:
@@ -201,32 +210,29 @@ class ChartView(QGraphicsView):
         delta_y = y1 - y0
         self.delta.setHtml(f'<font color="red">Δ</font>X : {delta_x:.4f}<br><font color="red">Δ</font>Y : {delta_y:.4f}')
 
-    def wave_hovered(self, point, state):
-        if self.tooltip == 0:
-            self.tooltip = Callout(self.chart)
-
-        if state:
-            x = point.x()
-            y = point.y()
-            self.tooltip.x = x
-            self.tooltip.y = y
-            self.tooltip.set_text(f"X: {x:.4f} \nY: {y:.4f} ")
-            self.tooltip.set_anchor(point)
-            self.tooltip.setZValue(11)
-            self.tooltip.update_geometry()
-            self.tooltip.show()
-        else:
+    def wave_hovered(self, point, state, name=''):
+        if not state:
             self.tooltip.hide()
+            return
+        x = point.x()
+        y = point.y()
+        self.tooltip.x = x
+        self.tooltip.y = y
+        self.tooltip.set_text("{}\nX: {:.4f} \nY: {:.4f} ".format(name, x, y))
+        self.tooltip.set_anchor(point)
+        self.tooltip.setZValue(11)
+        self.tooltip.update_geometry()
+        self.tooltip.show()
 
     def contextMenuEvent(self, event):
-        cur = self.parent().listView.currentItem()
+        cur = self.wavWin.listView.currentItem()
         menu = QMenu(self)
         actions=[]
-        for name in self.parent().sigNames[1:]:
+        for name in self.wavWin.sigNames[1:]:
             if name == cur.text():
                 continue
             action = WaveAction(self, text=name)
-            if name in self.parent().name2names[cur.text()]:
+            if name in self.wavWin.name2names[cur.text()]:
                 font = QFont()
                 font.setBold(True)
                 action.setFont(font)
@@ -239,7 +245,7 @@ class ChartView(QGraphicsView):
 class Callout(QGraphicsItem):
 
     def __init__(self, chart):
-        QGraphicsItem.__init__(self, chart)
+        super().__init__(chart)
         self._chart = chart
         self._text = ""
         self._textRect = QRectF()
@@ -343,6 +349,10 @@ class Callout(QGraphicsItem):
 
 
 class WaveListWidget(QListWidget):
+    def __init__(self, wavWin):
+        super().__init__()
+        self.wavWin = wavWin
+
     def contextMenuEvent(self, event):
         pass
         
@@ -352,12 +362,11 @@ class WaveMenu(QMenu):
         
 
 class WaveAction(QAction):
-
-    def __init_(self, *args, **kwargs):
-        super().__init_(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def act(self) -> None:
-        waveform: WaveformViewer = self.parent().parent()
+        waveform = self.parent().wavWin
         cur = waveform.listView.currentItem()
         if self.font().bold():
             waveform.name2names[cur.text()].remove(self.text())
@@ -382,6 +391,6 @@ class WaveAction(QAction):
         waveform.chartView.draw(cur.text(), *waveform.name2names[cur.text()])
 
 
-class waveTextItem(QGraphicsTextItem):
+class WaveTextItem(QGraphicsTextItem):
     def mouseDoubleClickEvent(self, event):
         self.parentItem().scene().views()[0].showCalculator()
