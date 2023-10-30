@@ -2,12 +2,12 @@ import os
 from numpy import array as NDArray
 from PySide6.QtWidgets import (
     QWidget, QMenu, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView,
-    QGraphicsItem, QGraphicsTextItem, QFileDialog
+    QGraphicsItem, QGraphicsTextItem, QFileDialog, QSizePolicy,
 )
-from PySide6.QtCharts import (QChart, QLineSeries)
+from PySide6.QtCharts import (QChart, QLineSeries, QValueAxis)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
 from PySide6.QtGui import (
-    QPainter, QFont, QFontMetrics, QPainterPath, QColor, QAction, QCursor
+    QPainter, QFont, QFontMetrics, QPainterPath, QColor, QAction
 )
 from pickle import load
 from collections import defaultdict
@@ -37,7 +37,7 @@ class WaveformViewer(QWidget):
         # TODO: make self an embedded window instead of an independent window
         #       embedded to its parent which is schWin (FoohuEda)
         self.setWindowTitle('FOOHU EDA - Waveform Viewer')
-        self.resize(900, 500)
+        self.resize(1000, 500)
 
         self.setLayout(self.layout)
 
@@ -121,9 +121,7 @@ class WaveformViewer(QWidget):
             return
         self.chartView.draw(cur.text(), *self.name2names[cur.text()])
         self.chartView.chart.setTitle(cur.text())
-        self.chartView.chart.axes()[0].setTitleText("Time")
-        self.chartView.chart.axes()[1].setTitleText("Value")
-
+        self.chartView.setAxesTitles()
 
     def closeEvent(self, event):
         return super().closeEvent(event)
@@ -140,13 +138,19 @@ class ChartView(QGraphicsView):
         self.chart.setMinimumSize(640, 480)
         self.chart.legend().hide()
         self.chart.setAcceptHoverEvents(True)
+        self.axisX = QValueAxis()
+        self.axisX.setLabelFormat('%.2f')
+        self.chart.addAxis(self.axisX, Qt.AlignBottom)
+        self.axisY = QValueAxis()
+        self.axisY.setLabelFormat('%.2f')
+        self.chart.addAxis(self.axisY, Qt.AlignLeft)
         self.scene().addItem(self.chart)
 
         self.delta = WaveTextItem(self.chart)
         x, y = self.scene().sceneRect().bottomRight().toTuple()
         self.delta.setPos(x - 100, y - 100)
         self.delta.setZValue(15)
-
+        
         self.setRenderHint(QPainter.Antialiasing)
         self.setMouseTracking(True)
 
@@ -155,14 +159,35 @@ class ChartView(QGraphicsView):
 
     def draw(self, *sigNames):
         self.chart.removeAllSeries()
+        self.chart.removeAxis(self.axisX)
+        self.chart.removeAxis(self.axisY)
+
+        self.axisX = QValueAxis()
+        self.axisX.setLabelFormat('%.2e')
+        self.chart.addAxis(self.axisX, Qt.AlignBottom)
+        self.axisY = QValueAxis()
+        self.axisY.setLabelFormat('%.2e')
+        # self.axisY.setLabelsAngle(45)
+        self.axisY.setLabelsVisible(True)
+        self.chart.addAxis(self.axisY, Qt.AlignLeft)
+
         for sigName in sigNames:
             index = self.wavWin.sigNames.index(sigName)
             series = QLineSeries()
             series.setName(sigName)
-            series.appendNp(self.wavWin.sigValues[0] * 1e3,
-                            self.wavWin.sigValues[index])
+            xData = self.wavWin.sigValues[0]
+            yData = self.wavWin.sigValues[index]
+            series.appendNp(xData, yData)
             self.chart.addSeries(series)
-        self.chart.createDefaultAxes()
+            series.attachAxis(self.axisX)
+            series.attachAxis(self.axisY)
+
+        if len(sigNames) > 1:
+            self.chart.legend().show()
+        else:
+            self.chart.legend().hide()
+        # self.chart.createDefaultAxes()
+
         self.bind_series_events()
 
         for callout in self.callouts:
@@ -170,6 +195,8 @@ class ChartView(QGraphicsView):
         self.callouts = []
         self.tooltip.hide()
         self.delta.setHtml("")
+        self.chart.layout().setContentsMargins(0, 0, 0, 0)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     def bind_series_events(self):
         for series in self.chart.series():
@@ -240,6 +267,32 @@ class ChartView(QGraphicsView):
             actions.append(action)
         menu.addActions(actions)
         menu.exec(event.globalPos())
+
+    def setAxesTitles(self):
+        simType = self.wavWin.simType
+        if simType.startswith('ac'):
+            xTitle = 'Frequency (Hz)'
+        elif simType.startswith('tran'):
+            xTitle = 'Time (s)'
+        elif simType.startswith('dc'):
+            xTitle = self.wavWin.sigNames[0]
+
+        yTitle = ''
+        for series in self.chart.series():
+            if series.name().startswith('V'):
+                yTitle = 'Value (V)' if len(yTitle) == 0 else yTitle + ' (V)'
+            elif series.name().startswith('I'):
+                yTitle = 'Value (A)' if len(yTitle) == 0 else yTitle + ' (A)'
+
+        self.axisX.setTitleText(xTitle)
+        self.axisY.setTitleText(yTitle)
+
+    def wheelEvent(self, event) -> None:
+        delta = event.angleDelta().y() / 120
+        factor = 1.2 ** delta
+        self.scale(factor, factor)
+        event.accept()
+        return super().wheelEvent(event)
 
 
 class Callout(QGraphicsItem):
