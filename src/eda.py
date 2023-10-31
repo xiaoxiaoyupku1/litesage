@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QMainWindow, QMenuBar, QMenu, QWidget, QGraphicsView, QMessageBox
 )
 from PySide6.QtGui import (
-    QAction, QKeySequence, QPainter
+    QAction, QKeySequence
 )
 
 from src.hmi.scene import SchScene
@@ -20,8 +20,9 @@ from src.layout.layout_main_window import LayoutMainWindow
 
 
 class FoohuEda(QMainWindow):
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        self.app = app
         self.initUser()
         self.initUi()
         self.setupUi()
@@ -34,6 +35,7 @@ class FoohuEda(QMainWindow):
     def initUi(self):
         # Windows
         # self = main window = schematic editor window
+        self.app.setWindowIcon(getIcon('eda'))
         self.centralWidget = None   # widget to put view on
         self.schView = None         # view to put scene on
         self.schScene = None        # scene to put symbols on

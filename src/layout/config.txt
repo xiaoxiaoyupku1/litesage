@@ -1,16 +1,13 @@
 [metal_info]
 poly_layer_id = 6-0
-met1_layer_id = 10-0
-met1_layer_id_txt = 10-1
-met2_layer_id = 12-0
-met2_layer_id_txt = 12-1
-met3_layer_id = 14-0
-met3_layer_id_txt = 14-1
+met1_layer_id = 7-0 
+met1_layer_id_txt = 121-0
+met2_layer_id = 9-0
+met2_layer_id_txt = 122-0
 
 [contact_via_info]
-contact_layer_id = 9-0
-via1_layer_id = 11-0
-via2_layer_id = 13-0
+contact_layer_id = 6-0
+via1_layer_id = 8-0
 
 [fab_dr]
 

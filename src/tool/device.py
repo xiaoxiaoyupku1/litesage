@@ -162,7 +162,7 @@ class DeviceParam():
 
 DEVNAME_HEAD_MAPPING = {
     'source': 'E',
-    'current Source': 'I',
+    'current source': 'I',
     'bjt': 'Q',
     'hv_mos': 'M',
     'rsub': 'RSUB',
