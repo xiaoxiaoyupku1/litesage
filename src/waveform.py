@@ -121,7 +121,6 @@ class WaveformViewer(QWidget):
             return
         self.chartView.draw(cur.text(), *self.name2names[cur.text()])
         self.chartView.chart.setTitle(cur.text())
-        self.chartView.setAxesTitles()
 
     def closeEvent(self, event):
         return super().closeEvent(event)
@@ -150,6 +149,7 @@ class ChartView(QGraphicsView):
         x, y = self.scene().sceneRect().bottomRight().toTuple()
         self.delta.setPos(x - 100, y - 100)
         self.delta.setZValue(15)
+        self.yCoeff = 1.
         
         self.setRenderHint(QPainter.Antialiasing)
         self.setMouseTracking(True)
@@ -177,8 +177,18 @@ class ChartView(QGraphicsView):
             series.setName(sigName)
             xData = self.wavWin.sigValues[0]
             yData = self.wavWin.sigValues[index]
-            if max(yData < -1e-9):
-                yData = yData * 1e6
+            if max(yData < -1e-30):
+                yData = yData * 1e30
+                self.yCoeff = 1e30
+            elif max(yData < -1e-24):
+                yData = yData * 1e24
+                self.yCoeff = 1e24
+            elif max(yData < -1e-18):
+                yData = yData * 1e18
+                self.yCoeff = 1e18
+            elif max(yData < -1e-9):
+                yData = yData * 1e9
+                self.yCoeff = 1e9
             series.appendNp(xData, yData)
             self.chart.addSeries(series)
             series.attachAxis(self.axisX)
@@ -199,6 +209,8 @@ class ChartView(QGraphicsView):
         self.delta.setHtml("")
         self.chart.layout().setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.setAxesTitles()
 
     def bind_series_events(self):
         for series in self.chart.series():
@@ -286,8 +298,12 @@ class ChartView(QGraphicsView):
             elif series.name().startswith('I'):
                 yTitle = 'Value (A)' if len(yTitle) == 0 else yTitle + ' (A)'
 
+        if self.yCoeff != 1.:
+            yTitle += ' * {:.1e}'.format(self.yCoeff)
+
         self.axisX.setTitleText(xTitle)
         self.axisY.setTitleText(yTitle)
+        self.yCoeff = 1.
 
     def wheelEvent(self, event) -> None:
         delta = event.angleDelta().y() / 120
