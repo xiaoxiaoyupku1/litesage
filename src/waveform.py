@@ -139,10 +139,10 @@ class ChartView(QGraphicsView):
         self.chart.legend().hide()
         self.chart.setAcceptHoverEvents(True)
         self.axisX = QValueAxis()
-        self.axisX.setLabelFormat('%.2f')
+        self.axisX.setLabelFormat('%.1e')
         self.chart.addAxis(self.axisX, Qt.AlignBottom)
         self.axisY = QValueAxis()
-        self.axisY.setLabelFormat('%.2f')
+        self.axisY.setLabelFormat('%.1e')
         self.chart.addAxis(self.axisY, Qt.AlignLeft)
         self.scene().addItem(self.chart)
 
@@ -163,10 +163,10 @@ class ChartView(QGraphicsView):
         self.chart.removeAxis(self.axisY)
 
         self.axisX = QValueAxis()
-        self.axisX.setLabelFormat('%.2e')
+        self.axisX.setLabelFormat('%.1e')
         self.chart.addAxis(self.axisX, Qt.AlignBottom)
         self.axisY = QValueAxis()
-        self.axisY.setLabelFormat('%.2e')
+        self.axisY.setLabelFormat('%.1e')
         # self.axisY.setLabelsAngle(45)
         self.axisY.setLabelsVisible(True)
         self.chart.addAxis(self.axisY, Qt.AlignLeft)
@@ -177,6 +177,8 @@ class ChartView(QGraphicsView):
             series.setName(sigName)
             xData = self.wavWin.sigValues[0]
             yData = self.wavWin.sigValues[index]
+            if max(yData < -1e-9):
+                yData = yData * 1e6
             series.appendNp(xData, yData)
             self.chart.addSeries(series)
             series.attachAxis(self.axisX)
