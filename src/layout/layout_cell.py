@@ -61,7 +61,7 @@ class LayoutCell(object):
             layer_dt_dict = {'layer': int(pg_list[0].layer_num), 'datatype': pg_list[0].data_type}
             for pg in pg_list:
                 if pg.status == Status.Normal:
-                    if pg.is_polygon:
+                    if not pg.is_polygon:
                         gds_pg = gdspy.Rectangle((pg.bb[0] / self.scale, pg.bb[1] / self.scale),
                                                  (pg.bb[2] / self.scale, pg.bb[3] / self.scale), **layer_dt_dict)
                         cell.add(gds_pg)
