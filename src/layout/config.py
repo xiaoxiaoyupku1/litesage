@@ -11,26 +11,27 @@ class Config(configparser.ConfigParser):
     def __init__(self, config_file_path, defaults=None):
         configparser.ConfigParser.__init__(self, defaults=defaults)
         self.config_file_path = config_file_path
-        self.met_to_net_map = {}
         self.poly_layer_id = ''
-        self.met1_layer_id = ''
-        self.met2_layer_id = ''
+        self.met1_layer_id = '7-0'
+        self.met1_txt_layer_id = '121-0'
+        self.met2_layer_id = '9-0'
+        self.met2_txt_layer_id = '122-0'
         self.met3_layer_id = ''
         self.met4_layer_id = ''
         self.met5_layer_id = ''
-        self.contact_layer_id = ''
-        self.via1_layer_id = ''
+        self.contact_layer_id = '6-0'
+        self.via1_layer_id = '8-0'
         self.via2_layer_id = ''
         self.via3_layer_id = ''
         self.via4_layer_id = ''
-        self.size_contact_equal = ''
-        self.space_contact_min = ''
-        self.overlap_contact_min = ''
-        self.size_v1_equal = ''
-        self.space_v1_min = ''
-        self.overlap_v1_min = ''
-        self.size_v2_equal = ''
-        self.space_v2_min = ''
+        self.size_contact_equal = 500
+        self.space_contact_min = 500
+        self.overlap_contact_min = 200
+        self.size_v1_equal = 260
+        self.space_v1_min = 250
+        self.overlap_v1_min = 200
+        self.size_v2_equal = 550
+        self.space_v2_min = 600
         self.overlap_v2_min = ''
         self.size_v3_equal = ''
         self.space_v3_min = ''
@@ -40,18 +41,22 @@ class Config(configparser.ConfigParser):
         self.overlap_v4_min = ''
         self.layer_id_order = []
         self.via_set = set()
-        self.metal_set = set()
+        self.metal_set = {self.met1_layer_id, self.met2_layer_id}
         self.routing_set = set()
         self.metal_order = []
         self.contact_via_order = []
         self.on_grid = 10
-        self.routing_width = ''
-        self.met1_routing_space = 0
-        self.met2_routing_space = 0
+        self.routing_width = 1200
+        self.met1_routing_space = 600
+        self.met2_routing_space = 1200
         self.met3_routing_space = 0
         self.met4_routing_space = 0
         self.met5_routing_space = 0
         self.metal_space_map = {}
+        self.met_to_net_map = {
+            self.met1_layer_id: self.met1_txt_layer_id,
+            self.met2_layer_id: self.met2_txt_layer_id,
+        }
         self.run()
 
     def on_grid_value_floor(self, value):
@@ -154,17 +159,18 @@ class Config(configparser.ConfigParser):
         return x_space, y_space, size_width, size_length, overlap_via_contact_min
 
     def shift_via_to_center(self, bb, via_list):
-        x_list = []
-        y_list = []
         new_via_list = []
-        for via_bb in via_list:
-            x_list.extend([via_bb[0], via_bb[2]])
-            y_list.extend([via_bb[1], via_bb[3]])
-        all_via_bb = [min(x_list), min(y_list), max(x_list), max(y_list)]
-        shift_x = self.on_grid_value_floor(((bb[2]-bb[0]) - (all_via_bb[2]-all_via_bb[0]))/2)+bb[0] - all_via_bb[0]
-        shift_y = self.on_grid_value_floor(((bb[3]-bb[1]) - (all_via_bb[3]-all_via_bb[1]))/2)+bb[1] - all_via_bb[1]
-        for via_bb in via_list:
-            new_via_list.append([via_bb[0]+shift_x, via_bb[1]+shift_y, via_bb[2]+shift_x, via_bb[3]+shift_y])
+        if via_list:
+            x_list = []
+            y_list = []
+            for via_bb in via_list:
+                x_list.extend([via_bb[0], via_bb[2]])
+                y_list.extend([via_bb[1], via_bb[3]])
+            all_via_bb = [min(x_list), min(y_list), max(x_list), max(y_list)]
+            shift_x = self.on_grid_value_floor(((bb[2]-bb[0]) - (all_via_bb[2]-all_via_bb[0]))/2)+bb[0] - all_via_bb[0]
+            shift_y = self.on_grid_value_floor(((bb[3]-bb[1]) - (all_via_bb[3]-all_via_bb[1]))/2)+bb[1] - all_via_bb[1]
+            for via_bb in via_list:
+                new_via_list.append([via_bb[0]+shift_x, via_bb[1]+shift_y, via_bb[2]+shift_x, via_bb[3]+shift_y])
 
         return new_via_list
 
@@ -286,14 +292,14 @@ class Config(configparser.ConfigParser):
     def run(self):
         file = self.config_file_path
 
-        if os.path.exists(file):
-            self.read(file)
-            self.sections()
-            self.parse_metal()
-            self.parse_contact_via()
-            self.update_layer_id_order()
-            self.update_fab_dr()
-            self.update_metal_order()
-            self.update_via_contact_order()
-            self.update_global_parameter()
-            self.update_metal_space_map()
+        # if os.path.exists(file):
+        # self.read(file)
+        # self.sections()
+        # self.parse_metal()
+        # self.parse_contact_via()
+        self.update_layer_id_order()
+        # self.update_fab_dr()
+        self.update_metal_order()
+        self.update_via_contact_order()
+        # self.update_global_parameter()
+        self.update_metal_space_map()

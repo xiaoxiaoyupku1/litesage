@@ -198,11 +198,17 @@ class Polygon(object):
 
     def get_is_polygon(self):
         point_list = self.point_list + [self.point_list[0]]
-        if len(self.point_list) == 4:
+        if len(point_list) == 5:
             for b_point, a_point in zip(point_list[:-1], point_list[1:]):
-                if not (b_point[0] == a_point[0] or b_point[1] == a_point[1]):
-                    return False
-            return True
+                if b_point[0] == a_point[0]:
+                    if b_point[1] == a_point[1]:
+                        return True
+                elif b_point[1] == a_point[1]:
+                    if b_point[0] == a_point[0]:
+                        return True
+                else:
+                    return True
+            return False
         else:
             return True
 
