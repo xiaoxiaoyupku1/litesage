@@ -1,9 +1,12 @@
-from PySide6.QtWidgets import QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem
+from PySide6.QtWidgets import QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem, QGraphicsPolygonItem
+from PySide6.QtGui import QPolygonF
+from PySide6.QtCore import QPointF
 
 
 class LayoutType(object):
 
     Rectangle = 3
+    Polygon = 5
     Text = 8
     Line = 6
 
@@ -22,6 +25,39 @@ class LayoutLineItem(QGraphicsLineItem):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class LayoutPolygonItem(QGraphicsPolygonItem):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layer_id = ''
+        self.polygon_instance = None
+        self.net_item = None
+        self.is_show_net = False
+
+    def delete(self):
+        self.polygon_instance.status = Status.Delete
+        self.hide()
+
+    def is_delete(self):
+        return self.polygon_instance.status == Status.Delete
+
+    def show(self) -> None:
+        super(LayoutPolygonItem, self).show()
+        self.show_net()
+
+    def hide(self) -> None:
+        super(LayoutPolygonItem, self).hide()
+        self.hide_net()
+
+    def show_net(self):
+        if self.net_item and self.isVisible() and self.is_show_net:
+            self.net_item.show()
+
+    def hide_net(self):
+        if self.net_item:
+            self.net_item.hide()
 
 
 class LayoutRectItem(QGraphicsRectItem):
@@ -92,7 +128,11 @@ class Polygon(object):
     def get_graphics_item(self, paintbrush_manage):
         if not self.layout_item:
             pen, brush = paintbrush_manage.get_paintbrush(self.layer_id)
-            self.layout_item = LayoutRectItem(self.bb[0], -self.bb[3], self.width, self.height)
+            if self.is_polygon:
+                polygon = QPolygonF([QPointF(point[0], -point[1]) for point in self.point_list])
+                self.layout_item = LayoutPolygonItem(polygon)
+            else:
+                self.layout_item = LayoutRectItem(self.bb[0], -self.bb[3], self.width, self.height)
             self.layout_item.setPen(pen)
             self.layout_item.setBrush(brush)
             self.layout_item.layer_id = self.layer_id
@@ -158,13 +198,13 @@ class Polygon(object):
 
     def get_is_polygon(self):
         point_list = self.point_list + [self.point_list[0]]
-        if len(self.point_list) == 1:
+        if len(self.point_list) == 4:
             for b_point, a_point in zip(point_list[:-1], point_list[1:]):
                 if not (b_point[0] == a_point[0] or b_point[1] == a_point[1]):
                     return False
             return True
         else:
-            return False
+            return True
 
     @staticmethod
     def rect_overlap(bb1, bb2):

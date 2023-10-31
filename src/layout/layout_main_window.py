@@ -148,6 +148,7 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             self.update_net_list_view()
             self.select_all_model_item(self.layer_list_view_model)
             self.ui.graphicsView.center_display()
+            self.ui.graphicsView.resize_pen_width()
             return
 
     def on_clicked_net_list_view(self, item):

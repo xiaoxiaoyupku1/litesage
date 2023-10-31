@@ -100,6 +100,8 @@ class GDSManage(object):
                 point_list = [(self.float_to_int_floor(point[0], self.scale),
                                self.float_to_int_floor(point[1], self.scale)) for point in polygon_array]
                 pg = Polygon(layer_num, data_type, point_list)
+                if len(point_list) > 4:
+                    print()
                 polygon_data[pg.layer_id].append(pg)
 
         return polygon_data

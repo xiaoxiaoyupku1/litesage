@@ -775,8 +775,14 @@ class LayoutScene(QGraphicsScene):
                     if self.show_mode == ShowMode.Simple:
                         item.hide()
                     self.addItem(item)
-                    x_list.extend([pg.bb[0], pg.bb[2]])
-                    y_list.extend([-pg.bb[1], -pg.bb[3]])
+                    if item.polygon_instance.is_polygon:
+                        for point in item.polygon_instance.point_list:
+                            x_list.append(point[0])
+                            y_list.append(-point[1])
+                    else:
+                        x_list.extend([pg.bb[0], pg.bb[2]])
+                        y_list.extend([-pg.bb[1], -pg.bb[3]])
+
                     self.polygon_obj_container[layer_id].append(item)
                     if pg.net_name:
                         if pg.net_name not in self.polygon_net_container:
