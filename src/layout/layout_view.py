@@ -48,8 +48,7 @@ class LayoutView(QGraphicsView):
         else:
             scale = (self.height() / height)
         self.scale(scale, scale)
-        self.resize_rectangle_pen_width()
-        self.resize_line_pen_width()
+        self.resize_pen_width()
 
     def key_press_f(self, event):
         self.center_display()

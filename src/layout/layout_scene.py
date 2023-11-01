@@ -294,7 +294,7 @@ class LayoutScene(QGraphicsScene):
                     self.reset_item(item)
                 self.selected_item_list.clear()
                 for item in items:
-                    if item.type() == LayoutType.Rectangle:
+                    if item.type() in [LayoutType.Rectangle, LayoutType.Polygon] :
                         pen, _ = self.paintbrush_manage.get_selected_paintbrush()
                         item.setPen(pen)
                         self.selected_item_list.append(item)
@@ -647,7 +647,7 @@ class LayoutScene(QGraphicsScene):
                     QMessageBox.information(self.layout_view, "Invalid polygons", "Please select metal layer!")
             else:
                 self.selected_item_list.append(item)
-            if item.type() == LayoutType.Rectangle:
+            if item.type() in [LayoutType.Rectangle, LayoutType.Polygon]:
                 pen, _ = self.paintbrush_manage.get_selected_paintbrush()
                 item.setPen(pen)
             else:
