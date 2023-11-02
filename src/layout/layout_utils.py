@@ -35,6 +35,7 @@ class LayoutPolygonItem(QGraphicsPolygonItem):
         self.polygon_instance = None
         self.net_item = None
         self.is_show_net = False
+        self.is_edit = True
 
     def delete(self):
         self.polygon_instance.status = Status.Delete
@@ -68,6 +69,7 @@ class LayoutRectItem(QGraphicsRectItem):
         self.polygon_instance = None
         self.net_item = None
         self.is_show_net = False
+        self.is_edit = True
 
     def delete(self):
         self.polygon_instance.status = Status.Delete
@@ -99,6 +101,7 @@ class LayoutTextItem(QGraphicsTextItem):
         super().__init__(*args, **kwargs)
         self.layer_id = ''
         self.text_instance = None
+        self.is_edit = True
 
     def delete(self):
         if self.text_instance:

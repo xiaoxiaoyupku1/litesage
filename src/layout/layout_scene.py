@@ -294,13 +294,14 @@ class LayoutScene(QGraphicsScene):
                     self.reset_item(item)
                 self.selected_item_list.clear()
                 for item in items:
-                    if item.type() in [LayoutType.Rectangle, LayoutType.Polygon] :
-                        pen, _ = self.paintbrush_manage.get_selected_paintbrush()
-                        item.setPen(pen)
-                        self.selected_item_list.append(item)
-                    elif item.type() == LayoutType.Text:
-                        item.setDefaultTextColor(self.paintbrush_manage.get_select_text_color())
-                        self.selected_item_list.append(item)
+                    if item.is_edit:
+                        if item.type() in [LayoutType.Rectangle, LayoutType.Polygon] :
+                            pen, _ = self.paintbrush_manage.get_selected_paintbrush()
+                            item.setPen(pen)
+                            self.selected_item_list.append(item)
+                        elif item.type() == LayoutType.Text:
+                            item.setDefaultTextColor(self.paintbrush_manage.get_select_text_color())
+                            self.selected_item_list.append(item)
 
     def draw_swipe_select_rectangle(self, event):
         if self.mouse_start_point:
@@ -635,7 +636,7 @@ class LayoutScene(QGraphicsScene):
     def handle_left_button_press_event(self, event):
 
         item = self.itemAt(event.scenePos(), QTransform())
-        if item and item not in self.selected_item_list:
+        if item and item not in self.selected_item_list and item.is_edit:
             if self.selected_item_list and self.mode == SceneMode.Normal:
                 for s_item in self.selected_item_list:
                     self.reset_item(s_item)
@@ -767,11 +768,15 @@ class LayoutScene(QGraphicsScene):
         y_list = []
         all_layout_cell = [self.layout_app.top_layout_cell] + self.layout_app.top_layout_cell.references
         for cell in all_layout_cell:
+            is_edit = True
+            if cell.name.endswith('_ip'):
+                is_edit = False
             for layer_id, pg_list in cell.polygon_data.items():
                 if layer_id not in self.polygon_obj_container:
                     self.polygon_obj_container[layer_id] = []
                 for pg in pg_list:
                     item = pg.get_graphics_item(self.paintbrush_manage)
+                    item.is_edit = is_edit
                     if self.show_mode == ShowMode.Simple:
                         item.hide()
                     self.addItem(item)
@@ -878,11 +883,15 @@ class LayoutScene(QGraphicsScene):
                           self.layout_app.top_layout_cell.references
         net_layer_id_set = set(list(self.layout_app.config.met_to_net_map.values()))
         for cell in all_layout_cell:
+            is_edit = True
+            if cell.name.endswith('_ip'):
+                is_edit = False
             for layer_id, label_list in cell.label_data.items():
                 if layer_id not in self.label_obj_container:
                     self.label_obj_container[layer_id] = []
                 for label in label_list:
                     item = label.get_graphics_item(self.paintbrush_manage)
+                    item.is_edit = is_edit
                     if self.show_mode == ShowMode.Simple:
                         item.hide()
                     self.addItem(item)
