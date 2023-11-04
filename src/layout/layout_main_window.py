@@ -115,7 +115,7 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.layout_scene.create_layout_polygon()
         self.layout_scene.create_text_label()
 
-    def show_simple_canvas(self):
+    def show_bbox_canvas(self):
         self.layout_scene.create_components_bb_polygon()
         self.layout_scene.create_components_name_text()
 
@@ -143,7 +143,7 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             self.layout_app.open_gds(file_path)
             self.net_diffusion()
             self.show_detail_canvas()
-            self.show_simple_canvas()
+            self.show_bbox_canvas()
             self.update_list_view()
             self.update_net_list_view()
             self.select_all_model_item(self.layer_list_view_model)

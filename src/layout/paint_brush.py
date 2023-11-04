@@ -116,7 +116,7 @@ class PaintBrushManage(object):
     def get_component_bb_paintbrush(self):
         if 'component_bb' not in self.paintbrush_container:
             pen = QPen()
-            pen.setColor(Qt.GlobalColor.red)
+            pen.setColor(Qt.GlobalColor.black)
             pen.setWidth(100)
             brush = QBrush()
             brush.setColor(Qt.GlobalColor.red)

@@ -121,6 +121,8 @@ class LayoutScene(QGraphicsScene):
         self.temp_routing_polygon_list = []
         self.net_name_list = []
         self.polygon_net_container = {}
+        self.component_bb_container = {}
+        self.component_name_container = {}
 
     def add_layout_polygon(self, net_name, layer_id, line_width, is_add_net_text):
         self.mode = SceneMode.PrePath
@@ -373,7 +375,6 @@ class LayoutScene(QGraphicsScene):
         selected_layer_id_list = self.main_window.get_selected_layer_id_list()
 
         if self.show_mode == ShowMode.Detail:
-            self.hide_component_bb()
             self.hide_component_name_text()
             for layer_id in selected_layer_id_list:
                 self.show_layer_polygon(layer_id)
@@ -739,14 +740,20 @@ class LayoutScene(QGraphicsScene):
     def create_components_bb_polygon(self):
         pen, _ = self.paintbrush_manage.get_component_bb_paintbrush()
         for component in self.layout_app.top_layout_cell.references:
-            width = component.bb[2]-component.bb[0]
-            height = component.bb[3]-component.bb[1]
-            bb_item = LayoutRectItem(component.bb[0], -component.bb[3], width, height)
-            bb_item.setPen(pen)
-            self.addItem(bb_item)
-            if self.show_mode == ShowMode.Detail:
-                bb_item.hide()
-            self.component_bb_container[component.name] = [bb_item]
+            bb = component.bb
+            lines = [
+                [bb[0], bb[1], bb[0], bb[3]],
+                [bb[0], bb[3], bb[2], bb[3]],
+                [bb[2], bb[3], bb[2], bb[1]],
+                [bb[0], bb[1], bb[2], bb[1]],
+            ]
+            self.component_bb_container[component.name] = []
+            for line in lines:
+                line_item = LayoutLineItem(line[0], -line[1], line[2], -line[3])
+                line_item.is_bbox = True
+                line_item.setPen(pen)
+                self.addItem(line_item)
+                self.component_bb_container[component.name].append(line_item)
 
     def create_components_name_text(self):
         pen, _ = self.paintbrush_manage.get_component_name_paintbrush()

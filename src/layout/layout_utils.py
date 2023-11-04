@@ -25,6 +25,8 @@ class LayoutLineItem(QGraphicsLineItem):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.is_bbox = False
+        self.is_edit = False
 
 
 class LayoutPolygonItem(QGraphicsPolygonItem):
