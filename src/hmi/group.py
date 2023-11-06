@@ -11,6 +11,7 @@ from src.hmi.ellipse import Circle, Arc
 from src.tool.device import DeviceParam
 from src.hmi.dialog import DesignDialog
 import re
+import copy
 
 class SchInst(QGraphicsItemGroup):
     def __init__(self, *args, **kwargs):
@@ -157,7 +158,6 @@ class SchInst(QGraphicsItemGroup):
     def draw(self, scene, model, shapes, devinfo, nextNetIndex, isThumbnail=False):
         dev = devinfo[model]
         nameHead = dev.head
-        params = dev.getParamList()
         nameId = self.getAutoNameId(scene, nameHead)
         self.setInstName(nameHead, nameId)
         self.lib = dev.lib
@@ -176,7 +176,7 @@ class SchInst(QGraphicsItemGroup):
         if isThumbnail:
             return
 
-        self.params = params
+        self.params = copy.deepcopy(dev.getParamList())
         self.paramText = ParameterText()
         if self.model == 'GND':
             return
