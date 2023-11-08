@@ -48,7 +48,8 @@ class SchInst(QGraphicsItemGroup):
         ret['m22'] = self.transform().m22()
 
         ret['params'] = params
-        distx, disty = [self.x() - centerX, self.y() - centerY]
+        distx, disty = [self.scenePos().x() - centerX, self.scenePos().y() - centerY]
+
 
         ret['distx'] = distx
         ret['disty'] = disty
