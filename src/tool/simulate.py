@@ -74,6 +74,9 @@ def runSimulation(gateway, netlist):
         '.param rel_bip=rel_mnl rel_DIO=rel_mnl',
         '.param rel_mnh=rel_mnl rel_mph=rel_mpl',
         '.options fastaccess list acct',
+        'rbkd $g_cbkd $g_csub 1m',
+        'rsub $g_csub sgnd 1m',
+        'vsgnd sgnd 0 0',
     ]
     netlist = ['*'] + liblines + netlist
 
