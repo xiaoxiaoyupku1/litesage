@@ -161,11 +161,15 @@ class DeviceParam():
 
 
 DEVNAME_HEAD_MAPPING = {
-    'source': 'E',
+    'capacitor': 'C',
+    'resistor': 'R',
+    'inductor': 'L',
+    'diode': 'D',
     'current source': 'I',
+    'voltage source': 'V',
     'bjt': 'Q',
+    'mos': 'M',
     'hv_mos': 'M',
-    'rsub': 'RSUB',
-    'esd': 'ESD',
-    'pad': 'PAD',
+    'source': 'E',
+    'switch': 'W',
 }

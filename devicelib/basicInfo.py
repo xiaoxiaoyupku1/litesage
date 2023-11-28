@@ -35,7 +35,7 @@ Param:,y,str,1,,,,,Value
 ENDDEF
 
 DEF NMOS
-Type:MOSFET
+Type:MOS
 Model:NMOS
 Pin:G,S,D
 ENDDEF
@@ -47,7 +47,7 @@ Pin:B,C,E
 ENDDEF
 
 DEF PMOS
-Type:MOSFET
+Type:MOS
 Model:PMOS
 Pin:G,S,D
 ENDDEF

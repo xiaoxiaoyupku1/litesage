@@ -504,7 +504,7 @@ class SchScene(QGraphicsScene):
         self.update()
 
     def showNetlist(self):
-        self.netlist = createNetlist(self)
+        self.netlist = createNetlist(self, viewOnly=True)
         dialog = NetlistDialog(None, self.netlist)
         setStatus('Create netlist')
         dialog.exec()
