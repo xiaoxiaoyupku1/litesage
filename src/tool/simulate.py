@@ -64,6 +64,7 @@ class GdsTrackThread(QThread):
 
 
 def runSimulation(gateway, netlist):
+    timeTag = getCurrentTime()
     liblines = [
         '.lib "D:\\process\\btpr-c140\\current\\lib\\process\\btpr-c140.lib"',
         '.lib "D:\\process\\btpr-c140\\current\\lib\\process\\btpr-c140_parasitic_devices.lib"',
@@ -74,6 +75,9 @@ def runSimulation(gateway, netlist):
         '.param rel_bip=rel_mnl rel_DIO=rel_mnl',
         '.param rel_mnh=rel_mnl rel_mph=rel_mpl',
         '.options fastaccess list acct',
+        'rbkd_{} $g_cbkd $g_csub 1m'.format(timeTag),
+        'rsub_{} $g_csub sgnd 1m'.format(timeTag),
+        'vsgnd_{} sgnd 0 0'.format(timeTag),
     ]
     netlist = ['*'] + liblines + netlist
 
@@ -83,7 +87,7 @@ def runSimulation(gateway, netlist):
         fp.write(bytes('\n'.join(netlist), encoding='utf-8'))
         fp.seek(0)
         localPath = fp.name
-        remotePath = '{}_{}_{}.sp'.format(getCurrentTime(),
+        remotePath = '{}_{}_{}.sp'.format(timeTag,
                                           getIpAddr(public=True), 
                                           getIpAddr(public=False))
         remotePath = os.path.join('/netlists', remotePath)

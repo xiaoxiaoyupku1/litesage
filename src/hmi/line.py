@@ -44,7 +44,7 @@ class WireSegment(Line):
         return self.pins
     def addPins(self):
         for item in self.collidingItems():
-            if type(item) is SymbolPin or type(item) is Pin:
+            if isinstance(item, SymbolPin) or isinstance(item, Pin):
                 self.addPin(item)
                 item.setConnected()
 
@@ -54,8 +54,9 @@ class WireSegment(Line):
         if dialog.exec():
             netName = dialog.name.text().strip()
             self.wire.setName(netName)
-            for designPin in [p for p in self.getPins() if isinstance(p, Pin)]:
-                designPin.updName(netName)
+            for xpin in self.getPins():
+                if isinstance(xpin, Pin):
+                    xpin.updName(netName)
 
             if self.text not in self.scene().items():
                 self.scene().addItem(self.text)
@@ -160,6 +161,29 @@ class Wire(): # Wire is a list of WireSegment
 
     def __setAutoName(self):
         pins = self.getPins()
+        symbPins = [p for p in pins if isinstance(p, SymbolPin)]
+        designPins = [p for p in pins if isinstance(p, Pin)]
+
+        if len(pins) == 0:
+            nextNetIndex = self.parent.getNextNetIndex()
+            netName = 'net{}'.format(nextNetIndex)
+
+        elif len(symbPins) > 0:
+            pin = symbPins[0]
+            netName = pin.getConn()
+            for pIdx in range(len(designPins)):
+                designPins[pIdx].updName(netName)
+
+        elif len(designPins) > 0:
+            # parent type: Design
+            nextNetIndex = self.parent.getNextNetIndex()
+            netName = 'net{}'.format(nextNetIndex)
+            designPins[0].updName(netName)
+
+        self.setName(netName)
+
+    def __setAutoName_bak(self):
+        pins = self.getPins()
         if len(pins) == 0:
             nextNetIndex = self.parent.getNextNetIndex()
             netName = 'net{}'.format(nextNetIndex)
@@ -184,7 +208,6 @@ class Wire(): # Wire is a list of WireSegment
 
     def __updatePinsConn(self):
         for pin in self.getPins():
-            #print(pin)
             pin.getParent().conns[pin.name] = self.getName()
 
     def __updateSegmentText(self):

@@ -5,4 +5,32 @@ Model:BG_ACTIVE
 Descr:带隙基准源Bandgap Reference
 Pin:ENABLE,PWR,SGND,BG_ACTIVE
 ENDDEF
+
+DEF PAD_ESD_MN9
+Type:PAD
+Model:pad_esd_mn9
+Descr:PAD
+Pin:PAD_PIN,ESD_GND
+ENDDEF
+
+DEF PAD_ESD_MN25
+Type:PAD
+Model:pad_esd_mn9
+Descr:PAD
+Pin:PAD_PIN,ESD_GND
+ENDDEF
+
+DEF PAD_ESD_MN45
+Type:PAD
+Model:pad_esd_mn9
+Descr:PAD
+Pin:PAD_PIN,ESD_GND
+ENDDEF
+
+DEF PAD_ESD_MP9
+Type:PAD
+Model:pad_esd_mn9
+Descr:PAD
+Pin:PAD_PIN,ESD_GND
+ENDDEF
 """

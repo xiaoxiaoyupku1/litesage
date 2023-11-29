@@ -152,6 +152,18 @@ class Design:
         self.initial_conns = self.conns.copy()
         self.Pins.remove(Pin)
 
+    def getNextNetIndex(self):
+        idx = 1
+        for net in self.conns.values():
+            if net.startswith('net'):
+                try:
+                    netIdx = int(net[3:])
+                    if netIdx >= idx:
+                        idx = netIdx + 1
+                except:
+                    continue
+        return idx
+
     def dumpDesign(self, filePath):
         rect = self.rect.rect()
         rectW = rect.width()

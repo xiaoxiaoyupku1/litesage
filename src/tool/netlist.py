@@ -4,8 +4,8 @@ from src.tool.design import Design
 ALL_USED_MODELS = []
 ALL_IP_INSTS = []
 
-def createNetlist(scene):
-    """ SPICE format """
+def createNetlist(scene, viewOnly=False):
+    """ SPICE format: viewOnly prettfies device model names if true """
     netlist = []
     comments = []
     subckts, knownDesigns = [], []
@@ -29,12 +29,12 @@ def createNetlist(scene):
         if design.model not in knownDesigns:
             line = '.subckt {} {}'.format(design.model, ' '.join(design.pins))
             subckts.append(line)
-            insts = _createInstNetlist(design, design.name)
+            insts = _createInstNetlist(design, design.name, viewOnly)
             subckts += insts
             subckts += ['.ends', '']
             knownDesigns.append(design.model)
 
-    netlist += _createInstNetlist(scene, '')
+    netlist += _createInstNetlist(scene, '', viewOnly)
 
     if len(scene.simtexts) > 0:
         netlist += ['']
@@ -45,7 +45,7 @@ def createNetlist(scene):
     return [ln.lower() for ln in results]
 
 
-def _createInstNetlist(parent, parentName):
+def _createInstNetlist(parent, parentName, viewOnly):
     global ALL_IP_INSTS
     global ALL_USED_MODELS
     netlist = []
@@ -72,9 +72,11 @@ def _createInstNetlist(parent, parentName):
             conn = net_pin_mapping.get(conn, conn)
             conn = '0' if conn in gndNets else conn
             line += ' {}'.format(conn)
+
+        modelName = inst.model if viewOnly else inst.spmodel
         if inst.isModelVisible():
             line = patchGlobalNodes(line, inst.lib, inst.model)
-            line += ' {}'.format(inst.model)
+            line += ' {}'.format(modelName)
         ALL_USED_MODELS.append(inst.model)
         for param in inst.params:
             if param.isUsedInNetlist():

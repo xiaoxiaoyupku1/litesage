@@ -11,6 +11,7 @@ from src.hmi.ellipse import Circle, Arc
 from src.tool.device import DeviceParam
 from src.hmi.dialog import DesignDialog
 import re
+import copy
 
 class SchInst(QGraphicsItemGroup):
     def __init__(self, *args, **kwargs):
@@ -21,7 +22,8 @@ class SchInst(QGraphicsItemGroup):
         self.nameId = None
         self.name = None
         self.lib = None # basic, pdk, ip
-        self.model = None
+        self.model = None # actually cell name of instance master
+        self.spmodel = None # model name in spice netlist for simulation
         self.pins = []
         self.conns = {} # pin name -> wire name
         self.initial_conns = {}
@@ -36,6 +38,7 @@ class SchInst(QGraphicsItemGroup):
                                             'nameId',
                                              'name',
                                              'model',
+                                             'spmodel',
                                              'pins',
                                              'conns',
                                              'initial_conns',
@@ -47,7 +50,8 @@ class SchInst(QGraphicsItemGroup):
         ret['m22'] = self.transform().m22()
 
         ret['params'] = params
-        distx, disty = [self.x() - centerX, self.y() - centerY]
+        distx, disty = [self.scenePos().x() - centerX, self.scenePos().y() - centerY]
+
 
         ret['distx'] = distx
         ret['disty'] = disty
@@ -157,12 +161,12 @@ class SchInst(QGraphicsItemGroup):
     def draw(self, scene, model, shapes, devinfo, nextNetIndex, isThumbnail=False):
         dev = devinfo[model]
         nameHead = dev.head
-        params = dev.getParamList()
         nameId = self.getAutoNameId(scene, nameHead)
         self.setInstName(nameHead, nameId)
         self.lib = dev.lib
         self.name = nameHead + str(nameId)
-        self.model = model
+        self.model = dev.name
+        self.spmodel = dev.model
         self.pins = dev.pins
         self.conns = {p:'net{}'.format(nextNetIndex+idx) for idx, p in enumerate(self.pins)}
         self.initial_conns = self.conns.copy()
@@ -176,7 +180,7 @@ class SchInst(QGraphicsItemGroup):
         if isThumbnail:
             return
 
-        self.params = params
+        self.params = copy.deepcopy(dev.getParamList())
         self.paramText = ParameterText()
         if self.model == 'GND':
             return
@@ -278,7 +282,8 @@ class SchInst(QGraphicsItemGroup):
         return self.lib == 'ip'
 
     def make_by_JSON(self, jsn, scene):
-        for k in ['nameHead', 'nameId','name','model','pins','conns','initial_conns','space','lib']:
+        for k in ['nameHead', 'nameId', 'name', 'model', 'spmodel',
+                  'pins', 'conns', 'initial_conns', 'space', 'lib']:
             setattr(self, k, jsn[k])
         for p in jsn['params']:
             param = DeviceParam()
