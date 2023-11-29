@@ -673,7 +673,7 @@ class LayoutScene(QGraphicsScene):
         return super(LayoutScene, self).mousePressEvent(event)
 
     def reset_item(self, item):
-        if item.type() == LayoutType.Rectangle:
+        if item.type() == LayoutType.Rectangle or item.type() == LayoutType.Polygon:
             pen, brush = self.paintbrush_manage.get_paintbrush(item.layer_id)
             item.setPen(pen)
             item.setBrush(brush)
@@ -758,7 +758,7 @@ class LayoutScene(QGraphicsScene):
     def create_components_name_text(self):
         pen, _ = self.paintbrush_manage.get_component_name_paintbrush()
         for component in self.layout_app.top_layout_cell.references:
-            font = self.paintbrush_manage.get_text_font(500)
+            font = self.paintbrush_manage.get_text_font(1000)
             text_item = LayoutTextItem(component.name)
             text_item.setFont(font)
             x = (component.bb[2]+component.bb[0])/2
