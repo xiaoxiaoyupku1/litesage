@@ -678,6 +678,7 @@ class SchScene(QGraphicsScene):
             for design in self.designs:
                 design_dict = {'model':design.model,
                                'name':design.name,
+                               'conns':design.conns,
                                'x':design.group.x(),
                                'y':design.group.y(),
                                'scale':design.group.scale(),
@@ -753,6 +754,7 @@ class SchScene(QGraphicsScene):
                         design.make_group()
                         design.group.setPos(design_dict['x'], design_dict['y'])
                         design.name = design_dict['name']
+                        design.conns = design_dict['conns']
                         design.setScale(design_dict['scale'])
                         t = design.group.transform()
                         t.scale(design_dict['m11'], design_dict['m22'])
