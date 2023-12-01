@@ -117,8 +117,7 @@ def getActualLevelGndNets(parent, net_pin_mapping=None):
 
 
 NO_PSB_LIST = [
-    'RHR', 'RMET1', 'RMET2', 'RPOLY1', 'RFUSEM2', 'RFUSEPOLY',
-    'ROPTION', 'RSMEAR', 'RSUB', 'IPROBE',
+    'RHPO1080', 'RLPO28'
 ]
 def patchGlobalNodes(line, lib, model):
     if lib == 'pdk' and model not in NO_PSB_LIST:

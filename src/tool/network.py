@@ -65,10 +65,21 @@ class Gateway(FTP):
             self.cwd(remoteDir)
             remotePath = os.path.basename(remotePath)
         bufsize = 1024
-        fp = open(localPath, 'wb')
-        self.retrbinary('RETR ' + remotePath, fp.write, bufsize)
-        fp.close()
+
+        while self.retrFile('RETR ' + remotePath, localPath, bufsize) == -1:
+            sleep(0.5)
+
         self.cwd(pwd)
+
+    def retrFile(self, cmd, savePath, bufsize):
+        fp = open(savePath, 'wb')
+        try:
+            self.retrbinary(cmd, fp.write, bufsize)
+            fp.close()
+            return 0
+        except:
+            fp.close()
+            return -1
 
     def isFile(self, remotePath):
         pwd = self.pwd()

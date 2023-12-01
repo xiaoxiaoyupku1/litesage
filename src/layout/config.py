@@ -14,7 +14,7 @@ class Config(configparser.ConfigParser):
         self.poly_layer_id = ''
         self.met1_layer_id = '7-0'
         self.met1_txt_layer_id = '121-0'
-        self.met2_layer_id = '9-0'
+        self.met2_layer_id = '84-0'
         self.met2_txt_layer_id = '122-0'
         self.met3_layer_id = ''
         self.met4_layer_id = ''
