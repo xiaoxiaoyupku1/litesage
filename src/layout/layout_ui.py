@@ -26,7 +26,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1087, 722)
+        MainWindow.resize(1132, 834)
         MainWindow.setAutoFillBackground(False)
         self.actionopen = QAction(MainWindow)
         self.actionopen.setObjectName(u"actionopen")
@@ -91,10 +91,10 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.labelFoohuPower.sizePolicy().hasHeightForWidth())
         self.labelFoohuPower.setSizePolicy(sizePolicy)
-        self.labelFoohuPower.setMinimumSize(QSize(108, 20))
-        self.labelFoohuPower.setMaximumSize(QSize(108, 20))
+        self.labelFoohuPower.setMinimumSize(QSize(216, 40))
+        self.labelFoohuPower.setMaximumSize(QSize(216, 40))
         self.labelFoohuPower.setStyleSheet(u"border-image: url(:/logo/poweredBy.png);")
-        self.labelFoohuPower.setPixmap(QPixmap(u"../../../../poweredBy.png"))
+        self.labelFoohuPower.setPixmap(QPixmap(u":/logo/poweredBy.png"))
         self.labelFoohuPower.setScaledContents(True)
         self.labelFoohuPower.setWordWrap(False)
 
@@ -109,7 +109,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1087, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1132, 22))
         self.menu_2 = QMenu(self.menubar)
         self.menu_2.setObjectName(u"menu_2")
         self.menuAction = QMenu(self.menubar)
