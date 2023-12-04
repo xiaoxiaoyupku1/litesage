@@ -151,7 +151,7 @@ class PaintBrushManage(object):
         return pen
 
     @staticmethod
-    def get_text_font(size=200):
+    def get_text_font(size=400):
         font = QFont()
         font.setPointSize(size)
         return font

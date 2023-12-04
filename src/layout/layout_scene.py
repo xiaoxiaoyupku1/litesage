@@ -375,7 +375,6 @@ class LayoutScene(QGraphicsScene):
         selected_layer_id_list = self.main_window.get_selected_layer_id_list()
 
         if self.show_mode == ShowMode.Detail:
-            self.hide_component_name_text()
             for layer_id in selected_layer_id_list:
                 self.show_layer_polygon(layer_id)
                 self.show_label_by_layer_id(layer_id)
@@ -758,15 +757,13 @@ class LayoutScene(QGraphicsScene):
     def create_components_name_text(self):
         pen, _ = self.paintbrush_manage.get_component_name_paintbrush()
         for component in self.layout_app.top_layout_cell.references:
-            font = self.paintbrush_manage.get_text_font(1000)
+            font = self.paintbrush_manage.get_text_font(2000)
             text_item = LayoutTextItem(component.name)
             text_item.setFont(font)
             x = (component.bb[2]+component.bb[0])/2
             y = (component.bb[3]+component.bb[1])/2
             text_item.setPos(x - text_item.boundingRect().width() / 2, -y)
             self.addItem(text_item)
-            if self.show_mode == ShowMode.Detail:
-                text_item.hide()
             self.component_name_container[component.name] = [text_item]
 
     def create_layout_polygon(self):
