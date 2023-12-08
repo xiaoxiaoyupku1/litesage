@@ -317,6 +317,12 @@ class SchInst(QGraphicsItemGroup):
         t.translate(-jsn.get('distx'), -jsn.get('disty'))
         self.setTransform(t)
 
+        p = self.paramText
+        tp = p.transform()
+        tp.scale(-1,1)
+        tp.translate(-p.boundingRect().width(),0)
+        p.setTransform(tp)
+
 
 
 class DesignGroup(QGraphicsItemGroup):
