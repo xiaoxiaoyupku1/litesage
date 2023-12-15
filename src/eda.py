@@ -466,10 +466,15 @@ class FoohuEda(QMainWindow):
             t = item.transform()
             t.scale(-1,1)
             item.setTransform(t)
-            #p = item.paramText
-            #tp = p.transform()
-            #tp.scale(-1,1)
-            #p.setTransform(tp)
+
+            p = item.paramText
+            tp = p.transform()
+            tp.scale(-1,1)
+            tp.translate(-p.boundingRect().width(),0)
+            p.setTransform(tp)
+
+            return 
+
 
         elif isinstance(item, DesignBorder):
             if not item.design.readonly:
