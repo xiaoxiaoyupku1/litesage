@@ -5,6 +5,7 @@ from src.layout.layout_application import LayoutApplication
 from src.layout.layout_utils import Polygon, Label
 from src.layout.layout_utils import LayoutRectItem, LayoutTextItem, LayoutLineItem
 from src.layout.layout_utils import LayoutType
+from src.layout.config import forbidden_layer_id
 
 
 class SceneDirection(object):
@@ -773,9 +774,11 @@ class LayoutScene(QGraphicsScene):
         all_layout_cell = [self.layout_app.top_layout_cell] + self.layout_app.top_layout_cell.references
         for cell in all_layout_cell:
             is_edit = True
-            if cell.name.endswith('_ip'):
+            if cell != self.layout_app.top_layout_cell:
                 is_edit = False
             for layer_id, pg_list in cell.polygon_data.items():
+                if layer_id == forbidden_layer_id:
+                    continue
                 if layer_id not in self.polygon_obj_container:
                     self.polygon_obj_container[layer_id] = []
                 for pg in pg_list:
@@ -888,7 +891,7 @@ class LayoutScene(QGraphicsScene):
         net_layer_id_set = set(list(self.layout_app.config.met_to_net_map.values()))
         for cell in all_layout_cell:
             is_edit = True
-            if cell.name.endswith('_ip'):
+            if cell != self.layout_app.top_layout_cell:
                 is_edit = False
             for layer_id, label_list in cell.label_data.items():
                 if layer_id not in self.label_obj_container:

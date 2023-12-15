@@ -277,7 +277,7 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             os.remove(destination_file)
             QtWidgets.QMessageBox.information(self, 'save info', 'save success!')
 
-    def save_as(self, file_path=''):
+    def save_as(self, file_path='', only_top_cell=False):
         show_info = False
         if not file_path:
             show_info = True
@@ -290,7 +290,7 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             polygon_list = self.layout_scene.get_cell_polygons()
             text_list = self.layout_scene.get_cell_text()
             self.layout_app.save_data(polygon_list, text_list)
-            res, title, err_msg = self.layout_app.save_gds(file_path)
+            res, title, err_msg = self.layout_app.save_gds(file_path, only_top_cell)
             if not res:
                 if os.path.exists(file_path):
                     os.remove(file_path)
@@ -319,7 +319,7 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             os.makedirs('./project/layout/', exist_ok=True)
             local_path = './project/layout/{}.gds'.format(self.layout_app.top_layout_cell.name)
             remote_path = '/LaGen/gdsS2/{}.gds'.format(self.layout_app.top_layout_cell.name)
-            self.save_as(local_path)
+            self.save_as(local_path, only_top_cell=True)
             gt.uploadFile(local_path, remote_path)
             QtWidgets.QMessageBox.information(self, 'Upload info', 'upload success')
         except Exception as e:

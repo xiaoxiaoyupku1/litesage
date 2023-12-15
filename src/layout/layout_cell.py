@@ -1,10 +1,11 @@
 import gdspy
 from src.layout.layout_utils import Status
+from src.layout.config import forbidden_layer_id
 
 
 class LayoutCell(object):
 
-    def __init__(self, name, scale, magnification=None):
+    def __init__(self, name, scale, gds_cell, magnification=None):
         self.name = name
         self.references = []
         self.polygon_data = {}
@@ -12,21 +13,25 @@ class LayoutCell(object):
         self.all_layer_id_list = []
         self.scale = scale
         self.magnification = magnification
+        self.gds_cell = gds_cell
         self.bb = []
 
     def set_bb(self):
         x_list = []
         y_list = []
-        for pg_list in self.polygon_data.values():
-            for pg in pg_list:
-                x_list.extend([pg.bb[0], pg.bb[2]])
-                y_list.extend([pg.bb[1], pg.bb[3]])
-        self.bb = [
-            min(x_list),
-            min(y_list),
-            max(x_list),
-            max(y_list)
-        ]
+        if forbidden_layer_id in self.polygon_data:
+            self.bb = [i for i in self.polygon_data[forbidden_layer_id][0].bb]
+        else:
+            for pg_list in self.polygon_data.values():
+                for pg in pg_list:
+                    x_list.extend([pg.bb[0], pg.bb[2]])
+                    y_list.extend([pg.bb[1], pg.bb[3]])
+            self.bb = [
+                min(x_list),
+                min(y_list),
+                max(x_list),
+                max(y_list)
+            ]
 
     def add_polygons(self, polygon_list):
         for pg in polygon_list:

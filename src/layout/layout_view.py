@@ -37,7 +37,7 @@ class LayoutView(QGraphicsView):
         pen_width = int(self.mapToScene(0, 0, 1, 1)[2].x() - self.mapToScene(0, 0, 1, 1)[0].x())
         bbox_width = int(self.mapToScene(0, 0, 3, 3)[2].x() - self.mapToScene(0, 0, 3, 3)[0].x())
         for item in [item for item in self.scene().items() if item.type() == LayoutType.Line]:
-            if item.is_bbox:
+            if hasattr(item, 'is_bbox') and item.is_bbox:
                 pen = QPen(item.pen().color(), bbox_width)
             else:
                 pen = QPen(item.pen().color(), pen_width)

@@ -33,7 +33,7 @@ class LayoutApplication(object):
     def is_poly(self, layer_id):
         pass
 
-    def save_gds(self, gds_path):
+    def save_gds(self, gds_path, only_top_cell):
 
         res, title, err_msg = True, '', ''
 
@@ -43,7 +43,7 @@ class LayoutApplication(object):
             title = "Empty Content"
             return res, title, err_msg
         try:
-            self.gds_manage.write_gds(gds_path, self.top_layout_cell)
+            self.gds_manage.write_gds(gds_path, self.top_layout_cell, only_top_cell)
         except Exception as e:
             print(e)
             res = True
