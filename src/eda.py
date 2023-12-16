@@ -1,6 +1,7 @@
 from PySide6.QtCore import (QRect)
 from PySide6.QtWidgets import (
-    QMainWindow, QMenuBar, QMenu, QWidget, QGraphicsView, QMessageBox
+    QMainWindow, QMenuBar, QMenu, QWidget, QGraphicsView, QMessageBox, 
+    QLabel, QSizePolicy
 )
 from PySide6.QtGui import (
     QAction, QKeySequence
@@ -9,7 +10,7 @@ from PySide6.QtGui import (
 from src.hmi.scene import SchScene
 from src.hmi.view import SchView
 from src.hmi.dialog import DesignFileDialog, DeviceChoiceDialog, UserAccountDialog, Confirmation
-from src.hmi.image import getIcon
+from src.hmi.image import getIcon, getTrademark
 from src.hmi.group import (SchInst, DesignGroup)
 from src.hmi.rect import DesignBorder
 from src.tool.status import setStatus
@@ -81,6 +82,7 @@ class FoohuEda(QMainWindow):
 
         # Status Bar
         self.statBar = None
+        self.trademark = None
 
 
     def setupUi(self):
@@ -90,8 +92,7 @@ class FoohuEda(QMainWindow):
 
         self.setupUiAction()
         self.setupUiMenu()
-        self.statBar = self.statusBar()
-        setStatus('Welcome to FOOHU EDA', bar=self.statBar)
+        self.setupStatBar()
 
     def setupUiAction(self):
         self.actSave = QAction(text='Save Design')
@@ -254,6 +255,21 @@ class FoohuEda(QMainWindow):
         self.centralView = QGraphicsView(self.centralWidget)
         self.centralView.setGeometry(QRect(0, 0, 500, 500))
         self.setCentralWidget(self.centralWidget)
+
+    def setupStatBar(self):
+        self.statBar = self.statusBar()
+        self.trademark = QLabel()
+        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.trademark.sizePolicy().hasHeightForWidth())
+        self.trademark.setPixmap(getTrademark())
+        self.trademark.setMaximumSize(216, 40)
+        self.trademark.setMinimumSize(216, 40)
+        self.trademark.setScaledContents(True)
+        self.statBar.addPermanentWidget(self.trademark)
+        self.statBar.setStyleSheet('QStatusBar::item { border: none; }')
+        setStatus('Welcome to FOOHU EDA', bar=self.statBar)
 
     def saveDesign(self, _):
         if self.schScene is None:
