@@ -8,6 +8,8 @@ from src.hmi.rect import  SymbolPin
 from src.hmi.polygon import Pin
 from src.hmi.ellipse import WireConnection
 
+import math
+
 
 class Line(QGraphicsLineItem):
     def __init__(self, *args, **kwargs):
@@ -75,28 +77,43 @@ class WireSegment(Line):
         self.wire.remove(self)
         self.wire.parent.wireList.checkConnectivity(self.wire)
 
+    def same(self,p1,p2):
+        return math.isclose(p1.x(),p2.x()) and math.isclose(p1.y(), p2.y())
+
+    def isoverlap(self, other):
+        return self.__getDirection() == other.__getDirection()
+
+
     def isConnected(self, other):
 
         if not self.collidesWithItem(other):
+            #case 1: no intersection
             return False
         else:
-            if self.__getDirection() == other.__getDirection():
-                #overlap
+            if self.isoverlap(other):
+                #case 2: overlap
                 return True
             else:
-                if self.__getDirection() == 'x_direct':
-                    x=self.line()
-                    y=other.line()
-                else:
-                    x=other.line()
-                    y=self.line()
-                if y.y1() == x.y1() or y.y2() == x.y1() or x.x1() == y.x1() or x.x2() == y.x1():
-                    # ⊥ or ∟
-                    self.__drawConnection(other)
+                if self.same(self.line().p1(), other.line().p1()) or self.same(self.line().p2(), other.line().p1()) or self.same(self.line().p1(), other.line().p2()) or self.same(self.line().p2(), other.line().p2()):
+                    # case 3: ∟
                     return True
+
                 else:
-                    #cross
-                    return False
+                    if self.__getDirection() == 'horizontal':
+                        hori=self.line()
+                        verti=other.line()
+                    else:
+                        hori=other.line()
+                        verti=self.line()
+
+
+                    if math.isclose(verti.y1(), hori.y1()) or math.isclose(verti.y2(), hori.y1()) or math.isclose(hori.x1(), verti.x1()) or math.isclose(hori.x2(), verti.x1()):
+                        #case 4: ⊥
+                        self.__drawConnection(other)
+                        return True
+                    else:
+                        #case 5: crossover
+                        return False
 
     def __drawConnection(self,other):
         _, p = self.line().intersects(other.line())
@@ -110,9 +127,9 @@ class WireSegment(Line):
 
     def __getDirection(self):
         if self.line().x1() == self.line().x2():
-            return 'y_direct'
+            return 'vertical'
         elif self.line().y1() == self.line().y2():
-            return 'x_direct'
+            return 'horizontal'
         else:
             raise Exception("strange line ")
     def toPrevJSON(self, centerX, centerY):
