@@ -236,7 +236,8 @@ class Wire(): # Wire is a list of WireSegment
 
     def complete(self):
         self.__checkParent() # in scene or editing_design
-        self.__setAutoName()
+        if self in self.parent.wireList.wirelist:
+            self.__setAutoName()
         self.__setSelectable()
 
     def __setSelectable(self):
@@ -313,6 +314,7 @@ class WireList():
                 self.wirelist.append(new)
         else:
             self.wirelist.append(new)
+
     def cleanup(self):
         for wire in self.wirelist:
             for seg in wire.getSegments():
