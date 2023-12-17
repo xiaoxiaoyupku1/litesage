@@ -52,6 +52,7 @@ class WireSegment(Line):
 
 
     def contextMenuEvent(self, event):
+        self.scene().cleanCursorSymb()
         dialog = WireDialog(parent=None, wiresegment=self)
         if dialog.exec():
             netName = dialog.name.text().strip()
