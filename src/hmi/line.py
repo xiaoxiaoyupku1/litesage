@@ -154,10 +154,12 @@ class Wire(): # Wire is a list of WireSegment
         pass
 
     def isConnected(self, other):
+        ret = False
         for segment in self.getSegments():
-            if any(segment.isConnected(other_segment) for other_segment in other.getSegments()):
-                return True
-        return False
+            for other_segment in other.getSegments():
+                if segment.isConnected(other_segment):
+                    ret = True
+        return ret
 
     def getSegments(self):
         return self.segments
