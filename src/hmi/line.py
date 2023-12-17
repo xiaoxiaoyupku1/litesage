@@ -57,9 +57,6 @@ class WireSegment(Line):
         if dialog.exec():
             netName = dialog.name.text().strip()
             self.wire.setName(netName)
-            for xpin in self.getPins():
-                if isinstance(xpin, Pin):
-                    xpin.updName(netName)
 
             if self.text not in self.scene().items():
                 self.scene().addItem(self.text)
@@ -179,28 +176,36 @@ class Wire(): # Wire is a list of WireSegment
             pins.update(segment.getPins())
         return pins
 
-    def __setAutoName(self):
+    def getAutoName(self):
+        pins = self.getPins()
+
+        symbPins = [p for p in pins if isinstance(p, SymbolPin)]
+        designPins = [p for p in pins if isinstance(p, Pin)]
+
+        if len(symbPins) == 0:
+            nextNetIndex = self.parent.getNextNetIndex()
+            netName = 'net{}'.format(nextNetIndex)
+        else:
+            pin = symbPins[0]
+            netName = pin.getConn()
+
+        return netName
+    def __setAutoName_bkk(self):
         pins = self.getPins()
         symbPins = [p for p in pins if isinstance(p, SymbolPin)]
         designPins = [p for p in pins if isinstance(p, Pin)]
 
-        if len(pins) == 0:
+        if len(symbPins) == 0:
             nextNetIndex = self.parent.getNextNetIndex()
             netName = 'net{}'.format(nextNetIndex)
-
-        elif len(symbPins) > 0:
+        else:
             pin = symbPins[0]
             netName = pin.getConn()
-            for pIdx in range(len(designPins)):
-                designPins[pIdx].updName(netName)
-
-        elif len(designPins) > 0:
-            # parent type: Design
-            nextNetIndex = self.parent.getNextNetIndex()
-            netName = 'net{}'.format(nextNetIndex)
-            designPins[0].updName(netName)
 
         self.setName(netName)
+
+        for pIdx in range(len(designPins)):
+            designPins[pIdx].updName(netName)
 
     def __setAutoName_bak(self):
         pins = self.getPins()
@@ -224,20 +229,20 @@ class Wire(): # Wire is a list of WireSegment
     def setName(self,name):
         self.name = name
         self.__updatePinsConn()
+        for xpin in self.getPins():
+            if isinstance(xpin, Pin):
+                xpin.updName(name)
         self.__updateSegmentText()
 
     def __updatePinsConn(self):
         for pin in self.getPins():
             pin.getParent().conns[pin.name] = self.getName()
-
     def __updateSegmentText(self):
         for segment in self.getSegments():
             segment.text.setPlainText(self.name)
 
     def complete(self):
         self.__checkParent() # in scene or editing_design
-        if self in self.parent.wireList.wirelist:
-            self.__setAutoName()
         self.__setSelectable()
 
     def __setSelectable(self):
@@ -249,15 +254,17 @@ class Wire(): # Wire is a list of WireSegment
         try:
             if scene.editDesign is not None:
                 if all(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
+                    # inside editdesign
                     self.parent = scene.editDesign
                     self.parent.wireList.append(self)
+                elif any(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
+                    #TODO: forbidden, alert
+                    pass
                 else:
-                    if any(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
-                        #TODO: forbidden, alert
-                        pass
-                    else:
-                        scene.wireList.append(self)
+                    #outside editdesign
+                    scene.wireList.append(self)
             else:
+                # outside editdesign
                 scene.wireList.append(self)
         except:
             scene.wireList.append(self)
@@ -289,7 +296,7 @@ class WireList():
 
     def __next__(self):
         return self.wirelist.__next__()
-    def append(self,new,check=True):
+    def append(self,new: Wire, check=True):
         if check:
             wires_connected = []
             others=[]
@@ -311,6 +318,8 @@ class WireList():
 
                 self.wirelist = others + [merged]
             else:
+                name = new.getAutoName()
+                new.setName(name)
                 self.wirelist.append(new)
         else:
             self.wirelist.append(new)
