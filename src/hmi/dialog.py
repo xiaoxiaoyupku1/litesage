@@ -493,7 +493,7 @@ class SimCmdDialog_CUSTOMIZE(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         layout = QFormLayout()
-        self.text = QLineEdit('.option temp=25')
+        self.text = QLineEdit('.temp 25')
         layout.addRow('', self.text)
         self.setLayout(layout)
 
