@@ -170,8 +170,8 @@ class Polygon(object):
             (bb[2], bb[1]),
         ]
 
-    def get_text_item(self, paintbrush_manage, text_layer_id=None):
-        font = paintbrush_manage.get_text_font()
+    def get_text_item(self, paintbrush_manage, text_layer_id=None, font_size=400):
+        font = paintbrush_manage.get_text_font(font_size)
         text_item = LayoutTextItem(self.net_name)
         text_item.setFont(font)
         text_item.setPos(self.net_location[0] - text_item.boundingRect().width() / 2,
@@ -268,9 +268,9 @@ class Label(object):
         self.status = Status.Normal
         self.type = ItemType.Text
 
-    def get_graphics_item(self, paintbrush_manage):
+    def get_graphics_item(self, paintbrush_manage, font_size=400):
         if not self.layout_item:
-            font = paintbrush_manage.get_text_font()
+            font = paintbrush_manage.get_text_font(font_size)
             self.layout_item = LayoutTextItem(self.text)
             self.layout_item.setFont(font)
             self.layout_item.setPos(self.x - self.layout_item.boundingRect().width() / 2,

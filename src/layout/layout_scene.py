@@ -800,8 +800,12 @@ class LayoutScene(QGraphicsScene):
                         if pg.net_name not in self.polygon_net_container:
                             self.polygon_net_container[pg.net_name] = []
                         self.polygon_net_container[pg.net_name].append(item)
-                        txt_item = pg.get_text_item(
-                            self.paintbrush_manage)
+                        if cell != self.layout_app.top_layout_cell:
+                            txt_item = pg.get_text_item(
+                                self.paintbrush_manage, font_size=1000)
+                        else:
+                            txt_item = pg.get_text_item(
+                                self.paintbrush_manage)
                         self.addItem(txt_item)
                         txt_item.hide()
                         item.net_item = txt_item
@@ -897,7 +901,10 @@ class LayoutScene(QGraphicsScene):
                 if layer_id not in self.label_obj_container:
                     self.label_obj_container[layer_id] = []
                 for label in label_list:
-                    item = label.get_graphics_item(self.paintbrush_manage)
+                    if cell != self.layout_app.top_layout_cell:
+                        item = label.get_graphics_item(self.paintbrush_manage, font_size=1000)
+                    else:
+                        item = label.get_graphics_item(self.paintbrush_manage)
                     item.is_edit = is_edit
                     if self.show_mode == ShowMode.Simple:
                         item.hide()
