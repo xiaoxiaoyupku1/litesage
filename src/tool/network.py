@@ -46,8 +46,16 @@ class Gateway(FTP):
         return Gateway._instance
 
     def init(self):
-        self.connect(host=self.host, port=self.port)
-        self.login(user=self.user, passwd=self.passwd)
+        connected = False
+        try:
+            self.connect(host=self.host, port=self.port)
+            self.login(user=self.user, passwd=self.passwd)
+            connected = True
+        except:
+            pass
+        finally:
+            assert connected, 'FTP connection error'
+
     
     def catDir(self, path):
         return self.dir(path)

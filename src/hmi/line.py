@@ -8,6 +8,8 @@ from src.hmi.rect import  SymbolPin
 from src.hmi.polygon import Pin
 from src.hmi.ellipse import WireConnection
 
+import math
+
 
 class Line(QGraphicsLineItem):
     def __init__(self, *args, **kwargs):
@@ -50,13 +52,11 @@ class WireSegment(Line):
 
 
     def contextMenuEvent(self, event):
+        self.scene().cleanCursorSymb()
         dialog = WireDialog(parent=None, wiresegment=self)
         if dialog.exec():
             netName = dialog.name.text().strip()
             self.wire.setName(netName)
-            for xpin in self.getPins():
-                if isinstance(xpin, Pin):
-                    xpin.updName(netName)
 
             if self.text not in self.scene().items():
                 self.scene().addItem(self.text)
@@ -75,28 +75,43 @@ class WireSegment(Line):
         self.wire.remove(self)
         self.wire.parent.wireList.checkConnectivity(self.wire)
 
+    def same(self,p1,p2):
+        return math.isclose(p1.x(),p2.x()) and math.isclose(p1.y(), p2.y())
+
+    def isoverlap(self, other):
+        return self.__getDirection() == other.__getDirection()
+
+
     def isConnected(self, other):
 
         if not self.collidesWithItem(other):
+            #case 1: no intersection
             return False
         else:
-            if self.__getDirection() == other.__getDirection():
-                #overlap
+            if self.isoverlap(other):
+                #case 2: overlap
                 return True
             else:
-                if self.__getDirection() == 'x_direct':
-                    x=self.line()
-                    y=other.line()
-                else:
-                    x=other.line()
-                    y=self.line()
-                if y.y1() == x.y1() or y.y2() == x.y1() or x.x1() == y.x1() or x.x2() == y.x1():
-                    # ⊥ or ∟
-                    self.__drawConnection(other)
+                if self.same(self.line().p1(), other.line().p1()) or self.same(self.line().p2(), other.line().p1()) or self.same(self.line().p1(), other.line().p2()) or self.same(self.line().p2(), other.line().p2()):
+                    # case 3: ∟
                     return True
+
                 else:
-                    #cross
-                    return False
+                    if self.__getDirection() == 'horizontal':
+                        hori=self.line()
+                        verti=other.line()
+                    else:
+                        hori=other.line()
+                        verti=self.line()
+
+
+                    if math.isclose(verti.y1(), hori.y1()) or math.isclose(verti.y2(), hori.y1()) or math.isclose(hori.x1(), verti.x1()) or math.isclose(hori.x2(), verti.x1()):
+                        #case 4: ⊥
+                        self.__drawConnection(other)
+                        return True
+                    else:
+                        #case 5: crossover
+                        return False
 
     def __drawConnection(self,other):
         _, p = self.line().intersects(other.line())
@@ -110,9 +125,9 @@ class WireSegment(Line):
 
     def __getDirection(self):
         if self.line().x1() == self.line().x2():
-            return 'y_direct'
+            return 'vertical'
         elif self.line().y1() == self.line().y2():
-            return 'x_direct'
+            return 'horizontal'
         else:
             raise Exception("strange line ")
     def toPrevJSON(self, centerX, centerY):
@@ -137,10 +152,12 @@ class Wire(): # Wire is a list of WireSegment
         pass
 
     def isConnected(self, other):
+        ret = False
         for segment in self.getSegments():
-            if any(segment.isConnected(other_segment) for other_segment in other.getSegments()):
-                return True
-        return False
+            for other_segment in other.getSegments():
+                if segment.isConnected(other_segment):
+                    ret = True
+        return ret
 
     def getSegments(self):
         return self.segments
@@ -159,28 +176,36 @@ class Wire(): # Wire is a list of WireSegment
             pins.update(segment.getPins())
         return pins
 
-    def __setAutoName(self):
+    def getAutoName(self):
+        pins = self.getPins()
+
+        symbPins = [p for p in pins if isinstance(p, SymbolPin)]
+        designPins = [p for p in pins if isinstance(p, Pin)]
+
+        if len(symbPins) == 0:
+            nextNetIndex = self.parent.getNextNetIndex()
+            netName = 'net{}'.format(nextNetIndex)
+        else:
+            pin = symbPins[0]
+            netName = pin.getConn()
+
+        return netName
+    def __setAutoName_bkk(self):
         pins = self.getPins()
         symbPins = [p for p in pins if isinstance(p, SymbolPin)]
         designPins = [p for p in pins if isinstance(p, Pin)]
 
-        if len(pins) == 0:
+        if len(symbPins) == 0:
             nextNetIndex = self.parent.getNextNetIndex()
             netName = 'net{}'.format(nextNetIndex)
-
-        elif len(symbPins) > 0:
+        else:
             pin = symbPins[0]
             netName = pin.getConn()
-            for pIdx in range(len(designPins)):
-                designPins[pIdx].updName(netName)
-
-        elif len(designPins) > 0:
-            # parent type: Design
-            nextNetIndex = self.parent.getNextNetIndex()
-            netName = 'net{}'.format(nextNetIndex)
-            designPins[0].updName(netName)
 
         self.setName(netName)
+
+        for pIdx in range(len(designPins)):
+            designPins[pIdx].updName(netName)
 
     def __setAutoName_bak(self):
         pins = self.getPins()
@@ -204,19 +229,20 @@ class Wire(): # Wire is a list of WireSegment
     def setName(self,name):
         self.name = name
         self.__updatePinsConn()
+        for xpin in self.getPins():
+            if isinstance(xpin, Pin):
+                xpin.updName(name)
         self.__updateSegmentText()
 
     def __updatePinsConn(self):
         for pin in self.getPins():
             pin.getParent().conns[pin.name] = self.getName()
-
     def __updateSegmentText(self):
         for segment in self.getSegments():
             segment.text.setPlainText(self.name)
 
     def complete(self):
         self.__checkParent() # in scene or editing_design
-        self.__setAutoName()
         self.__setSelectable()
 
     def __setSelectable(self):
@@ -228,15 +254,17 @@ class Wire(): # Wire is a list of WireSegment
         try:
             if scene.editDesign is not None:
                 if all(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
+                    # inside editdesign
                     self.parent = scene.editDesign
                     self.parent.wireList.append(self)
+                elif any(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
+                    #TODO: forbidden, alert
+                    pass
                 else:
-                    if any(seg.collidesWithItem(scene.editDesign.rect) for seg in self.getSegments()):
-                        #TODO: forbidden, alert
-                        pass
-                    else:
-                        scene.wireList.append(self)
+                    #outside editdesign
+                    scene.wireList.append(self)
             else:
+                # outside editdesign
                 scene.wireList.append(self)
         except:
             scene.wireList.append(self)
@@ -268,7 +296,7 @@ class WireList():
 
     def __next__(self):
         return self.wirelist.__next__()
-    def append(self,new,check=True):
+    def append(self,new: Wire, check=True):
         if check:
             wires_connected = []
             others=[]
@@ -290,9 +318,12 @@ class WireList():
 
                 self.wirelist = others + [merged]
             else:
+                name = new.getAutoName()
+                new.setName(name)
                 self.wirelist.append(new)
         else:
             self.wirelist.append(new)
+
     def cleanup(self):
         for wire in self.wirelist:
             for seg in wire.getSegments():

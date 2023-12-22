@@ -163,6 +163,9 @@ class SchScene(QGraphicsScene):
         return posx, posy
 
     def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.RightButton:
+            return
+
         if self.enableDel:
             pass
         else:

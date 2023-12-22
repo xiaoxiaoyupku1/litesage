@@ -137,6 +137,7 @@ class SchInst(QGraphicsItemGroup):
         self.nameId = nameId 
 
     def contextMenuEvent(self, event):
+        self.scene().cleanCursorSymb()
         if self.model == 'GND':
             return
         dialog = ParameterDialog(parent=None, 
@@ -317,11 +318,12 @@ class SchInst(QGraphicsItemGroup):
         t.translate(-jsn.get('distx'), -jsn.get('disty'))
         self.setTransform(t)
 
-        p = self.paramText
-        tp = p.transform()
-        tp.scale(-1,1)
-        tp.translate(-p.boundingRect().width(),0)
-        p.setTransform(tp)
+        if jsn.get('m11') == -1 and jsn.get('m22') == 1:
+            p = self.paramText
+            tp = p.transform()
+            tp.scale(-1,1)
+            tp.translate(-p.boundingRect().width(),0)
+            p.setTransform(tp)
 
 
 

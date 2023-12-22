@@ -2,7 +2,7 @@ import os
 from numpy import array as NDArray
 from PySide6.QtWidgets import (
     QWidget, QMenu, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView,
-    QGraphicsItem, QGraphicsTextItem, QFileDialog, QSizePolicy,
+    QGraphicsItem, QGraphicsTextItem, QFileDialog, QSizePolicy, QStatusBar, QLabel
 )
 from PySide6.QtCharts import (QChart, QLineSeries, QValueAxis)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
@@ -13,6 +13,7 @@ from pickle import load
 from collections import defaultdict
 from src.calculator import Calculator
 from src.tool.wave import WaveInfo
+from src.hmi.image import getTrademark
 
 
 class WaveformViewer(QWidget):
@@ -24,6 +25,7 @@ class WaveformViewer(QWidget):
         self.sigValues = None
         self.listView: QListWidget = None
         self.chartView = None # wave signal chart
+        self.statusBar = None
         self.layout = None  # window layout of widgets
 
         self.selSigIdx = None   # selected signal index
@@ -37,7 +39,7 @@ class WaveformViewer(QWidget):
         # TODO: make self an embedded window instead of an independent window
         #       embedded to its parent which is schWin (FoohuEda)
         self.setWindowTitle('FOOHU EDA - Waveform Viewer')
-        self.resize(1000, 500)
+        self.resize(1000, 600)
 
         self.setLayout(self.layout)
 
@@ -104,6 +106,19 @@ class WaveformViewer(QWidget):
             self.chartView.destroy()
         self.chartView = ChartView(self)
 
+        self.statusBar = QStatusBar()
+        trademark = QLabel()
+        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(trademark.sizePolicy().hasHeightForWidth())
+        trademark.setPixmap(getTrademark())
+        trademark.setMaximumSize(216, 40)
+        trademark.setMinimumSize(216, 40)
+        trademark.setScaledContents(True)
+        self.statusBar.addPermanentWidget(trademark)
+        self.statusBar.setStyleSheet('QStatusBar::item { border: none; }')
+
         # Layout
         if self.layout is None:
             self.layout = QGridLayout(self)
@@ -111,6 +126,8 @@ class WaveformViewer(QWidget):
         self.layout.setColumnStretch(0, 0)
         self.layout.addWidget(self.chartView, 1, 1)
         self.layout.setColumnStretch(1, 1)
+        self.layout.addWidget(self.statusBar, 2, 0, 1, 2)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         # Select 1st wave
         #if self.sigValues is not None:
             #self.changeWave(None, sigName=self.sigNames[1])
