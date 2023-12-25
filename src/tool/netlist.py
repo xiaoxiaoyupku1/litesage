@@ -20,7 +20,7 @@ def createNetlist(scene, viewOnly=False):
         line = design.name
         for pin in design.pins:
             conn = design.conns[pin]
-            conn = '0' if conn in gndNets else conn
+            conn = '$g_csub' if conn in gndNets else conn
             line += ' {}'.format(conn)
         line += ' {}'.format(design.model)
         ALL_USED_MODELS.append(design.model)
@@ -70,7 +70,7 @@ def _createInstNetlist(parent, parentName, viewOnly):
         for p in inst.pins:
             conn = inst.conns[p]
             conn = net_pin_mapping.get(conn, conn)
-            conn = '0' if conn in gndNets else conn
+            conn = '$g_csub' if conn in gndNets else conn
             line += ' {}'.format(conn)
 
         modelName = inst.model if viewOnly else inst.spmodel
