@@ -172,6 +172,9 @@ class Design:
         rectY = rect.y()
         centerX = rectX + rectW / 2
         centerY = rectY + rectH / 2
+        ratio = self.scene.sceneSymbRatio
+        centerX = int(centerX / ratio) * ratio
+        centerY = int(centerY / ratio) * ratio
 
         with open(filePath, 'w') as f:
             #first row: UNKNOWN_MODEL,node1,net2 ...
