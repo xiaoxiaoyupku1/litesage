@@ -9,7 +9,7 @@ from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon, Pin
 from src.hmi.ellipse import Circle,WireConnection
 from src.hmi.symbol import Symbol
-from src.hmi.group import SchInst
+from src.hmi.group import SchInst, DesignGroup
 from src.tool.device import getDeviceInfos
 from src.tool.netlist import createNetlist, getAllUsedModels
 from src.tool.design import Design
@@ -134,6 +134,10 @@ class SchScene(QGraphicsScene):
                 self.removeItem(shape)
             elif isinstance(shape, DesignBorder):
                 shape.delete()
+            elif isinstance(shape, DesignGroup):
+                if shape.design in self.designs:
+                    self.designs.remove(shape.design)
+                self.removeItem(shape)
             elif isinstance(shape, Pin):
                 shape.delete()
             elif isinstance(shape, SimulationCommandText):
