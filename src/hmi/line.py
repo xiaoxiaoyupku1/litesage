@@ -60,6 +60,7 @@ class WireSegment(Line):
 
             if self.text not in self.scene().items():
                 self.scene().addItem(self.text)
+                self.text.show = True
             self.text.setPos(event.pos())
 
     def delete(self):
@@ -133,9 +134,17 @@ class WireSegment(Line):
     def toPrevJSON(self, centerX, centerY):
         line = self.line()
         items = [line.x1() - centerX, line.y1() - centerY, line.x2() - centerX, line.y2() - centerY]
-        return items
-    def make_by_JSON(self,jsn):
-        self.setLine(QLineF(*jsn))
+        if self.text.show is True:
+            return {'line':items, 'text':[self.text.scenePos().x() - centerX,self.text.scenePos().y() - centerY]}
+        else:
+            return {'line':items, 'text':None}
+
+    def make_by_JSON(self,jsn, name):
+        self.setLine(QLineF(*jsn['line']))
+        if jsn['text'] is not None:
+            self.text.setPos(jsn['text'][0], jsn['text'][1])
+            self.text.setPlainText(name)
+            self.text.show = True
 
 class Wire(): # Wire is a list of WireSegment
     def __init__(self,parent):
@@ -281,7 +290,7 @@ class Wire(): # Wire is a list of WireSegment
         self.name = jsn['name']
         for seg in jsn['segs']:
             segment = WireSegment()
-            segment.make_by_JSON(seg)
+            segment.make_by_JSON(seg, self.name)
             self.add(segment)
 
 

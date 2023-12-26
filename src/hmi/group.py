@@ -162,7 +162,7 @@ class SchInst(QGraphicsItemGroup):
 
             nameHead = self.name[0].upper()
             nameId = self.name[1:]
-            if re.search('^\d+$', nameId):
+            if re.search(r'^\d+$', nameId):
                 nameId = int(nameId)
                 self.setInstName(nameHead, nameId)
             else:

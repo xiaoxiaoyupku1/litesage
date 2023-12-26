@@ -242,6 +242,8 @@ class Design:
             for wire in self.wireList.wirelist:
                 for seg in wire.getSegments():
                     self.group.addToGroup(seg)
+                    if seg.text.show is True:
+                        self.group.addToGroup(seg.text)
 
             for pn in self.Pins:
                 self.group.addToGroup(pn)
