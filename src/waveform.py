@@ -14,6 +14,7 @@ from collections import defaultdict
 from src.calculator import Calculator
 from src.tool.wave import WaveInfo
 from src.hmi.image import getTrademark
+import math
 
 
 class WaveformViewer(QWidget):
@@ -202,22 +203,37 @@ class ChartView(QGraphicsView):
             series.setName(sigName)
             xData = self.wavWin.sigValues[0]
             yData = self.wavWin.sigValues[index]
-            if max(yData < -1e-30):
+            '''
+            if abs(max(yData)) < 1e-30:
                 yData = yData * 1e30
                 self.yCoeff = 1e30
-            elif max(yData < -1e-24):
+            elif abs(max(yData)) < 1e-24:
                 yData = yData * 1e24
                 self.yCoeff = 1e24
-            elif max(yData < -1e-18):
+            elif abs(max(yData)) < 1e-18:
                 yData = yData * 1e18
                 self.yCoeff = 1e18
-            elif max(yData < -1e-9):
-                yData = yData * 1e9
-                self.yCoeff = 1e9
+            elif abs(max(yData)) < 1e-12:
+                yData = yData * 1e12
+                self.yCoeff = 1e12
+            '''
+
             series.appendNp(xData, yData)
             self.chart.addSeries(series)
             series.attachAxis(self.axisX)
             series.attachAxis(self.axisY)
+
+
+            if math.isclose(self.axisY.min(), self.axisY.max()): # to fix no wave if min == max,
+                if math.isclose(self.axisY.min(), 0.0):
+                    half = 1.0
+                else:
+                    half = abs(self.axisY.max())
+                self.axisY.setRange(self.axisY.max() - half, self.axisY.max()+half)
+
+            # need update, not good
+            if self.axisY.max() - self.axisY.min() < 1.5e-12: # to fix no y-axis if max -  min  too small
+                self.axisY.setRange(self.axisY.min(), self.axisY.min() + 1.5e-12)
 
         if len(sigNames) > 1:
             self.chart.legend().show()
