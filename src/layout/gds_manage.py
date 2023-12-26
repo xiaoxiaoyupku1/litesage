@@ -1,7 +1,7 @@
 import gdspy
 from src.layout.layout_cell import LayoutCell
 from src.layout.layout_utils import Polygon, Label
-from src.layout.config import forbidden_layer_id
+from src.layout.config import forbidden_layer_id, terminal_layer_id
 
 
 class GDSManage(object):
@@ -156,9 +156,11 @@ class GDSManage(object):
             layer_num = int(label.layer)
             data_type = int(label.texttype)
             text = label.text
+            layer_id = "{}-{}".format(layer_num, data_type)
             x = self.float_to_int_floor(label.position[0], self.scale)
             y = self.float_to_int_floor(label.position[1], self.scale)
-            if forbidden_bb and forbidden_bb[0] <x<forbidden_bb[2] and forbidden_bb[1] <y<forbidden_bb[3]:
+            if layer_id != terminal_layer_id and forbidden_bb and forbidden_bb[0] < x < forbidden_bb[2] and \
+                    forbidden_bb[1] < y < forbidden_bb[3]:
                 continue
             label = Label(layer_num, data_type, text, x, y)
             if label.layer_id not in label_data:

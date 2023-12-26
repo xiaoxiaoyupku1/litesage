@@ -3,6 +3,7 @@ import os
 from src.layout.layout_utils import OnGrid
 
 forbidden_layer_id = '1000-9'
+terminal_layer_id = '1000-10'
 
 
 class Config(configparser.ConfigParser):

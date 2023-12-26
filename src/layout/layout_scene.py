@@ -5,7 +5,7 @@ from src.layout.layout_application import LayoutApplication
 from src.layout.layout_utils import Polygon, Label
 from src.layout.layout_utils import LayoutRectItem, LayoutTextItem, LayoutLineItem
 from src.layout.layout_utils import LayoutType
-from src.layout.config import forbidden_layer_id
+from src.layout.config import forbidden_layer_id, terminal_layer_id
 
 
 class SceneDirection(object):
@@ -901,7 +901,9 @@ class LayoutScene(QGraphicsScene):
                 if layer_id not in self.label_obj_container:
                     self.label_obj_container[layer_id] = []
                 for label in label_list:
-                    if cell != self.layout_app.top_layout_cell:
+                    if layer_id == terminal_layer_id:
+                        item = label.get_graphics_item(self.paintbrush_manage, font_size=1000)
+                    elif cell != self.layout_app.top_layout_cell:
                         item = label.get_graphics_item(self.paintbrush_manage, font_size=2000)
                     else:
                         item = label.get_graphics_item(self.paintbrush_manage)
