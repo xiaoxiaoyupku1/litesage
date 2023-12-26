@@ -107,7 +107,7 @@ class ParameterDialog(QDialog):
         self.setWindowTitle('Enter Parameters')
         formLayout = QFormLayout()
         text = item.toPlainText()
-        paramTextLines = re.split('\s+', text.strip())
+        paramTextLines = re.split(r'\s+', text.strip())
         self.name = QLineEdit(paramTextLines.pop(0))
         formLayout.addRow('Name:', self.name)
         self.devName = QLineEdit(paramTextLines.pop(0))

@@ -17,7 +17,7 @@ from src.tool.status import setStatus
 from src.tool.account import UserAccount
 from src.tool.sys import readFile
 from src.waveform import WaveformViewer
-from src.layout.layout_main_window import LayoutMainWindow
+#from src.layout.layout_main_window import LayoutMainWindow
 
 
 class FoohuEda(QMainWindow):
@@ -356,7 +356,7 @@ class FoohuEda(QMainWindow):
             self.schView = SchView(self.schScene)
             self.setCentralWidget(self.schView)
             self.schScene.wavWin = WaveformViewer()
-            self.schScene.layWin = LayoutMainWindow()
+            #self.schScene.layWin = LayoutMainWindow()
 
     def addBasicDev(self):
         self.schScene.cleanCursorSymb()

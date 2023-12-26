@@ -744,6 +744,8 @@ class SchScene(QGraphicsScene):
         for wire in self.wireList.wirelist:
             for seg in wire.getSegments():
                 self.addItem(seg)
+                if seg.text.show is True:
+                    self.addItem(seg.text)
 
         #connections of wires
         jsn = json.loads(lines[1].split(':', maxsplit=1)[1])
