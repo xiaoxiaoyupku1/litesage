@@ -1,6 +1,5 @@
-from PySide6.QtWidgets import (QGraphicsLineItem, QGraphicsItem)
+from PySide6.QtWidgets import (QGraphicsLineItem, QGraphicsItem, QGraphicsSceneMouseEvent)
 from PySide6.QtCore import Qt,QLineF
-from PySide6.QtWidgets import ( QGraphicsScene )
 
 from src.hmi.dialog import WireDialog
 from src.hmi.text import WireNameText
@@ -62,6 +61,13 @@ class WireSegment(Line):
                 self.scene().addItem(self.text)
                 self.text.show = True
             self.text.setPos(event.pos())
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+                wavWin = self.scene().wavWin
+                if wavWin is not None and wavWin.isVisible():
+                    wavWin.displayWave(self.wire.name, 'v')
+        return super().mousePressEvent(event)
 
     def delete(self):
         for conn in self.connections:

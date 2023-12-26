@@ -70,6 +70,14 @@ class WaveformViewer(QWidget):
         self.setupUi()
         self.setLayout(self.layout)
         self.show()
+
+    def displayWave(self, sigName, sigType):
+        for index, sig in enumerate(self.sigNames):
+            if sig.lower().startswith(sigType) and sigName.lower() in sig.lower():
+                item = self.listView.item(index-1)
+                self.listView.setCurrentItem(item)
+                self.changeWave()
+                break
             
     def parseData(self, data, mode):
         if data is None:

@@ -39,6 +39,13 @@ class SchInst(QGraphicsItemGroup):
             self.setPos(posx, posy)
         return super().mouseReleaseEvent(event)
 
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+                wavWin = self.scene().wavWin
+                if wavWin is not None and wavWin.isVisible():
+                    wavWin.displayWave(self.name, 'i')
+        return super().mousePressEvent(event)
+
     def toPrevJSON(self, centerX, centerY):
         params =  [p.toPrevJSON() for p in self.params]
         ret = {k: getattr(self, k) for k in ['nameHead',
@@ -363,3 +370,10 @@ class DesignGroup(QGraphicsItemGroup):
             posx, posy = self.scene().roundPos(curPos.x(), curPos.y())
             self.setPos(posx, posy)
         return super().mouseReleaseEvent(event)
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+                wavWin = self.scene().wavWin
+                if wavWin is not None and wavWin.isVisible():
+                    wavWin.displayWave(self.design.name, type='i')
+        return super().mousePressEvent(event)
