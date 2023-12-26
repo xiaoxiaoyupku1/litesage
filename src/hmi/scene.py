@@ -71,6 +71,7 @@ class SchScene(QGraphicsScene):
         self.gateway = None
         self.remoteNetlistPath = None
         self.setSimTrack = False
+        self.genGdsFlag = None
 
     def initBasicDevices(self):
         if self.basicSymbols is None or self.basicDevInfo is None:
@@ -521,22 +522,27 @@ class SchScene(QGraphicsScene):
         # check used models and user rights
         bannedModels = []
         found = []
+        self.genGdsFlag = None
         if self.user.getLevel() == 3:
             # no need to check
-            return True
+            pass
         elif self.user.getLevel() == 2:
             bannedModels = list(self.ipSymbols.keys())
-        elif self.user.getLevel()  == 1:
+        elif self.user.getLevel() == 1:
             bannedModels = list(self.pdkSymbols.keys()) + list(self.ipSymbols.keys())
         
+        allBasic = True
         for model in getAllUsedModels():
             if model in bannedModels:
                 found.append(model)
+            if model in list(self.pdkSymbols.keys()) or \
+                    model in list(self.ipSymbols.keys()):
+                allBasic = False
+        self.genGdsFlag = False if self.user.getLevel() == 1 or allBasic else True
         
         if len(found) > 0:
             setStatus('Cannot run simulation with {}, '.format(' '.join(found)) +
-                      'please update your account',
-                      timeout=-1)
+                      'please update your account')
             return False
 
         # check simulation analysis
@@ -564,11 +570,14 @@ class SchScene(QGraphicsScene):
         if not checked:
             return
 
-        if self.gateway is None:
-            self.gateway = Gateway()
-        self.remoteNetlistPath = runSimulation(self.gateway, self.netlist)
-        setStatus('Running simulation...', timeout=-1)
-
+        try:
+            if self.gateway is None:
+                self.gateway = Gateway()
+            self.remoteNetlistPath = runSimulation(self.gateway, self.netlist)
+        except:
+            setStatus('FTP connection error!')
+            return
+        setStatus('Running simulation...')
         self.simTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
         self.simTrackThread.simprep.connect(self.showSimResult)
         self.simTrackThread.start()
@@ -576,17 +585,18 @@ class SchScene(QGraphicsScene):
     def showSimResult(self, simprep):
         simMsg = re.sub(r'ltspice', 'SPICE', self.simTrackThread.message,
                         flags=re.IGNORECASE)
-        setStatus(simMsg, timeout=-1)
         if simprep == 0:
             # success
             self.simTrackThread.simprep.disconnect()
             self.simTrackThread.quit()
 
+            setStatus('Reading simulation waveform...')
             self.sigTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
             self.sigTrackThread.sigprep.connect(self.showSigResult)
             self.sigTrackThread.start()
 
         elif simprep == -1:
+            setStatus(simMsg)
             self.simTrackThread.simprep.disconnect()
             self.simTrackThread.quit()
             # fail
@@ -604,9 +614,13 @@ class SchScene(QGraphicsScene):
             dataFile = getSigResult(self.gateway, self.remoteNetlistPath)
             self.wavWin.showWindowAndOpenWave(dataFile, 'full')
 
-            self.gdsTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
-            self.gdsTrackThread.gdsprep.connect(self.showGdsResult)
-            self.gdsTrackThread.start()
+            if self.genGdsFlag:
+                setStatus('Generating layout...')
+                self.gdsTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
+                self.gdsTrackThread.gdsprep.connect(self.showGdsResult)
+                self.gdsTrackThread.start()
+            else:
+                setStatus('Waveform opened')
             return
 
     def showGdsResult(self, gdsprep):
@@ -616,6 +630,7 @@ class SchScene(QGraphicsScene):
 
             dataFile = getGdsResult(self.gateway, self.remoteNetlistPath)
             self.layWin.show_window_and_open_gds(dataFile)
+            setStatus('Layout generation succeeded')
 
     def clear(self):
         self.symbols = []

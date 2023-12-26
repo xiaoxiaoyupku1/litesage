@@ -130,57 +130,6 @@ def checkSimStatus(gateway, remoteNetlistPath):
         sleep(interval)
     return result, message
 
-# def getSimStatus(gateway, remoteNetlistPath):
-#     # 0: success, -1: failure
-#     success = None
-#     interval = RETR_SIM_STATUS_INTVL
-# 
-#     def _readStatusFile(interval, success):
-#         for line in gateway.readFile(remoteStatusPath):
-#             if line.startswith('Simulation left time'):
-#                 lefttime = float(line.split('left time')[1].strip())  # left time always in seconds
-#                 interval = lefttime / 10.0
-#                 setStatus(line, timeout=-1)
-#             elif 'success' in line.lower():
-#                 success = 0
-#                 setStatus(line)
-#             elif 'fail' in line.lower():
-#                 success = -1
-#                 setStatus(line)
-#         return interval, success
-# 
-#     name = os.path.splitext(remoteNetlistPath)[0]
-#     remoteStatusPath = name + '.status'
-# 
-#     while success is None:
-#         sleep(interval)
-#         interval, success = _readStatusFile(interval, success)
-# 
-#     return success
-
-
-# def getSigResult(gateway, remoteNetlistPath):
-#     sigprep = None
-# 
-#     def _readSigFile(sigprep):
-#         for line in gateway.readFile(remoteSigPath):
-#             if line.startswith('finish dump all'):
-#                 sigprep = 1
-#             elif line.startswith('finish dump names'):
-#                 sigprep = 2
-#             elif line.startswith('finish dump single'):
-#                 sigprep = 3
-#         return sigprep
-# 
-#     name = os.path.splitext(remoteNetlistPath)[0]
-#     remoteSigPath = name + '.sigStatus'
-# 
-#     while sigprep is None:
-#         sleep(1)
-#         sigprep = _readSigFile(sigprep)
-# 
-#     return sigprep
-
 def checkSigResult(gateway, remoteNetlistPath):
     # 0:success, -1: failure
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
