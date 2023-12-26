@@ -1,3 +1,5 @@
+import re
+import json
 from PySide6.QtCore import (Qt, QPointF)
 from PySide6.QtGui import (QPolygonF, QPen, QColor)
 from PySide6.QtWidgets import (QGraphicsScene)
@@ -9,7 +11,7 @@ from src.hmi.rect import Rect, DesignBorder, SymbolPin
 from src.hmi.polygon import Polygon, Pin
 from src.hmi.ellipse import Circle,WireConnection
 from src.hmi.symbol import Symbol
-from src.hmi.group import SchInst
+from src.hmi.group import SchInst, DesignGroup
 from src.tool.device import getDeviceInfos
 from src.tool.netlist import createNetlist, getAllUsedModels
 from src.tool.design import Design
@@ -18,7 +20,6 @@ from src.tool.simulate import SimTrackThread, SigTrackThread, GdsTrackThread
 from src.tool.simulate import runSimulation, getSigResult, getGdsResult
 from src.tool.network import Gateway
 from src.waveform import WaveformViewer
-import json
 
 
 class SchScene(QGraphicsScene):
@@ -134,6 +135,10 @@ class SchScene(QGraphicsScene):
                 self.removeItem(shape)
             elif isinstance(shape, DesignBorder):
                 shape.delete()
+            elif isinstance(shape, DesignGroup):
+                if shape.design in self.designs:
+                    self.designs.remove(shape.design)
+                self.removeItem(shape)
             elif isinstance(shape, Pin):
                 shape.delete()
             elif isinstance(shape, SimulationCommandText):
@@ -531,7 +536,7 @@ class SchScene(QGraphicsScene):
         if len(found) > 0:
             setStatus('Cannot run simulation with {}, '.format(' '.join(found)) +
                       'please update your account',
-                      timeout=0)
+                      timeout=-1)
             return False
 
         # check simulation analysis
@@ -562,14 +567,16 @@ class SchScene(QGraphicsScene):
         if self.gateway is None:
             self.gateway = Gateway()
         self.remoteNetlistPath = runSimulation(self.gateway, self.netlist)
-        setStatus('Start simulation', timeout=0)
+        setStatus('Running simulation...', timeout=-1)
 
         self.simTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
         self.simTrackThread.simprep.connect(self.showSimResult)
         self.simTrackThread.start()
 
     def showSimResult(self, simprep):
-        setStatus(self.simTrackThread.message, timeout=0)
+        simMsg = re.sub(r'ltspice', 'SPICE', self.simTrackThread.message,
+                        flags=re.IGNORECASE)
+        setStatus(simMsg, timeout=-1)
         if simprep == 0:
             # success
             self.simTrackThread.simprep.disconnect()

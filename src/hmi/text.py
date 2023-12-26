@@ -32,6 +32,11 @@ class WireNameText(ParameterText):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setDefaultTextColor('blue')
+        self.font = self.font()
+        self.font.setItalic(True)
+        self.font.setPixelSize(10)
+        self.setFont(self.font)
 
 
 class NetlistText(QTextBrowser):

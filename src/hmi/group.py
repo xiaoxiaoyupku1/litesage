@@ -140,9 +140,12 @@ class SchInst(QGraphicsItemGroup):
         self.scene().cleanCursorSymb()
         if self.model == 'GND':
             return
+        otherInsts = [symb.name for symb in self.scene().symbols 
+                      if symb != self] if self.scene() else []
         dialog = ParameterDialog(parent=None, 
                                  item=self.paramText, 
-                                 params=self.params)
+                                 params=self.params,
+                                 otherInsts=otherInsts)
         if dialog.exec():
             self.name = dialog.name.text()
             for idx, value in enumerate(dialog.values):
