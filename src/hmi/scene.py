@@ -2,7 +2,7 @@ import re
 import json
 from PySide6.QtCore import (Qt, QPointF)
 from PySide6.QtGui import (QPolygonF, QPen, QColor)
-from PySide6.QtWidgets import (QGraphicsScene)
+from PySide6.QtWidgets import (QGraphicsScene, QGraphicsItem)
 
 from src.hmi.text import ParameterText, SimulationCommandText
 from src.hmi.dialog import NetlistDialog, SimulationCommandDialog
@@ -744,6 +744,8 @@ class SchScene(QGraphicsScene):
         for wire in self.wireList.wirelist:
             for seg in wire.getSegments():
                 self.addItem(seg)
+                seg.addPins()
+                seg.setFlag(QGraphicsItem.ItemIsSelectable, True)
                 if seg.text.show is True:
                     self.addItem(seg.text)
 
