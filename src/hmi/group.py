@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import (QGraphicsItemGroup, QGraphicsItem)
+from PySide6.QtWidgets import (QGraphicsItemGroup, QGraphicsItem, QGraphicsSceneMouseEvent)
 from PySide6.QtCore import (Qt, QPointF)
-from PySide6.QtGui import (QPolygonF, QPen, QColor)
+from PySide6.QtGui import (QPolygonF, QPen)
 
 from src.hmi.dialog import ParameterDialog
 from src.hmi.text import Text, ParameterText
@@ -31,6 +31,13 @@ class SchInst(QGraphicsItemGroup):
         self.params = [] # list of DeviceParam
         self.space = ''
         self.SymbolPins = []
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if self.scene():
+            curPos = self.scenePos()
+            posx, posy = self.scene().roundPos(curPos.x(), curPos.y())
+            self.setPos(posx, posy)
+        return super().mouseReleaseEvent(event)
 
     def toPrevJSON(self, centerX, centerY):
         params =  [p.toPrevJSON() for p in self.params]
@@ -349,3 +356,10 @@ class DesignGroup(QGraphicsItemGroup):
 
         dialog = DesignDialog(parent=None,designRect=self)
         dialog.exec()
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if self.scene():
+            curPos = self.scenePos()
+            posx, posy = self.scene().roundPos(curPos.x(), curPos.y())
+            self.setPos(posx, posy)
+        return super().mouseReleaseEvent(event)
