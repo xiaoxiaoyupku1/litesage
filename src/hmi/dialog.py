@@ -102,7 +102,7 @@ class WireDialog(QDialog):
 
 
 class ParameterDialog(QDialog):
-    def __init__(self, parent=None, item=None, params=None):
+    def __init__(self, parent=None, item=None, params=None, otherInsts=[]):
         super().__init__(parent)
         self.setWindowTitle('Enter Parameters')
         formLayout = QFormLayout()
@@ -113,6 +113,7 @@ class ParameterDialog(QDialog):
         self.devName = QLineEdit(paramTextLines.pop(0))
         self.devName.setReadOnly(True)
         self.devName.setFrame(False)
+        self.otherInsts = otherInsts
         formLayout.addRow('Device:', self.devName)
         self.values = [] # list of (pname, QLineEdit)
         for param in params:
@@ -160,6 +161,14 @@ class ParameterDialog(QDialog):
                 self.errMsg.show()
                 return
             self.values[idx][1].setText(str(num))
+
+        instName = self.name.text().strip()
+        for otherInst in self.otherInsts:
+            if instName.lower() == otherInst.lower():
+                self.errMsg.setText('invalid name: {}\nalready exists: {}'.format(instName, otherInst))
+                self.errMsg.show()
+                return
+        self.name.setText(instName)
         super().accept()
 
 
