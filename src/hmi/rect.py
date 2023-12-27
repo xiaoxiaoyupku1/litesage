@@ -33,7 +33,7 @@ class DesignBorder(Rect):
         if self.design is None:
             return
 
-        dialog = DesignDialog(parent=None,designRect=self)
+        dialog = DesignDialog(parent=None, designRect=self)
         dialog.exec()
 
 
