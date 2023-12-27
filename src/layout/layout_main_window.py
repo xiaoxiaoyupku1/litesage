@@ -300,13 +300,17 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             if show_info:
                 QtWidgets.QMessageBox.information(self, 'save info', 'save success!')
 
+    def routing_dialog_cancel(self):
+        self.layout_scene.mode = 'Normal'
+        self.routing_dialog.close()
+
     def show_window_and_open_gds(self, file_path):
         self.show()
         self.open_gds(file_path)
 
     def setup_routing_dialog_ui(self):
         self.routing_dialog_ui.pushButtonConfirm.clicked.connect(self.add_polygon_accepted)
-        self.routing_dialog_ui.pushButtonCancel.clicked.connect(lambda: self.routing_dialog.close())
+        self.routing_dialog_ui.pushButtonCancel.clicked.connect(lambda: self.routing_dialog_cancel())
         self.routing_dialog_ui.lineEditLineWidth.setValidator(QIntValidator())
         self.routing_dialog_ui.pushButtonConfirm.setShortcut(Qt.Key.Key_Enter)
         self.routing_dialog.setWindowTitle("routing params input")
