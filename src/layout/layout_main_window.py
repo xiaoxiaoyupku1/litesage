@@ -112,8 +112,8 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.update_net_list_view()
 
     def show_detail_canvas(self):
-        self.layout_scene.create_layout_polygon()
         self.layout_scene.create_text_label()
+        self.layout_scene.create_layout_polygon()
 
     def show_bbox_canvas(self):
         self.layout_scene.create_components_bb_polygon()

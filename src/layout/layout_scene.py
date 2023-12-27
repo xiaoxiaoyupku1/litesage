@@ -6,6 +6,7 @@ from src.layout.layout_utils import Polygon, Label
 from src.layout.layout_utils import LayoutRectItem, LayoutTextItem, LayoutLineItem
 from src.layout.layout_utils import LayoutType
 from src.layout.config import forbidden_layer_id, terminal_layer_id
+import re
 
 
 class SceneDirection(object):
@@ -758,8 +759,12 @@ class LayoutScene(QGraphicsScene):
     def create_components_name_text(self):
         pen, _ = self.paintbrush_manage.get_component_name_paintbrush()
         for component in self.layout_app.top_layout_cell.references:
+            if component.name.endswith('_ip'):
+                c_name = re.sub("_\d+_ip", '', component.name)
+            else:
+                c_name = component.name
             font = self.paintbrush_manage.get_text_font(2000)
-            text_item = LayoutTextItem(component.name)
+            text_item = LayoutTextItem(c_name)
             text_item.setFont(font)
             x = (component.bb[2]+component.bb[0])/2
             y = (component.bb[3]+component.bb[1])/2
