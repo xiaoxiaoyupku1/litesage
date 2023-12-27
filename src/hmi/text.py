@@ -37,6 +37,7 @@ class WireNameText(ParameterText):
         self.font.setItalic(True)
         self.font.setPixelSize(10)
         self.setFont(self.font)
+        self.show = False
 
 
 class NetlistText(QTextBrowser):

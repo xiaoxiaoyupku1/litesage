@@ -1,6 +1,5 @@
-from PySide6.QtWidgets import (QGraphicsLineItem, QGraphicsItem)
+from PySide6.QtWidgets import (QGraphicsLineItem, QGraphicsItem, QGraphicsSceneMouseEvent)
 from PySide6.QtCore import Qt,QLineF
-from PySide6.QtWidgets import ( QGraphicsScene )
 
 from src.hmi.dialog import WireDialog
 from src.hmi.text import WireNameText
@@ -60,7 +59,15 @@ class WireSegment(Line):
 
             if self.text not in self.scene().items():
                 self.scene().addItem(self.text)
+                self.text.show = True
             self.text.setPos(event.pos())
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+                wavWin = self.scene().wavWin
+                if wavWin is not None and wavWin.isVisible():
+                    wavWin.displayWave(self.wire.name, 'v')
+        return super().mousePressEvent(event)
 
     def delete(self):
         for conn in self.connections:
@@ -133,9 +140,17 @@ class WireSegment(Line):
     def toPrevJSON(self, centerX, centerY):
         line = self.line()
         items = [line.x1() - centerX, line.y1() - centerY, line.x2() - centerX, line.y2() - centerY]
-        return items
-    def make_by_JSON(self,jsn):
-        self.setLine(QLineF(*jsn))
+        if self.text.show is True:
+            return {'line':items, 'text':[self.text.scenePos().x() - centerX,self.text.scenePos().y() - centerY]}
+        else:
+            return {'line':items, 'text':None}
+
+    def make_by_JSON(self,jsn, name):
+        self.setLine(QLineF(*jsn['line']))
+        if jsn['text'] is not None:
+            self.text.setPos(jsn['text'][0], jsn['text'][1])
+            self.text.setPlainText(name)
+            self.text.show = True
 
 class Wire(): # Wire is a list of WireSegment
     def __init__(self,parent):
@@ -281,7 +296,7 @@ class Wire(): # Wire is a list of WireSegment
         self.name = jsn['name']
         for seg in jsn['segs']:
             segment = WireSegment()
-            segment.make_by_JSON(seg)
+            segment.make_by_JSON(seg, self.name)
             self.add(segment)
 
 
