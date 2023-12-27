@@ -4,7 +4,7 @@ from PySide6.QtGui import (QPolygonF, QPen)
 
 from src.hmi.dialog import ParameterDialog
 from src.hmi.text import Text, ParameterText
-from src.hmi.line import Line, Bus
+from src.hmi.line import Line, Bus, WireSegment
 from src.hmi.rect import SymbolPin
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
@@ -375,5 +375,18 @@ class DesignGroup(QGraphicsItemGroup):
         if event.button() == Qt.MouseButton.LeftButton:
                 wavWin = self.scene().wavWin
                 if wavWin is not None and wavWin.isVisible():
-                    wavWin.displayWave(self.design.name, type='i')
+                    for childItem in self.childItems():
+                        if childItem.contains(childItem.mapFromScene(event.scenePos())):
+                            sigName, sigType = None, None
+                            if isinstance(childItem, WireSegment):
+                                sigType = 'v'
+                                sigName = childItem.wire.name
+                            elif isinstance(childItem, SchInst):
+                                sigType = 'i'
+                                sigName = childItem.name
+                            if sigName is not None and sigType is not None:
+                                wavWin.displayWave(sigName, sigType)
+                            break
+                    else:
+                        wavWin.displayWave(self.design.name, type='i')
         return super().mousePressEvent(event)
