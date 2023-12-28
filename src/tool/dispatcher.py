@@ -123,59 +123,59 @@ class GatewayHandler(FileSystemEventHandler):
                 break
         return
     
-    # def _on_modified_wave(self, event):
-    #     sigFile = event.src_path
-    #     now = getCurrentTime()
-    #     if not sigFile.endswith('.sig'):
-    #         return
-    #     elif not os.path.isfile(sigFile):
-    #         return
-    #     
-    #     while not os.access(sigFile, os.R_OK):
-    #         print('... waiting for reading permission of {}'.format(sigFile))
-    #         sleep(0.5)
+    def _on_modified_wave(self, event):
+        sigFile = event.src_path
+        now = getCurrentTime()
+        if not sigFile.endswith('.sig'):
+            return
+        elif not os.path.isfile(sigFile):
+            return
+        
+        while not os.access(sigFile, os.W_OK):
+            print('... waiting for reading permission of {}'.format(sigFile))
+            sleep(0.5)
 
-    #     print('{} wave parsing success: {}'.format(now, sigFile))
-    #     sigBaseName = os.path.basename(sigFile)
-    #     sigFileNew = os.path.join(self.wavePath, sigBaseName)
-    #     if not os.path.isfile(sigFileNew):
-    #         copy(sigFile, sigFileNew)
+        print('{} wave parsing success: {}'.format(now, sigFile))
+        sigBaseName = os.path.basename(sigFile)
+        sigFileNew = os.path.join(self.wavePath, sigBaseName)
+        if not os.path.isfile(sigFileNew):
+            os.rename(sigFile, sigFileNew)
 
-    # def _on_modified_gdss1(self, event):
-    #     gdsFile = event.src_path
-    #     now = getCurrentTime()
-    #     if not gdsFile.endswith('.gds'):
-    #         return
-    #     elif not os.path.isfile(gdsFile):
-    #         return
-    #     
-    #     while not os.access(gdsFile, os.R_OK):
-    #         print('... waiting for reading permission of {}'.format(gdsFile))
-    #         sleep(0.5)
+    def _on_modified_gdss1(self, event):
+        gdsFile = event.src_path
+        now = getCurrentTime()
+        if not gdsFile.endswith('.gds'):
+            return
+        elif not os.path.isfile(gdsFile):
+            return
+        
+        while not os.access(gdsFile, os.W_OK):
+            print('... waiting for reading permission of {}'.format(gdsFile))
+            sleep(0.5)
 
-    #     print('{} gds s1 success: {}'.format(now, gdsFile))
-    #     gdsBaseName = os.path.basename(gdsFile)
-    #     gdsFileNew = os.path.join(self.laGenS1Path, gdsBaseName)
-    #     if not os.path.isfile(gdsFileNew):
-    #         copy(gdsFile, gdsFileNew)
+        print('{} gds s1 success: {}'.format(now, gdsFile))
+        gdsBaseName = os.path.basename(gdsFile)
+        gdsFileNew = os.path.join(self.laGenS1Path, gdsBaseName)
+        if not os.path.isfile(gdsFileNew):
+            os.rename(gdsFile, gdsFileNew)
 
-    # def _on_modified_gdss2(self, event):
-    #     gdsFile = event.src_path
-    #     now = getCurrentTime()
-    #     if not gdsFile.endswith('.gds'):
-    #         return
-    #     elif not os.path.isfile(gdsFile):
-    #         return
-    #     
-    #     print('{} gds s2 success: {}'.format(now, gdsFile))
-    #     while not os.access(gdsFile, os.R_OK):
-    #         print('... waiting for reading permission of {}'.format(gdsFile))
-    #         sleep(0.5)
+    def _on_modified_gdss2(self, event):
+        gdsFile = event.src_path
+        now = getCurrentTime()
+        if not gdsFile.endswith('.gds'):
+            return
+        elif not os.path.isfile(gdsFile):
+            return
+        
+        print('{} gds s2 success: {}'.format(now, gdsFile))
+        while not os.access(gdsFile, os.W_OK):
+            print('... waiting for reading permission of {}'.format(gdsFile))
+            sleep(0.5)
 
-    #     gdsBaseName = os.path.basename(gdsFile)
-    #     gdsFileNew = os.path.join(self.fhGdsS2Path, gdsBaseName)
-    #     if not os.path.isfile(gdsFileNew):
-    #         copy(gdsFile, gdsFileNew)
+        gdsBaseName = os.path.basename(gdsFile)
+        gdsFileNew = os.path.join(self.fhGdsS2Path, gdsBaseName)
+        if not os.path.isfile(gdsFileNew):
+            os.rename(gdsFile, gdsFileNew)
 
 
 def run():
