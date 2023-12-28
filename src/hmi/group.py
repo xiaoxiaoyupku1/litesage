@@ -5,7 +5,7 @@ from PySide6.QtGui import (QPolygonF, QPen)
 from src.hmi.dialog import ParameterDialog
 from src.hmi.text import Text, ParameterText
 from src.hmi.line import Line, Bus, WireSegment
-from src.hmi.rect import SymbolPin
+from src.hmi.rect import SymbolPin, DesignBorder
 from src.hmi.polygon import Polygon
 from src.hmi.ellipse import Circle, Arc
 from src.tool.device import DeviceParam
@@ -377,6 +377,10 @@ class DesignGroup(QGraphicsItemGroup):
                 if wavWin is not None and wavWin.isVisible():
                     for childItem in self.childItems():
                         if childItem.contains(childItem.mapFromScene(event.scenePos())):
+
+                            if isinstance(childItem, DesignBorder):
+                                continue
+
                             sigName, sigType = None, None
                             if isinstance(childItem, WireSegment):
                                 sigType = 'v'
@@ -388,5 +392,5 @@ class DesignGroup(QGraphicsItemGroup):
                                 wavWin.displayWave(sigName, sigType)
                             break
                     else:
-                        wavWin.displayWave(self.design.name, type='i')
+                        wavWin.displayWave(self.design.name, 'i')
         return super().mousePressEvent(event)
