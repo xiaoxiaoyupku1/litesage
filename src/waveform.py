@@ -164,10 +164,10 @@ class ChartView(QGraphicsView):
         self.chart.legend().hide()
         self.chart.setAcceptHoverEvents(True)
         self.axisX = QValueAxis()
-        self.axisX.setLabelFormat('%.1e')
+        self.axisX.setLabelFormat('%.3g')
         self.chart.addAxis(self.axisX, Qt.AlignBottom)
         self.axisY = QValueAxis()
-        self.axisY.setLabelFormat('%.1e')
+        self.axisY.setLabelFormat('%.3g')
         self.chart.addAxis(self.axisY, Qt.AlignLeft)
         self.scene().addItem(self.chart)
 
@@ -189,10 +189,10 @@ class ChartView(QGraphicsView):
         self.chart.removeAxis(self.axisY)
 
         self.axisX = QValueAxis()
-        self.axisX.setLabelFormat('%.1e')
+        self.axisX.setLabelFormat('%.3g')
         self.chart.addAxis(self.axisX, Qt.AlignBottom)
         self.axisY = QValueAxis()
-        self.axisY.setLabelFormat('%.1e')
+        self.axisY.setLabelFormat('%.3g')
         # self.axisY.setLabelsAngle(45)
         self.axisY.setLabelsVisible(True)
         self.chart.addAxis(self.axisY, Qt.AlignLeft)
@@ -290,7 +290,7 @@ class ChartView(QGraphicsView):
         x1, y1 = self.callouts[1].x, self.callouts[1].y
         delta_x = x1 - x0
         delta_y = y1 - y0
-        self.delta.setHtml(f'<font color="red">Δ</font>X : {delta_x:.4f}<br><font color="red">Δ</font>Y : {delta_y:.4f}')
+        self.delta.setHtml(f'<font color="red">Δ</font>X : {delta_x:.3g}<br><font color="red">Δ</font>Y : {delta_y:.3g}')
 
     def wave_hovered(self, point, state, name=''):
         if not state:
@@ -300,7 +300,7 @@ class ChartView(QGraphicsView):
         y = point.y()
         self.tooltip.x = x
         self.tooltip.y = y
-        self.tooltip.set_text("{}\nX: {:.4f} \nY: {:.4f} ".format(name, x, y))
+        self.tooltip.set_text("{}\nX: {:.3g} \nY: {:.3g} ".format(name, x, y))
         self.tooltip.set_anchor(point)
         self.tooltip.setZValue(11)
         self.tooltip.update_geometry()
