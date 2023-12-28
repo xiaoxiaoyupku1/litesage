@@ -265,6 +265,7 @@ class Design:
             for wire in self.wireList.wirelist:
                 for seg in wire.getSegments():
                     seg.setOpacity(0)
+                    seg.text.setOpacity(0)
 
             for conn in self.connections:
                 conn.setOpacity(0)
@@ -284,6 +285,7 @@ class Design:
             for wire in self.wireList.wirelist:
                 for seg in wire.getSegments():
                     seg.setOpacity(1)
+                    seg.text.setOpacity(1)
 
             for conn in self.connections:
                 conn.setOpacity(1)
