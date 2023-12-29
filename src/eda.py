@@ -16,6 +16,7 @@ from src.hmi.rect import DesignBorder
 from src.tool.status import setStatus
 from src.tool.account import UserAccount
 from src.tool.sys import readFile
+from src.tool.config import PRODUCT_NAME
 from src.waveform import WaveformViewer
 from src.layout.layout_main_window import LayoutMainWindow
 
@@ -87,7 +88,7 @@ class FoohuEda(QMainWindow):
 
     def setupUi(self):
         self.resize(800, 600)
-        self.setWindowTitle('FOOHU EDA - Schematic Editor')
+        self.setWindowTitle(f'{PRODUCT_NAME} - Schematic Editor')
         self.cursorSymb = 'NA'
 
         self.setupUiAction()
@@ -269,7 +270,7 @@ class FoohuEda(QMainWindow):
         self.trademark.setScaledContents(True)
         self.statBar.addPermanentWidget(self.trademark)
         self.statBar.setStyleSheet('QStatusBar::item { border: none; }')
-        setStatus('Welcome to FOOHU EDA', bar=self.statBar)
+        setStatus(f'Welcome to {PRODUCT_NAME}', bar=self.statBar)
 
     def saveDesign(self, _):
         if self.schScene is None:

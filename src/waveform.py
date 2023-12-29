@@ -13,6 +13,7 @@ from pickle import load
 from collections import defaultdict
 from src.calculator import Calculator
 from src.tool.wave import WaveInfo
+from src.tool.config import PRODUCT_NAME
 from src.hmi.image import getTrademark
 import math
 
@@ -39,7 +40,7 @@ class WaveformViewer(QWidget):
 
         # TODO: make self an embedded window instead of an independent window
         #       embedded to its parent which is schWin (FoohuEda)
-        self.setWindowTitle('FOOHU EDA - Waveform Viewer')
+        self.setWindowTitle(f'{PRODUCT_NAME} - Waveform Viewer')
         self.resize(1000, 600)
 
         self.setLayout(self.layout)

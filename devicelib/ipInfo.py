@@ -31,6 +31,6 @@ DEF PAD_ESD_MP9
 Type:PAD
 Model:pad_esd_mn9
 Descr:PAD
-Pin:PAD_PIN,ESD_GND
+Pin:ESD_PWR,PAD_PIN
 ENDDEF
 """
