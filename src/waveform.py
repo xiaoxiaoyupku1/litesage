@@ -4,18 +4,19 @@ from PySide6.QtWidgets import (
     QWidget, QMenu, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView,
     QGraphicsItem, QGraphicsTextItem, QFileDialog, QSizePolicy, QStatusBar, QLabel
 )
-from PySide6.QtCharts import (QChart, QLineSeries, QValueAxis)
+from PySide6.QtCharts import (QChart, QLineSeries, QValueAxis, QLogValueAxis)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
 from PySide6.QtGui import (
     QPainter, QFont, QFontMetrics, QPainterPath, QColor, QAction
 )
 from pickle import load
 from collections import defaultdict
+import numpy as np
+import math
 from src.calculator import Calculator
 from src.tool.wave import WaveInfo
 from src.tool.config import PRODUCT_NAME
 from src.hmi.image import getTrademark
-import math
 
 
 class WaveformViewer(QWidget):
@@ -171,6 +172,12 @@ class ChartView(QGraphicsView):
         self.axisY.setLabelFormat('%.3g')
         self.chart.addAxis(self.axisY, Qt.AlignLeft)
         self.scene().addItem(self.chart)
+        self.axisMinX = None
+        self.axisMaxX = None
+        self.axisMinY = None
+        self.axisMaxY = None
+        self.axisXLog = False
+        self.axisYLog = False
 
         self.delta = WaveTextItem(self.chart)
         x, y = self.scene().sceneRect().bottomRight().toTuple()
@@ -189,60 +196,65 @@ class ChartView(QGraphicsView):
         self.chart.removeAxis(self.axisX)
         self.chart.removeAxis(self.axisY)
 
-        self.axisX = QValueAxis()
-        self.axisX.setLabelFormat('%.3g')
+        self.checkLogScale(sigNames)
+
+        self.axisX = QLogValueAxis() if self.axisXLog else QValueAxis()
+        self.axisX.setLabelFormat('%.2g')
+        self.axisX.setLabelsVisible(True)
         self.chart.addAxis(self.axisX, Qt.AlignBottom)
+
+        # self.axisY = QLogValueAxis() if self.axisYLog else QValueAxis()
         self.axisY = QValueAxis()
-        self.axisY.setLabelFormat('%.3g')
-        # self.axisY.setLabelsAngle(45)
+        self.axisY.setLabelFormat('%.2g')
         self.axisY.setLabelsVisible(True)
         self.chart.addAxis(self.axisY, Qt.AlignLeft)
+
+        self.axisMinY = None
+        self.axisMaxY = None
 
         for sigName in sigNames:
             index = self.wavWin.sigNames.index(sigName)
             series = QLineSeries()
             series.setName(sigName)
+
             xData = self.wavWin.sigValues[0]
             yData = self.wavWin.sigValues[index]
-            '''
-            if abs(max(yData)) < 1e-30:
-                yData = yData * 1e30
-                self.yCoeff = 1e30
-            elif abs(max(yData)) < 1e-24:
-                yData = yData * 1e24
-                self.yCoeff = 1e24
-            elif abs(max(yData)) < 1e-18:
-                yData = yData * 1e18
-                self.yCoeff = 1e18
-            elif abs(max(yData)) < 1e-12:
-                yData = yData * 1e12
-                self.yCoeff = 1e12
-            '''
+            # if sigName.lower().startswith(('is(', 'ib(')):
+            #     yData = np.where(yData < 0, 0, yData)
+
+            # self.axisMinX = min(xData) if self.axisMinX is None else min(self.axisMinX, min(xData)) 
+            # self.axisMaxX = max(xData) if self.axisMaxX is None else max(self.axisMaxX, max(xData))
+
+            yData = np.where(np.abs(yData) < 1e-14, 0, yData)
+            # yData = np.where(yData > -1e-14, 0, yData)
+            self.axisMinY = min(yData) if self.axisMinY is None else min(self.axisMinY, min(yData))
+            self.axisMaxY = max(yData) if self.axisMaxY is None else max(self.axisMaxY, max(yData))
 
             series.appendNp(xData, yData)
             self.chart.addSeries(series)
             series.attachAxis(self.axisX)
             series.attachAxis(self.axisY)
 
+            # if math.isclose(self.axisY.min(), self.axisY.max()): # to fix no wave if min == max,
+            #     if math.isclose(self.axisY.min(), 0.0):
+            #         half = 1.0
+            #     else:
+            #         half = abs(self.axisY.max())
+            #     self.axisY.setRange(self.axisY.max() - half, self.axisY.max()+half)
 
-            if math.isclose(self.axisY.min(), self.axisY.max()): # to fix no wave if min == max,
-                if math.isclose(self.axisY.min(), 0.0):
-                    half = 1.0
-                else:
-                    half = abs(self.axisY.max())
-                self.axisY.setRange(self.axisY.max() - half, self.axisY.max()+half)
+            # # need update, not good
+            # if self.axisY.max() - self.axisY.min() < 1.5e-12: # to fix no y-axis if max -  min  too small
+            #     self.axisY.setRange(self.axisY.min(), self.axisY.min() + 1.5e-12)
 
-            # need update, not good
-            if self.axisY.max() - self.axisY.min() < 1.5e-12: # to fix no y-axis if max -  min  too small
-                self.axisY.setRange(self.axisY.min(), self.axisY.min() + 1.5e-12)
+            series.clicked.connect(self.wave_point_selected)
+            series.hovered.connect(lambda p, s, name=series.name(): self.wave_hovered(p, s, name))
 
         if len(sigNames) > 1:
             self.chart.legend().show()
         else:
             self.chart.legend().hide()
         # self.chart.createDefaultAxes()
-
-        self.bind_series_events()
+        self.setAxesRange()
 
         for callout in self.callouts:
             self.scene().removeItem(callout)
@@ -254,10 +266,45 @@ class ChartView(QGraphicsView):
 
         self.setAxesTitles()
 
-    def bind_series_events(self):
-        for series in self.chart.series():
-            series.clicked.connect(self.wave_point_selected)
-            series.hovered.connect(lambda p, s, name=series.name(): self.wave_hovered(p, s, name=name))
+    def checkLogScale(self, sigNames):
+        self.axisXLog = True if self.wavWin.simType.startswith('ac') else False
+        self.axisYLog = any(sigName.lower().startswith(('is(', 'ib(')) for sigName in sigNames) 
+
+    def setAxesRange(self):
+        self.axisX.setTickCount(5)
+        self.axisY.setTickCount(5)
+
+        if math.isclose(self.axisMaxY, self.axisMinY):
+            if math.isclose(self.axisMaxY, 0.):
+                self.axisY.setRange(-1., 1.)
+                return
+            else:
+                half = abs(self.axisMaxY)
+                self.axisMaxY, self.axisMinY = self.axisMaxY + half, self.axisMinY - half
+        
+        if self.axisMaxY == 0:
+            maxy = 0
+        else:
+            maxy = f'{self.axisMaxY:.3e}'
+            maxy_int, maxy_flo = maxy.split('e')
+            maxy_int = str(int(float(maxy_int)) + 1)
+            maxy = eval(maxy_int + 'e' + maxy_flo)
+
+        if self.axisMinY == 0:
+            miny = 0
+        else:
+            miny = f'{self.axisMinY:.3e}'
+            miny_int, miny_flo = miny.split('e')
+            miny_int = str(int(float(miny_int)) - 1)
+            miny = eval(miny_int + 'e' + miny_flo)
+
+        if maxy - miny < 1.5e-12:
+            # need update, not good
+            # to fix no y-axis if max-min too small
+            maxy = miny + 1.5e-12
+
+        self.axisY.setRange(miny, maxy)
+
 
     def showCalculator(self):
         x0, y0 = self.callouts[0].x, self.callouts[0].y
