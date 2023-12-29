@@ -256,7 +256,7 @@ class ChartView(QGraphicsView):
 
     def bind_series_events(self):
         for series in self.chart.series():
-            series.doubleClicked.connect(self.wave_doubleclicked)
+            series.clicked.connect(self.wave_point_selected)
             series.hovered.connect(lambda p, s, name=series.name(): self.wave_hovered(p, s, name=name))
 
     def showCalculator(self):
@@ -272,7 +272,7 @@ class ChartView(QGraphicsView):
         self.delta.setPos(x - 100, y - 100)
         super().resizeEvent(event)
 
-    def wave_doubleclicked(self, point):
+    def wave_point_selected(self, point):
         if len(self.callouts) <= 1:
             self.callouts.append(self.tooltip)
         elif len(self.callouts) == 2:
@@ -309,7 +309,10 @@ class ChartView(QGraphicsView):
 
     def contextMenuEvent(self, event):
         cur = self.wavWin.listView.currentItem()
+        if cur is None:
+            return
         menu = QMenu(self)
+        menu.setStyleSheet('QMenu{menu-scrollable: 1;}')
         actions=[]
         for name in self.wavWin.sigNames[1:]:
             if name == cur.text():
