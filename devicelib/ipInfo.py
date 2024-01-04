@@ -15,21 +15,21 @@ ENDDEF
 
 DEF PAD_ESD_MN25
 Type:PAD
-Model:pad_esd_mn9
+Model:pad_esd_mn25
 Descr:PAD
 Pin:PAD_PIN,ESD_GND
 ENDDEF
 
 DEF PAD_ESD_MN45
 Type:PAD
-Model:pad_esd_mn9
+Model:pad_esd_mn45
 Descr:PAD
 Pin:PAD_PIN,ESD_GND
 ENDDEF
 
 DEF PAD_ESD_MP9
 Type:PAD
-Model:pad_esd_mn9
+Model:pad_esd_mp9
 Descr:PAD
 Pin:ESD_PWR,PAD_PIN
 ENDDEF
