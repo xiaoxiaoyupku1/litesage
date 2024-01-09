@@ -33,7 +33,7 @@ class LayoutApplication(object):
     def is_poly(self, layer_id):
         pass
 
-    def save_gds(self, gds_path, only_top_cell):
+    def save_gds(self, gds_path, only_top_cell=False):
 
         res, title, err_msg = True, '', ''
 
