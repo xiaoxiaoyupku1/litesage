@@ -42,58 +42,56 @@ class StdButton(QWidget):
         self.setLayout(self.column_layout)
         self.button.clicked.connect(self.handle_click)
 
-    def get_op(self):
-        math_str = self.cal().math_str
-        if len(math_str) > 0 and math_str[0] == '-':
-            math_str = math_str[1:]
-        ret =  ''.join([i for i in math_str if not i.isdigit()]).replace('.', '')
-
-        if len(ret) >= 1:
-            ret = ret[0]
-
-        return ret
-
-
     def cal(self):
         return self.parent().parent()
 
+    def clear_ind(self):
+        self.cal().math_str = ''
+        self.cal().main_ind.label.setText(self.cal().math_str)
+        self.cal().main_ind.need_clear = False
 
     def handle_click(self):
         main_ind = self.cal().main_ind
-
         txt = self.button.text()
 
-        if(txt == 'C'):
-            self.cal().math_str = ''
-            main_ind.label.setText(self.cal().math_str)
+        if txt == 'C':
+            self.clear_ind()
             return
-        elif(txt == '='):
-            op = self.get_op()
-            args = self.cal().math_str.split(op)
-            self.cal().math_str = str(do_math(args[0], args[1], op))
-            main_ind.label.setText(self.cal().math_str)
-            args = None
-            return
-        elif(txt == '÷' or txt == 'x' or txt == '-' or txt == '+'):
-            op = self.get_op()
 
-            if op == '':
-                self.cal().math_str += txt
-                main_ind.label.setText(self.cal().math_str)
-                return
-            else:
-                args = self.cal().math_str.split(op)
-                self.cal().math_str = str(do_math(args[0], args[1], op))
-                main_ind.label.setText(self.cal().math_str)
-                return
-        elif(txt in ['X1','X2','Y1','Y2']):
+        elif txt == '=':
+            expr = self.cal().math_str
+            try:
+                res = str(eval(expr)) if len(expr) > 0 else ''
+            except:
+                res = 'Wrong input. Press "C".'
+            self.cal().math_str = res
+            main_ind.label.setText(res)
+            main_ind.need_clear = True
+            return
+
+        if main_ind.need_clear:
+            self.clear_ind()
+
+        if txt in ('X1', 'X2', 'Y1', 'Y2'):
             txt = getattr(self.cal(), txt)
-            txt = f'{txt:.4f}'
-        elif txt == '+/-':
-            pass
+            txtstr = str(txt)
+            if txtstr.startswith('(') and txtstr.endswith(')'):
+                pass
+            else:
+                txt = f'({txt:.3g})'
+
+        elif txt in ('+', '-', '*', '/'):
+            expr = self.cal().math_str
+            if expr.startswith('(') and expr.endswith(')'):
+                pass
+            elif len(expr) > 0:
+                expr = f'({expr})'
+            self.cal().math_str = expr
+            main_ind.label.setText(expr)
 
         self.cal().math_str += txt
         main_ind.label.setText(self.cal().math_str)
+
 
 class NumGrid(QWidget):
     def __init__(self, parent=None):
@@ -122,8 +120,8 @@ class NumGrid(QWidget):
 
         self.button_c = StdButton("C")
 
-        self.button_d = StdButton("÷")
-        self.button_m = StdButton("x")
+        self.button_d = StdButton("/")
+        self.button_m = StdButton("*")
         self.button_s = StdButton("-")
         self.button_a = StdButton("+")
         self.button_e = StdButton("=")
@@ -155,17 +153,4 @@ class Indicator(QWidget):
         self.column_layout.setAlignment(Qt.AlignCenter)
         self.column_layout.addWidget(self.label)
         self.setLayout(self.column_layout)
-
-
-
-def do_math(arg1, arg2, op):
-    if(op == '÷'):
-        return float(arg1) / float(arg2)
-    if(op == 'x'):
-        return float(arg1) * float(arg2)
-    if(op == '-'):
-        return float(arg1) - float(arg2)
-    if(op == '+'):
-        return float(arg1) + float(arg2)                
-
-
+        self.need_clear = False

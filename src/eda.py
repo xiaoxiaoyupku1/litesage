@@ -16,6 +16,7 @@ from src.hmi.rect import DesignBorder
 from src.tool.status import setStatus
 from src.tool.account import UserAccount
 from src.tool.sys import readFile
+from src.tool.config import PRODUCT_NAME
 from src.waveform import WaveformViewer
 from src.layout.layout_main_window import LayoutMainWindow
 
@@ -51,8 +52,11 @@ class FoohuEda(QMainWindow):
         self.menuLayout = None
 
         # Menu File
-        self.actSave = None
-        self.actLoad = None
+        self.actNewSch = None
+        self.actSaveSch = None
+        self.actLoadSch = None
+        self.actSaveDesign = None
+        self.actLoadDesign = None
 
         # Menu Edit
         self.actBasic = None
@@ -87,7 +91,7 @@ class FoohuEda(QMainWindow):
 
     def setupUi(self):
         self.resize(800, 600)
-        self.setWindowTitle('FOOHU EDA - Schematic Editor')
+        self.setWindowTitle(f'{PRODUCT_NAME} - Schematic Editor')
         self.cursorSymb = 'NA'
 
         self.setupUiAction()
@@ -95,11 +99,15 @@ class FoohuEda(QMainWindow):
         self.setupStatBar()
 
     def setupUiAction(self):
-        self.actSave = QAction(text='Save Design')
-        self.actSave.triggered.connect(self.saveDesign)
+        self.actSaveDesign = QAction(text='Save Design')
+        self.actSaveDesign.triggered.connect(self.saveDesign)
 
-        self.actLoad = QAction(text='Load Design')
-        self.actLoad.triggered.connect(self.loadDesign)
+        self.actLoadDesign = QAction(text='Load Design')
+        self.actLoadDesign.triggered.connect(self.loadDesign)
+
+        self.actNewSch = QAction(text='New Schematic')
+        self.actNewSch.setShortcut(QKeySequence('ctrl+i'))
+        self.actNewSch.triggered.connect(self.newSch)
 
         self.actSaveSch = QAction(text='Save Schematic')
         self.actSaveSch.setShortcut(QKeySequence('ctrl+s'))
@@ -205,10 +213,11 @@ class FoohuEda(QMainWindow):
 
         self.menuFile = QMenu(self.menuBar)
         self.menuFile.setTitle('File')
+        self.menuFile.addAction(self.actNewSch)
         self.menuFile.addAction(self.actSaveSch)
         self.menuFile.addAction(self.actLoadSch)
-        self.menuFile.addAction(self.actSave)
-        self.menuFile.addAction(self.actLoad)
+        self.menuFile.addAction(self.actSaveDesign)
+        self.menuFile.addAction(self.actLoadDesign)
 
         self.menuEdit = QMenu(self.menuBar)
         self.menuEdit.setTitle('Edit')
@@ -269,7 +278,7 @@ class FoohuEda(QMainWindow):
         self.trademark.setScaledContents(True)
         self.statBar.addPermanentWidget(self.trademark)
         self.statBar.setStyleSheet('QStatusBar::item { border: none; }')
-        setStatus('Welcome to FOOHU EDA', bar=self.statBar)
+        setStatus(f'Welcome to {PRODUCT_NAME}', bar=self.statBar)
 
     def saveDesign(self, _):
         if self.schScene is None:
@@ -304,6 +313,16 @@ class FoohuEda(QMainWindow):
         self.schScene.designTextLines = [line for line in readFile(designFile)]
         setStatus('Load Design from {}'.format(designFile))
 
+    def newSch(self):
+        if self.schScene is not None and len(self.schScene.items()) > 0:
+            confirm = Confirmation('This will clean up current schematic, do you want to continue?')
+            if confirm.exec():
+                self.schScene = None
+            else:
+                return
+        self.initSchScene()
+
+
     def saveSch(self):
         if self.schScene is None:
             return
@@ -325,7 +344,7 @@ class FoohuEda(QMainWindow):
 
     def loadSch(self):
         if len(self.schScene.items()) > 0:
-            confirm = Confirmation("This will clean up current schematic, do you want to continue?")
+            confirm = Confirmation('This will clean up current schematic, do you want to continue?')
             if confirm.exec():
                 self.do_loadSch()
             else:

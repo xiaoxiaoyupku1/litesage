@@ -1,3 +1,6 @@
+# Production information
+PRODUCT_NAME = 'FOOHU EDA'
+
 # FTP connection
 HOST = '127.0.0.1'
 PORT = 8080
@@ -17,5 +20,5 @@ FTP_LAGEN_S1_PATH = r'F:\\LaGen\\gdsS1\\'
 FTP_LAGEN_S2_PATH = r'F:\\LaGen\\gdsS2\\'
 FH_POST_PATH = r'H:\\Simulation\\'
 FH_WAVE_PATH = r'H:\\wave\\Results\\'
-FH_GDS_S1_PATH = r'H:\\LaGen\\gds_files\\gds_s1\\metal\\'
+FH_GDS_S1_PATH = r'H:\\LaGen\\gds_files\\gds_s1\\metal\\to_client\\'
 FH_GDS_S2_PATH = r'H:\\LaGen\\gds_files\\gds_s2\\metal\\'

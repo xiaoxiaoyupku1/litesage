@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QGraphicsTextItem, QTextBrowser,QGraphicsItem
+from PySide6.QtWidgets import QGraphicsSceneMouseEvent, QGraphicsTextItem, QTextBrowser,QGraphicsItem
 
 class Text(QGraphicsTextItem):
     def __init__(self, text='', posx=0, posy=0, orient='0', dimension=62.5):
@@ -38,6 +38,12 @@ class WireNameText(ParameterText):
         self.font.setPixelSize(10)
         self.setFont(self.font)
         self.show = False
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        wavWin = self.scene().wavWin
+        if wavWin is not None and wavWin.isVisible():
+            wavWin.displayWave(self.toPlainText(), 'v')
+        return super().mousePressEvent(event)
 
 
 class NetlistText(QTextBrowser):
