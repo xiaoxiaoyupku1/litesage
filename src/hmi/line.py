@@ -349,4 +349,17 @@ class WireList():
         self.wirelist.remove(wire)
 
     def checkConnectivity(self,wire):
-        pass
+        if wire not in self.wirelist:
+            return
+
+        segs = wire.getSegments().copy()
+        if len(segs) == 1:
+            return
+
+        for seg in segs[1:]:
+            wire.remove(seg)
+
+        for seg in segs[1:]:
+            new_wire = Wire(wire.parent)
+            new_wire.add(seg)
+            self.append(new_wire)
