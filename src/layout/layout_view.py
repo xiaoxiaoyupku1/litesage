@@ -57,11 +57,11 @@ class LayoutView(QGraphicsView):
             scale = (self.height() / height)
         scale *= 2.5
         self.scale(scale, scale)
-        last_x = None
-        last_y = None
+        x_set = set()
+        y_set = set()
         while True:
             x = self.mapFromScene(self.scene().bb[0], self.scene().bb[1]).x()
-            if last_x == x:
+            if x in x_set:
                 break
             if 50 < x < 100:
                 break
@@ -69,10 +69,10 @@ class LayoutView(QGraphicsView):
                 self.keyPressEvent(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Right, Qt.NoModifier))
             else:
                 self.keyPressEvent(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Left, Qt.NoModifier))
-            last_x = x
+            x_set.add(x)
         while True:
             y = self.mapFromScene(self.scene().bb[0], self.scene().bb[1]).y()
-            if y == last_y:
+            if y in y_set:
                 break
             if 50 < y < 100:
                 break
@@ -80,7 +80,7 @@ class LayoutView(QGraphicsView):
                 self.keyPressEvent(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Down, Qt.NoModifier))
             else:
                 self.keyPressEvent(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Up, Qt.NoModifier))
-            last_y = y
+            y_set.add(y)
         self.resize_pen_width()
 
     def key_press_f(self, event):
