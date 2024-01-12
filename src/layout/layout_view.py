@@ -2,6 +2,9 @@ from PySide6.QtWidgets import QGraphicsView
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen
 from src.layout.layout_utils import LayoutType
+from PySide6.QtGui import QBrush, QPen, QFont
+from src.layout.layout_utils import TextType
+from PySide6.QtGui import QKeyEvent
 
 
 class LayoutView(QGraphicsView):
@@ -19,6 +22,7 @@ class LayoutView(QGraphicsView):
         self.zoom_out_sx = 1.0 / 1.2
         self.zoom_out_sy = 1.0 / 1.2
         self.layout_scene = None
+        self.font_size = 5
         self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
 
     def resize_rectangle_pen_width(self):
@@ -51,7 +55,32 @@ class LayoutView(QGraphicsView):
             scale = (self.width()/width)
         else:
             scale = (self.height() / height)
+        scale *= 2.5
         self.scale(scale, scale)
+        last_x = None
+        last_y = None
+        while True:
+            x = self.mapFromScene(self.scene().bb[0], self.scene().bb[1]).x()
+            if last_x == x:
+                break
+            if 50 < x < 100:
+                break
+            if x > 100:
+                self.keyPressEvent(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Right, Qt.NoModifier))
+            else:
+                self.keyPressEvent(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Left, Qt.NoModifier))
+            last_x = x
+        while True:
+            y = self.mapFromScene(self.scene().bb[0], self.scene().bb[1]).y()
+            if y == last_y:
+                break
+            if 50 < y < 100:
+                break
+            if y > 100:
+                self.keyPressEvent(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Down, Qt.NoModifier))
+            else:
+                self.keyPressEvent(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Up, Qt.NoModifier))
+            last_y = y
         self.resize_pen_width()
 
     def key_press_f(self, event):
@@ -66,9 +95,35 @@ class LayoutView(QGraphicsView):
         return super(LayoutView, self).keyPressEvent(event)
 
     def resize_pen_width(self):
-        self.resize_rectangle_pen_width()
-        self.resize_polygon_pen_width()
-        self.resize_line_pen_width()
+        pen_width = int(self.mapToScene(0, 0, 1, 1)[2].x() - self.mapToScene(0, 0, 1, 1)[0].x())
+        for item in self.scene().items():
+            if item.type() == LayoutType.Rectangle:
+                pen = QPen(item.pen().color(), pen_width)
+                item.setPen(pen)
+            elif item.type() == LayoutType.Polygon:
+                pen = QPen(item.pen().color(), pen_width)
+                item.setPen(pen)
+            elif item.type() == LayoutType.Line:
+                pen_width = int(self.mapToScene(0, 0, 1, 1)[2].x() - self.mapToScene(0, 0, 1, 1)[0].x())
+                bbox_width = int(self.mapToScene(0, 0, 3, 3)[2].x() - self.mapToScene(0, 0, 3, 3)[0].x())
+                if hasattr(item, 'is_bbox') and item.is_bbox:
+                    pen = QPen(item.pen().color(), bbox_width)
+                else:
+                    pen = QPen(item.pen().color(), pen_width)
+                item.setPen(pen)
+            elif item.type() == LayoutType.Text and hasattr(item, 'text_type') and item.text_type == TextType.Component:
+                pen_width = int(self.mapToScene(0, 0, self.font_size, self.font_size)[2].x() - self.mapToScene(0, 0, self.font_size, self.font_size)[0].x())
+                font = QFont()
+                font.setPointSize(pen_width)
+                item.setFont(font)
+
+        # self.resize_rectangle_pen_width()
+        # self.resize_polygon_pen_width()
+        # self.resize_line_pen_width()
+
+    def set_font_size(self, value):
+        self.font_size = value
+        self.resize_pen_width()
 
     def wheelEvent(self, event) -> None:
         if len(self.scene().items()) > 0:

@@ -7,6 +7,7 @@ from src.layout.layout_utils import LayoutRectItem, LayoutTextItem, LayoutLineIt
 from src.layout.layout_utils import LayoutType
 from src.layout.config import forbidden_layer_id, terminal_layer_id
 import re
+from src.layout.layout_utils import TextType
 
 
 class SceneDirection(object):
@@ -765,6 +766,7 @@ class LayoutScene(QGraphicsScene):
                 c_name = component.name
             font = self.paintbrush_manage.get_text_font(2000)
             text_item = LayoutTextItem(c_name)
+            text_item.text_type = TextType.Component
             text_item.setFont(font)
             x = (component.bb[2]+component.bb[0])/2
             y = (component.bb[3]+component.bb[1])/2

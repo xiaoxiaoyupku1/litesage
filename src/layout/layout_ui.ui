@@ -133,8 +133,15 @@
     <addaction name="actionVia"/>
     <addaction name="actionRuler"/>
    </widget>
+   <widget class="QMenu" name="menuSetting">
+    <property name="title">
+     <string>Setting</string>
+    </property>
+    <addaction name="actionFontSize"/>
+   </widget>
    <addaction name="menu_2"/>
    <addaction name="menuAction"/>
+   <addaction name="menuSetting"/>
   </widget>
   <widget class="QDockWidget" name="Windowlayer">
    <property name="sizePolicy">
@@ -293,6 +300,11 @@
   <action name="actionUpload">
    <property name="text">
     <string>Upload</string>
+   </property>
+  </action>
+  <action name="actionFontSize">
+   <property name="text">
+    <string>FontSize</string>
    </property>
   </action>
  </widget>
