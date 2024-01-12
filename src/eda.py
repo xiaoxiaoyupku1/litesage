@@ -47,6 +47,7 @@ class FoohuEda(QMainWindow):
         self.menuBar = None
         self.menuFile = None
         self.menuEdit = None
+        self.menuRun = None
         self.menuUser = None
         self.menuWave = None
         self.menuLayout = None
@@ -63,17 +64,28 @@ class FoohuEda(QMainWindow):
         self.actPdk = None
         self.actIp = None
         self.actDesign = None
+
         self.actRes = None
+        self.actCap = None
+        self.actDio = None
+        self.actInd = None
         self.actGnd = None
         self.actVsrc = None
         self.actWire = None
+        self.actWname = None
         self.actPin = None
         self.actRect = None
-        self.actSim = None
+        self.actCmd = None
+        self.actCmt = None
         self.actFit = None
+        self.actZoomIn = None
+        self.actZoomOut = None
         self.actGrid = None
-        self.actRun = None
+
+        # Menu Run
         self.actNetlist = None
+        self.actRunSim = None
+        self.actRunLay = None
 
         # Menu User Account
         self.actLogin = None
@@ -138,6 +150,21 @@ class FoohuEda(QMainWindow):
         self.actRes.setShortcut(QKeySequence('r'))
         self.actRes.triggered.connect(self.drawRes)
 
+        self.actCap = QAction(getIcon('cap'), '&', self, 
+                              text='Capacitor')
+        self.actCap.setShortcut(QKeySequence('c'))
+        self.actCap.triggered.connect(self.drawCap)
+
+        self.actDio = QAction(getIcon('dio'), '&', self, 
+                              text='Diode')
+        self.actDio.setShortcut(QKeySequence('d'))
+        self.actDio.triggered.connect(self.drawDio)
+
+        self.actInd = QAction(getIcon('ind'), '&', self, 
+                              text='Inductor')
+        self.actInd.setShortcut(QKeySequence('l'))
+        self.actInd.triggered.connect(self.drawInd)
+
         self.actVsrc = QAction(getIcon('vsrc'), '&', self, 
                                text='Voltage Source')
         self.actVsrc.setShortcut(QKeySequence('v'))
@@ -153,6 +180,11 @@ class FoohuEda(QMainWindow):
         self.actWire.setShortcut(QKeySequence('w'))
         self.actWire.triggered.connect(self.drawWire)
 
+        self.actWname = QAction(getIcon('wname'), '&', self,
+                               text='Wire Name')
+        self.actWname.setShortcut(QKeySequence('ctrl+l'))
+        self.actWname.triggered.connect(self.drawWname)
+
         self.actPin = QAction(getIcon('pin'), '&', self, 
                               text='Pin')
         self.actPin.setShortcut(QKeySequence('p'))
@@ -163,28 +195,47 @@ class FoohuEda(QMainWindow):
         self.actRect.setShortcut(QKeySequence('t'))
         self.actRect.triggered.connect(self.drawRect)
 
-        self.actSim = QAction(getIcon('sim'), '&', self,
+        self.actCmd = QAction(getIcon('cmd'), '&', self,
                               text='Simulation Command')
-        self.actSim.setShortcut(QKeySequence('s'))
-        self.actSim.triggered.connect(self.drawSim)
+        self.actCmd.setShortcut(QKeySequence('s'))
+        self.actCmd.triggered.connect(self.drawCmd)
+
+        self.actCmt = QAction(getIcon('cmt'), '&', self,
+                              text='Comment Text')
+        self.actCmt.setShortcut(QKeySequence('m'))
+        self.actCmt.triggered.connect(self.drawCmt)
 
         self.actFit = QAction(getIcon('fit'), '&', self,
                               text='Fit')
         self.actFit.setShortcut(QKeySequence('f'))
         self.actFit.triggered.connect(self.fit)
 
+        self.actZoomIn = QAction(getIcon('zoom'), '&', self,
+                               text='Zoom In')
+        self.actZoomIn.setShortcut(QKeySequence('ctrl++'))
+        self.actZoomIn.triggered.connect(self.zoomIn)
+
+        self.actZoomOut = QAction(getIcon('zoom'), '&', self,
+                               text='Zoom Out')
+        self.actZoomOut.setShortcut(QKeySequence('ctrl+-'))
+        self.actZoomOut.triggered.connect(self.zoomOut)
+
         self.actGrid = QAction(getIcon('grid'), '&', self,
                                text='Turn On/Off Grid')
         self.actGrid.setShortcut(QKeySequence('ctrl+g'))
         self.actGrid.triggered.connect(self.toggleGrid)
 
-        self.actRun = QAction(getIcon('run'), '&', self,
-                              text='Run')
-        self.actRun.setShortcut(QKeySequence('ctrl+r'))
-        self.actRun.triggered.connect(self.runSim)
+        self.actRunSim = QAction(getIcon('run'), '&', self,
+                                 text='Run Simulation')
+        self.actRunSim.setShortcut(QKeySequence('ctrl+r'))
+        self.actRunSim.triggered.connect(self.runSim)
+
+        self.actRunLay = QAction(text='Run Auto Layout')
+        self.actRunLay.setShortcut(QKeySequence('ctrl+y'))
+        self.actRunLay.triggered.connect(self.runLay)
 
         self.actNetlist = QAction(getIcon('netlist'), '&', self,
-                                  text='Netlist')
+                                  text='View Netlist')
         self.actNetlist.setShortcut(QKeySequence('ctrl+n'))
         self.actNetlist.triggered.connect(self.showNetlist)
 
@@ -228,20 +279,30 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actDesign)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actRes)
+        self.menuEdit.addAction(self.actCap)
+        self.menuEdit.addAction(self.actDio)
+        self.menuEdit.addAction(self.actInd)
         self.menuEdit.addAction(self.actGnd)
         self.menuEdit.addAction(self.actVsrc)
         self.menuEdit.addAction(self.actWire)
+        self.menuEdit.addAction(self.actWname)
         self.menuEdit.addAction(self.actPin)
         self.menuEdit.addAction(self.actRect)
-        self.menuEdit.addAction(self.actSim)
+        self.menuEdit.addAction(self.actCmd)
+        self.menuEdit.addAction(self.actCmt)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actFit)
+        self.menuEdit.addAction(self.actZoomIn)
+        self.menuEdit.addAction(self.actZoomOut)
         self.menuEdit.addAction(self.actGrid)
         self.menuEdit.addAction(self.actRotate)
         self.menuEdit.addAction(self.actMirror)
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actRun)
-        self.menuEdit.addAction(self.actNetlist)
+
+        self.menuRun = QMenu(self.menuBar)
+        self.menuRun.setTitle('Run')
+        self.menuRun.addAction(self.actNetlist)
+        self.menuRun.addAction(self.actRunSim)
+        self.menuRun.addAction(self.actRunLay)
 
         self.menuUser = QMenu(self.menuBar)
         self.menuUser.setTitle('Guest (Lvl1)')
@@ -256,6 +317,7 @@ class FoohuEda(QMainWindow):
 
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
+        self.menuBar.addAction(self.menuRun.menuAction())
         self.menuBar.addAction(self.menuUser.menuAction())
         self.menuBar.addAction(self.menuWave.menuAction())
         self.menuBar.addAction(self.menuLayout.menuAction())
@@ -439,6 +501,15 @@ class FoohuEda(QMainWindow):
     def drawRes(self):
         self.drawSymbol('RES', 'basic')
 
+    def drawCap(self):
+        self.drawSymbol('CAP', 'basic')
+
+    def drawDio(self):
+        self.drawSymbol('DIO', 'basic')
+
+    def drawInd(self):
+        self.drawSymbol('IND1', 'basic')
+
     def drawVsrc(self):
         self.drawSymbol('VSRC', 'basic')
 
@@ -447,12 +518,18 @@ class FoohuEda(QMainWindow):
 
     def drawWire(self):
         self.drawSymbol('NA', 'W')
+
+    def drawWname(self):
+        self.schScene.drawWireName()
         
     def drawPin(self):
         self.drawSymbol('NA', 'P')
         
-    def drawSim(self):
+    def drawCmd(self):
         self.drawSymbol('NA', 'S')
+
+    def drawCmt(self):
+        self.drawSymbol('NA', 'M')
 
     def drawRect(self):
         self.schScene.cleanCursorSymb()
@@ -473,6 +550,14 @@ class FoohuEda(QMainWindow):
         self.schView.fit(self.schScene)
         setStatus('Auto-fit schematic to window size')
 
+    def zoomIn(self):
+        self.schView.zoom()
+        setStatus('Zoom in')
+
+    def zoomOut(self):
+        self.schView.zoom(out=True)
+        setStatus('Zoom out')
+
     def toggleGrid(self):
         self.schScene.toggleGrid()
         setStatus('Toggle background grid points')
@@ -480,20 +565,16 @@ class FoohuEda(QMainWindow):
     def runSim(self):
         self.schScene.runSim()
 
+    def runLay(self):
+        self.schScene.runLay()
+
     def showNetlist(self):
         self.schScene.showNetlist()
 
     def rotateSymbol(self):
         item =  self.schScene.cursorSymb
         if isinstance(item, SchInst):
-            #p = item.paramText
-            #text = p.toPlainText()
-            #item.removeFromGroup(p)
             item.setRotation(item.rotation()+90)
-            #p.setPos(item.pos())
-            #item.addToGroup(p)
-            #text = text.replace('\n', ' ')
-            #p.setPlainText(text)
 
     def mirrorSymbol(self):
         item = self.schScene.cursorSymb
@@ -509,7 +590,6 @@ class FoohuEda(QMainWindow):
             p.setTransform(tp)
 
             return 
-
 
         elif isinstance(item, DesignBorder):
             if not item.design.readonly:

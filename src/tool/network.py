@@ -56,6 +56,9 @@ class Gateway(FTP):
         finally:
             assert connected, 'FTP connection error'
 
+    def reconnect(self):
+        self.close()
+        self.init()
     
     def catDir(self, path):
         return self.dir(path)
@@ -117,7 +120,11 @@ class Gateway(FTP):
         if len(remoteDir) > 0:
             self.cwd(remoteDir)
             remotePath = os.path.basename(remotePath)
-        self.storbinary('STOR ' + remotePath, fp, bufsize)
+        try:
+            self.storbinary('STOR ' + remotePath, fp, bufsize)
+        except:
+            self.reconnect()
+            self.storbinary('STOR ' + remotePath, fp, bufsize)
         self.cwd(pwd)
         fp.close()
 
