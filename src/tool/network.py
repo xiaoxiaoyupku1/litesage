@@ -148,3 +148,10 @@ class Gateway(FTP):
 
     def end(self):
         self.quit()
+
+    def isConnected(self):
+        try:
+            self.voidcmd('NOOP')
+        except:
+            return False
+        return True

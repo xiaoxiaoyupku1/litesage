@@ -612,6 +612,8 @@ class SchScene(QGraphicsScene):
         try:
             if self.gateway is None:
                 self.gateway = Gateway()
+            else:
+                self.gateway.reconnect()
             self.remoteNetlistPath = runSimulation(self.gateway, self.netlist)
         except:
             setStatus('FTP connection error!')
@@ -670,6 +672,10 @@ class SchScene(QGraphicsScene):
             dataFile = getGdsResult(self.gateway, self.remoteNetlistPath)
             self.layWin.show_window_and_open_gds(dataFile)
             setStatus('Layout generation succeeded')
+
+    def cutGateway(self):
+        if self.gateway is not None:
+            self.gateway.end()
 
     def clear(self):
         self.symbols = []
