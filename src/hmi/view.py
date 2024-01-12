@@ -35,5 +35,10 @@ class SchView(QGraphicsView):
 
         self.update()
 
+    def zoom(self, out=False):
+        zoomFactor = 0.8 if out else 1.2
+        self.scale(zoomFactor, zoomFactor)
+        self.update()
+
     def fit(self, scene):
         self.fitInView(scene.itemsBoundingRect(), Qt.KeepAspectRatio)

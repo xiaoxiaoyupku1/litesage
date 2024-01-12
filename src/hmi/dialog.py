@@ -321,9 +321,10 @@ class SimulationCommandDialog(QDialog):
         dialAc = SimCmdDialog_AC(self)
         dialDc = SimCmdDialog_DC(self)
         dialDcOp = SimCmdDialog_DCOP(self)
+        dialCmt = SimCmdDialog_COMMENT(self)
         dialCustom = SimCmdDialog_CUSTOMIZE(self)
-        self.dialogs = [dialTran, dialAc, dialDc, dialDcOp, dialCustom]
-        self.dialNames = ['TRAN', 'AC', 'DC', 'DC OP', 'Customize']
+        self.dialogs = [dialTran, dialAc, dialDc, dialDcOp, dialCmt, dialCustom]
+        self.dialNames = ['TRAN', 'AC', 'DC', 'DC OP', 'Comment', 'Customize']
 
     def setup(self):
         self.tab = QTabWidget(self)
@@ -359,10 +360,13 @@ class SimulationCommandDialog(QDialog):
             tabId = 2
         elif text.lower() == '.op':
             tabId = 3
-        else:
+        elif text.lower().startswith('**'):
             tabId = 4
+            text = text[2:]
+        else:
+            tabId = 5
         self.tab.setCurrentIndex(tabId)
-        self.dialogs[tabId].setCommand(text)
+        self.dialogs[tabId].setCommand(text.strip())
 
         
 class SimCmdDialog_TRAN(QDialog):
@@ -497,6 +501,21 @@ class SimCmdDialog_DCOP(QDialog):
 
     def setCommand(self, text):
         return
+
+class SimCmdDialog_COMMENT(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QFormLayout()
+        self.text = QLineEdit('')
+        layout.addRow('', self.text)
+        self.setLayout(layout)
+
+    def getCommand(self):
+        text = self.text.text().strip()
+        return '** ' + text if len(text) > 0 else text
+    
+    def setCommand(self, text):
+        self.text.setText(text)
 
 class SimCmdDialog_CUSTOMIZE(QDialog):
     def __init__(self, parent=None):

@@ -69,6 +69,17 @@ class WireSegment(Line):
                     wavWin.displayWave(self.wire.name, 'v')
         return super().mousePressEvent(event)
 
+    def addName(self):
+        dialog = WireDialog(parent=None, wiresegment=self)
+        if dialog.exec():
+            netName = dialog.name.text().strip()
+            self.wire.setName(netName)
+            if self.text not in self.scene().items():
+                self.scene().addItem(self.text)
+                self.text.show = True
+            center = self.boundingRect().center()
+            self.text.setPos(center.x(), center.y())
+
     def delete(self):
         for conn in self.connections:
             self.scene().removeItem(conn)

@@ -184,6 +184,18 @@ class SchScene(QGraphicsScene):
                     self.wireStartPos = None
                     self.drawRes(event)
                     setStatus('Add device RES')
+                elif self.insertSymbType == 'C':
+                    self.wireStartPos = None
+                    self.drawCap(event)
+                    setStatus('Add device CAP')
+                elif self.insertSymbType == 'D':
+                    self.wireStartPos = None
+                    self.drawDio(event)
+                    setStatus('Add device DIO')
+                elif self.insertSymbType == 'L':
+                    self.wireStartPos = None
+                    self.drawInd(event)
+                    setStatus('Add device IND1')
                 elif self.insertSymbType == 'V':
                     self.wireStartPos = None
                     self.drawVsrc(event)
@@ -200,14 +212,23 @@ class SchScene(QGraphicsScene):
                     self.drawDesign(event)
                     setStatus('Add design')
                 elif self.insertSymbType == 'S':
-                    self.drawSim(event)
+                    self.drawCmd(event)
                     setStatus('Add simulation command')
+                elif self.insertSymbType == 'M':
+                    self.drawCmd(event, cmt=True)
+                    setStatus('Add comment')
         return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         if self.cursorSymb is None:
             if self.insertSymbType == 'R':
                 self.drawRes(event)
+            elif self.insertSymbType == 'C':
+                self.drawCap(event)
+            elif self.insertSymbType == 'D':
+                self.drawDio(event)
+            elif self.insertSymbType == 'L':
+                self.drawInd(event)
             elif self.insertSymbType == 'V':
                 self.drawVsrc(event)
             elif self.insertSymbType == 'P':
@@ -222,7 +243,9 @@ class SchScene(QGraphicsScene):
             elif self.insertSymbType == 'Design':
                 self.drawDesign(event)
             elif self.insertSymbType == 'S':
-                self.drawSim(event, mode='move')
+                self.drawCmd(event, mode='move')
+            elif self.insertSymbType == 'M':
+                self.drawCmd(event, mode='move', cmt=True)
         else:
             curPos = event.scenePos()
             posx, posy = self.roundPos(curPos.x(), curPos.y())
@@ -380,6 +403,15 @@ class SchScene(QGraphicsScene):
     def drawRes(self, event):
         self.drawSymbol(event, 'RES', 'basic')
 
+    def drawCap(self, event):
+        self.drawSymbol(event, 'CAP', 'basic')
+
+    def drawDio(self, event):
+        self.drawSymbol(event, 'DIO', 'basic')
+
+    def drawInd(self, event):
+        self.drawSymbol(event, 'IND1', 'basic')
+
     def drawVsrc(self, event):
         self.drawSymbol(event, 'VSRC', 'basic')
 
@@ -438,6 +470,12 @@ class SchScene(QGraphicsScene):
             wireseg.addPins()
             self.currentWire.add(wireseg)
 
+    def drawWireName(self):
+        for item in self.selectedItems():
+            if isinstance(item, WireSegment):
+                item.addName()
+                break
+
     def drawRect(self, event, mode=None):
         # mode: 'press', 'move'
         curPos = event.scenePos()
@@ -467,14 +505,15 @@ class SchScene(QGraphicsScene):
             self.widgetMouseMove = None
             self.insertSymbType = 'NA'
 
-    def drawSim(self, event, mode=None):
+    def drawCmd(self, event, mode=None, cmt=False):
         # mode: 'press', 'move'
         curPos = event.scenePos()
         posx, posy = self.roundPos(curPos.x(), curPos.y())
         self.cursorSymb = []
         if mode != 'move':
             return False
-        dialog = SimulationCommandDialog(None, text='')
+        text = '**' if cmt else ''
+        dialog = SimulationCommandDialog(None, text=text)
         result = dialog.exec()
         if result != dialog.accepted:
             return False
@@ -791,5 +830,3 @@ class SchScene(QGraphicsScene):
                         design.setShow(Qt.CheckState(design_dict['show']))
                         self.designs.append(design)
                         break
-
-
