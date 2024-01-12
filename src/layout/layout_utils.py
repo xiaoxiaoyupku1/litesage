@@ -21,6 +21,12 @@ class ItemType(object):
     Text = 'Text'
 
 
+class TextType(object):
+    Component = 'Component'
+    Net = 'net'
+    Other = ''
+
+
 class LayoutLineItem(QGraphicsLineItem):
 
     def __init__(self, *args, **kwargs):
@@ -104,6 +110,7 @@ class LayoutTextItem(QGraphicsTextItem):
         self.layer_id = ''
         self.text_instance = None
         self.is_edit = True
+        self.text_type = ''
 
     def delete(self):
         if self.text_instance:

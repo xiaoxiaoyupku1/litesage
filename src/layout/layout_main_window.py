@@ -330,6 +330,18 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             print(e)
             QtWidgets.QMessageBox.information(self, 'Upload info', 'upload Fail!')
 
+    def font_size_setting(self):
+        title = "Setting font size"
+        label = "FontSize"
+        default_value = self.ui.graphicsView.font_size
+        min_value = 1
+        max_value = 50
+        step = 1
+        font_size, ok = QtWidgets.QInputDialog.getInt(self, title, label, default_value, min_value, max_value, step)
+        if ok:
+            self.ui.graphicsView.set_font_size(font_size)
+
+
     def setup(self):
         self.setup_routing_dialog_ui()
         self.ui.actionOpen.triggered.connect(self.open_gds)
@@ -347,3 +359,4 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.ui.actionVia.triggered.connect(self.layout_scene.key_press_o)
         self.ui.actionDele.triggered.connect(self.layout_scene.key_press_delete)
         self.ui.actionUpload.triggered.connect(self.upload_gds)
+        self.ui.actionFontSize.triggered.connect(self.font_size_setting)
