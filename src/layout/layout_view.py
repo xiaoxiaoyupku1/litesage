@@ -112,10 +112,12 @@ class LayoutView(QGraphicsView):
                     pen = QPen(item.pen().color(), pen_width)
                 item.setPen(pen)
             elif item.type() == LayoutType.Text and hasattr(item, 'text_type') and item.text_type == TextType.Component:
-                pen_width = int(self.mapToScene(0, 0, self.font_size, self.font_size)[2].x() - self.mapToScene(0, 0, self.font_size, self.font_size)[0].x())
+                pen_width = int(self.mapToScene(0, 0, self.font_size, self.font_size)[2].x() -
+                                self.mapToScene(0, 0, self.font_size, self.font_size)[0].x())
                 font = QFont()
                 font.setPointSize(pen_width)
                 item.setFont(font)
+                item.setPos(item.origin_x - item.boundingRect().width() / 2, -item.origin_y - item.boundingRect().height() / 2)
 
         # self.resize_rectangle_pen_width()
         # self.resize_polygon_pen_width()

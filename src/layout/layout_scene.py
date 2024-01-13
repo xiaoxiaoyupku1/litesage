@@ -772,6 +772,8 @@ class LayoutScene(QGraphicsScene):
             y = (component.bb[3]+component.bb[1])/2
             text_item.setPos(x - text_item.boundingRect().width() / 2, -y)
             self.addItem(text_item)
+            text_item.origin_x = x
+            text_item.origin_y = y
             self.component_name_container[component.name] = [text_item]
 
     def create_layout_polygon(self):
