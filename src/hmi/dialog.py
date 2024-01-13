@@ -199,6 +199,26 @@ class DesignFileDialog(QFileDialog):
         self.setAcceptMode(acceptMode)
 
 
+class WaveFileDialog(QFileDialog):
+    def __init__(self, *args, **kwargs):
+        mode = kwargs.pop('mode', 'load')       # load or save
+        directory = kwargs.get('directory')
+
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+
+        super().__init__(*args, **kwargs)
+        self.accepted = QDialog.Accepted
+
+        self.setNameFilter('Wave Files (*.sig)')
+
+        if mode == 'load':
+            acceptMode = QFileDialog.AcceptOpen
+        else:
+            acceptMode = QFileDialog.AcceptSave
+        self.setAcceptMode(acceptMode)
+
+
 class DeviceChoiceDialog(QDialog):
     def __init__(self, parent, title, devices=[], devInfo={}, symbType='basic'):
         super().__init__(parent)

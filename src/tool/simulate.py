@@ -113,21 +113,28 @@ def checkSimStatus(gateway, remoteNetlistPath):
     message = ''
     # 0: success, -1: failure, 1: simulating
     interval = 0.5
-    while result is None:
-        if gateway.isFile(failNetlistPath):
-            lines = gateway.readFile(failNetlistStatus)
-            message = 'Simulation failed: ' + ' '.join(lines)
-            result = -1
-        elif gateway.isFile(passNetlistPath):
-            message = 'Simulation succeeded'
-            result = 0
-        elif gateway.isFile(origNetlistPath) and gateway.isFile(origNetlistStatus):
-            lines = gateway.readFile(origNetlistStatus)
-            message = 'Simulation on-going'
-            message = message + lines[0] if len(lines) > 0 else message
-            # TODO: read origNetlistStatus and update interval value
-            # setStatus(message)
-        sleep(interval)
+    try:
+        while result is None:
+            if not gateway.isConnected():
+                message = 'Simulation stopped'
+                result = -1
+            elif gateway.isFile(failNetlistPath):
+                lines = gateway.readFile(failNetlistStatus)
+                message = 'Simulation failed: ' + ' '.join(lines)
+                result = -1
+            elif gateway.isFile(passNetlistPath):
+                message = 'Simulation succeeded'
+                result = 0
+            elif gateway.isFile(origNetlistPath) and gateway.isFile(origNetlistStatus):
+                lines = gateway.readFile(origNetlistStatus)
+                message = 'Simulation on-going'
+                message = message + lines[0] if len(lines) > 0 else message
+                # TODO: read origNetlistStatus and update interval value
+                # setStatus(message)
+            sleep(interval)
+    except:
+        message = 'Simulation stopped'
+        result = -1
     return result, message
 
 def checkSigResult(gateway, remoteNetlistPath):
@@ -136,10 +143,15 @@ def checkSigResult(gateway, remoteNetlistPath):
     sigFile = os.path.join(r'/waves', baseName + '.sig')
 
     interval = 0.5
-    while True:
-        if gateway.isFile(sigFile):
-            return 0
-        sleep(interval)
+    try:
+        while True:
+            if not gateway.isConnected():
+                return -1
+            elif gateway.isFile(sigFile):
+                return 0
+            sleep(interval)
+    except:
+        return -1
 
 def getSigResult(gateway, remoteNetlistPath):
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
@@ -160,10 +172,15 @@ def checkGdsResult(gateway, remoteNetlistPath):
     sigFile = os.path.join(r'/LaGen/gdsS1', baseName + '.gds')
 
     interval = 0.5
-    while True:
-        if gateway.isFile(sigFile):
-            return 0
-        sleep(interval)
+    try:
+        while True:
+            if not gateway.isConnected():
+                return -1
+            elif gateway.isFile(sigFile):
+                return 0
+            sleep(interval)
+    except:
+        return -1
 
 def getGdsResult(gateway, remoteNetlistPath):
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]

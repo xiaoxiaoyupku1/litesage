@@ -51,6 +51,7 @@ class FoohuEda(QMainWindow):
         self.menuUser = None
         self.menuWave = None
         self.menuLayout = None
+        self.menuHelp = None
 
         # Menu File
         self.actNewSch = None
@@ -85,7 +86,9 @@ class FoohuEda(QMainWindow):
         # Menu Run
         self.actNetlist = None
         self.actRunSim = None
+        self.actStopSim = None
         self.actRunLay = None
+        self.actStopLay = None
 
         # Menu User Account
         self.actLogin = None
@@ -95,6 +98,9 @@ class FoohuEda(QMainWindow):
 
         # Menu Layout
         self.actOpenLayout = None
+
+        # Menu Help
+        self.actHelp = None
 
         # Status Bar
         self.statBar = None
@@ -230,9 +236,17 @@ class FoohuEda(QMainWindow):
         self.actRunSim.setShortcut(QKeySequence('ctrl+r'))
         self.actRunSim.triggered.connect(self.runSim)
 
+        self.actStopSim = QAction(text='Stop Simulation')
+        self.actStopSim.setShortcut(QKeySequence('ctrl+h'))
+        self.actStopSim.triggered.connect(self.stopSim)
+
         self.actRunLay = QAction(text='Run Auto Layout')
         self.actRunLay.setShortcut(QKeySequence('ctrl+y'))
         self.actRunLay.triggered.connect(self.runLay)
+
+        self.actStopLay = QAction(text='Stop Auto Layout')
+        self.actStopLay.setShortcut(QKeySequence('ctrl+j'))
+        self.actStopLay.triggered.connect(self.stopLay)
 
         self.actNetlist = QAction(getIcon('netlist'), '&', self,
                                   text='View Netlist')
@@ -258,6 +272,8 @@ class FoohuEda(QMainWindow):
         self.actOpenLayout = QAction(text='Open Layout')
         self.actOpenLayout.triggered.connect(self.openLayout)
 
+        self.actHelp = QAction(text='Help')
+
     def setupUiMenu(self):
         self.menuBar = QMenuBar(self)
         self.setMenuBar(self.menuBar)
@@ -267,6 +283,7 @@ class FoohuEda(QMainWindow):
         self.menuFile.addAction(self.actNewSch)
         self.menuFile.addAction(self.actSaveSch)
         self.menuFile.addAction(self.actLoadSch)
+        self.menuFile.addSeparator()
         self.menuFile.addAction(self.actSaveDesign)
         self.menuFile.addAction(self.actLoadDesign)
 
@@ -301,8 +318,12 @@ class FoohuEda(QMainWindow):
         self.menuRun = QMenu(self.menuBar)
         self.menuRun.setTitle('Run')
         self.menuRun.addAction(self.actNetlist)
+        self.menuRun.addSeparator()
         self.menuRun.addAction(self.actRunSim)
-        self.menuRun.addAction(self.actRunLay)
+        self.menuRun.addAction(self.actStopSim)
+        # self.menuRun.addSeparator()
+        # self.menuRun.addAction(self.actRunLay)
+        # self.menuRun.addAction(self.actStopLay)
 
         self.menuUser = QMenu(self.menuBar)
         self.menuUser.setTitle('Guest (Lvl1)')
@@ -315,12 +336,17 @@ class FoohuEda(QMainWindow):
         self.menuLayout.setTitle('Layout')
         self.menuLayout.addAction(self.actOpenLayout)
 
+        self.menuHelp = QMenu(self.menuBar)
+        self.menuHelp.setTitle('Help')
+        self.menuHelp.addAction(self.actHelp)
+
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuEdit.menuAction())
         self.menuBar.addAction(self.menuRun.menuAction())
         self.menuBar.addAction(self.menuUser.menuAction())
         self.menuBar.addAction(self.menuWave.menuAction())
         self.menuBar.addAction(self.menuLayout.menuAction())
+        self.menuBar.addAction(self.menuHelp.menuAction())
 
         self.centralWidget = QWidget(self)
         self.centralView = QGraphicsView(self.centralWidget)
@@ -565,8 +591,14 @@ class FoohuEda(QMainWindow):
     def runSim(self):
         self.schScene.runSim()
 
+    def stopSim(self):
+        self.schScene.cutGateway()
+
     def runLay(self):
         self.schScene.runLay()
+
+    def stopLay(self):
+        self.schScene.cutGateway()
 
     def showNetlist(self):
         self.schScene.showNetlist()

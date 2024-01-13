@@ -1,27 +1,35 @@
 import os
 from numpy import array as NDArray
 from PySide6.QtWidgets import (
-    QWidget, QMenu, QListWidget, QGridLayout, QGraphicsScene, QGraphicsView,
-    QGraphicsItem, QGraphicsTextItem, QFileDialog, QSizePolicy, QStatusBar, QLabel
+    QMainWindow, QWidget, QMenuBar, QMenu, QListWidget, QGridLayout, QGraphicsScene, 
+    QGraphicsView, QGraphicsItem, QGraphicsTextItem, 
+    QFileDialog, QSizePolicy, QStatusBar, QLabel
 )
 from PySide6.QtCharts import (QChart, QLineSeries, QValueAxis, QLogValueAxis)
 from PySide6.QtCore import Qt, QPointF, QRectF, QRect
 from PySide6.QtGui import (
     QPainter, QFont, QFontMetrics, QPainterPath, QColor, QAction
 )
-from pickle import load
+from pickle import load, dump
 from collections import defaultdict
 import numpy as np
 import math
 from src.calculator import Calculator
 from src.tool.wave import WaveInfo
 from src.tool.config import PRODUCT_NAME
+from src.tool.status import setStatus
 from src.hmi.image import getTrademark
+from src.hmi.dialog import WaveFileDialog
 
 
-class WaveformViewer(QWidget):
+class WaveformViewer(QMainWindow):
     def __init__(self, mode='full'):
         super().__init__()
+        self.menuBar = None
+        self.menuFile = None
+        self.actLoad = None
+        self.actSaveAs = None
+
         self.waveInfo = None
         self.simType = None
         self.sigNames = None
@@ -29,11 +37,8 @@ class WaveformViewer(QWidget):
         self.listView: QListWidget = None
         self.chartView = None # wave signal chart
         self.statusBar = None
-        self.layout = None  # window layout of widgets
-
-        self.selSigIdx = None   # selected signal index
-        self.selSigName = None  # selected signal name
-        self.selSigValues = None  # selected signal values
+        self.centralWidget = None  # window layout of widgets
+        self.gridLayout = None
 
         self.name2names = defaultdict(set)
         self.parseData(None, mode)
@@ -44,7 +49,6 @@ class WaveformViewer(QWidget):
         self.setWindowTitle(f'{PRODUCT_NAME} - Waveform Viewer')
         self.resize(1000, 600)
 
-        self.setLayout(self.layout)
 
     def showWindowAndOpenWave(self, dataFile, mode='full'):
         # dataFile: WaveInfo, path string, empty string, None
@@ -68,10 +72,10 @@ class WaveformViewer(QWidget):
                 return
             else:
                 assert 0, 'wrong dataFile format: {}'.format(dataFile)
+            setStatus('Load Wave {}'.format(dataFile))
 
         self.parseData(data, mode)
         self.setupUi()
-        self.setLayout(self.layout)
         self.show()
 
     def displayWave(self, sigName, sigType):
@@ -104,6 +108,20 @@ class WaveformViewer(QWidget):
         raise
 
     def setupUi(self):
+        self.menuBar = QMenuBar(self)
+        self.actLoad = QAction(text='Load Wave')
+        self.actLoad.setShortcut('ctrl+o')
+        self.actLoad.triggered.connect(self.loadWave)
+        self.actSaveAs = QAction(text='Save Wave as')
+        self.actSaveAs.setShortcut('ctrl+shift+s')
+        self.actSaveAs.triggered.connect(self.saveWave)
+        self.setMenuBar(self.menuBar)
+        self.menuFile = QMenu(self.menuBar)
+        self.menuFile.setTitle('File')
+        self.menuFile.addAction(self.actLoad)
+        self.menuFile.addAction(self.actSaveAs)
+        self.menuBar.addAction(self.menuFile.menuAction())
+
         # Left side: wave name list
         if self.listView is None:
             self.listView = WaveListWidget(self)
@@ -131,17 +149,18 @@ class WaveformViewer(QWidget):
         self.statusBar.setStyleSheet('QStatusBar::item { border: none; }')
 
         # Layout
-        if self.layout is None:
-            self.layout = QGridLayout(self)
-        self.layout.addWidget(self.listView, 1, 0)
-        self.layout.setColumnStretch(0, 0)
-        self.layout.addWidget(self.chartView, 1, 1)
-        self.layout.setColumnStretch(1, 1)
-        self.layout.addWidget(self.statusBar, 2, 0, 1, 2)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        # Select 1st wave
-        #if self.sigValues is not None:
-            #self.changeWave(None, sigName=self.sigNames[1])
+        self.centralWidget = QWidget()
+        self.gridLayout = QGridLayout(self.centralWidget)
+        self.gridLayout.addWidget(self.listView, 1, 0)
+        self.gridLayout.setColumnStretch(0, 0)
+        self.gridLayout.addWidget(self.chartView, 1, 1)
+        self.gridLayout.setColumnStretch(1, 1)
+        self.gridLayout.addWidget(self.statusBar, 2, 0, 1, 2)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.setCentralWidget(self.centralWidget)
+
+        # Select first signal
+        self.listView.setCurrentRow(0)
 
     def changeWave(self):
         cur = self.listView.currentItem()
@@ -153,6 +172,33 @@ class WaveformViewer(QWidget):
     def closeEvent(self, event):
         return super().closeEvent(event)
 
+    def loadWave(self):
+        dialog = WaveFileDialog(self, 'Load Wave', mode='load', directory='./project/')
+        result = dialog.exec()
+        if result != dialog.accepted:
+            return
+        waveFile = dialog.selectedFiles()[0]
+        if not os.access(waveFile, os.R_OK):
+            setStatus('No permission to read {}'.format(waveFile))
+            return
+        self.showWindowAndOpenWave(waveFile)
+        setStatus('Load wave from {}'.format(waveFile))
+
+    def saveWave(self):
+        if len(self.sigNames) == 0 or self.waveInfo is None:
+            setStatus('No wave to save!')
+            return
+        dialog = WaveFileDialog(self, 'Save Wave as', mode='save', directory='./project/')
+        result = dialog.exec()
+        if result != dialog.accepted:
+            return
+        waveFile = dialog.selectedFiles()[0]
+        if not os.access(os.path.dirname(waveFile), os.W_OK):
+            setStatus('No permission to write {}'.format(waveFile))
+            return
+        with open(waveFile, 'wb') as fport:
+            dump(self.waveInfo, fport)
+        setStatus('Save wave to {}'.format(waveFile))
 
 class ChartView(QGraphicsView):
     def __init__(self, wavWin):
