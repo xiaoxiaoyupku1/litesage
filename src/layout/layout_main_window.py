@@ -330,6 +330,12 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
             print(e)
             QtWidgets.QMessageBox.information(self, 'Upload info', 'upload Fail!')
 
+    def zoom_in(self):
+        self.ui.graphicsView.zoomIn()
+
+    def zoom_out(self):
+        self.ui.graphicsView.zoomOut()
+
     def font_size_setting(self):
         title = "Setting font size"
         label = "FontSize"
@@ -359,4 +365,6 @@ class LayoutMainWindow(QtWidgets.QMainWindow):
         self.ui.actionVia.triggered.connect(self.layout_scene.key_press_o)
         self.ui.actionDele.triggered.connect(self.layout_scene.key_press_delete)
         self.ui.actionUpload.triggered.connect(self.upload_gds)
+        self.ui.actionZoomIn.triggered.connect(self.zoom_in)
+        self.ui.actionZoomOut.triggered.connect(self.zoom_out)
         self.ui.actionFontSize.triggered.connect(self.font_size_setting)

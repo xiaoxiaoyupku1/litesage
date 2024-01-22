@@ -137,3 +137,15 @@ class LayoutView(QGraphicsView):
             self.layout_scene.update()
             self.update()
             self.resize_pen_width()
+
+    def zoomIn(self):
+        self.scale(self.zoom_in_sx, self.zoom_in_sy)
+        self.layout_scene.update()
+        self.update()
+        self.resize_pen_width()
+
+    def zoomOut(self):
+        self.scale(self.zoom_out_sx, self.zoom_out_sy)
+        self.layout_scene.update()
+        self.update()
+        self.resize_pen_width()
