@@ -51,6 +51,7 @@ class SchScene(QGraphicsScene):
         self.gridOn = True  # flag grid
         self.gridPen = None
         self.isThumbnail = False
+        self.movable = False
 
         self.basicSymbols = None  # basic ideal symbols
         self.basicSymbolNames = None  # to filter symbols for user to choose
@@ -550,6 +551,23 @@ class SchScene(QGraphicsScene):
     def toggleGrid(self):
         self.gridOn = not self.gridOn
         self.update()
+        if self.gridOn:
+            msg = 'Toggle on background grid points'
+        else:
+            msg = 'Toggle off background grid points'
+        setStatus(msg)
+
+    def toggleMove(self):
+        self.movable = not self.movable
+        for inst in self.symbols:
+            inst.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
+        for design in self.designs:
+            design.group.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
+        if self.movable:
+            msg = 'Instances and designs are now movable'
+        else:
+            msg = 'Instances and designs are no longer movable'
+        setStatus(msg)
 
     def rotateSelectedItems(self):
         allWires = [wire.getName() for wire in self.wireList.wirelist]

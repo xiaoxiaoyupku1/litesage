@@ -82,6 +82,7 @@ class FoohuEda(QMainWindow):
         self.actZoomIn = None
         self.actZoomOut = None
         self.actGrid = None
+        self.actMove = None
 
         # Menu Run
         self.actNetlist = None
@@ -231,6 +232,10 @@ class FoohuEda(QMainWindow):
         self.actGrid.setShortcut(QKeySequence('ctrl+g'))
         self.actGrid.triggered.connect(self.toggleGrid)
 
+        self.actMove = QAction(text='Move')
+        self.actMove.setShortcut(QKeySequence('f7'))
+        self.actMove.triggered.connect(self.toggleMove)
+
         self.actRunSim = QAction(getIcon('run'), '&', self,
                                  text='Run Simulation')
         self.actRunSim.setShortcut(QKeySequence('ctrl+r'))
@@ -314,6 +319,7 @@ class FoohuEda(QMainWindow):
         self.menuEdit.addAction(self.actGrid)
         self.menuEdit.addAction(self.actRotate)
         self.menuEdit.addAction(self.actMirror)
+        self.menuEdit.addAction(self.actMove)
 
         self.menuRun = QMenu(self.menuBar)
         self.menuRun.setTitle('Run')
@@ -586,7 +592,9 @@ class FoohuEda(QMainWindow):
 
     def toggleGrid(self):
         self.schScene.toggleGrid()
-        setStatus('Toggle background grid points')
+
+    def toggleMove(self):
+        self.schScene.toggleMove()
 
     def runSim(self):
         self.schScene.runSim()

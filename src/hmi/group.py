@@ -17,7 +17,7 @@ class SchInst(QGraphicsItemGroup):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.ItemIsMovable, False)
         self.nameHead = None
         self.nameId = None
         self.name = None
@@ -348,7 +348,7 @@ class DesignGroup(QGraphicsItemGroup):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.ItemIsMovable, False)
         self.design = None
 
     def setDesign(self, design):
