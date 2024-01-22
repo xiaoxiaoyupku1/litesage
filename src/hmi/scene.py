@@ -585,23 +585,27 @@ class SchScene(QGraphicsScene):
     def mirrorSelectedItems(self):
         allWires = [wire.getName() for wire in self.wireList.wirelist]
         for item in self.selectedItems():
-            if isinstance(item, SchInst):
-                wireNames = item.conns.values()
+            if isinstance(item, SchInst) or isinstance(item, DesignGroup):
+                inst = item if isinstance(item, SchInst) else item.design
+                wireNames = inst.conns.values()
                 connected = [w for w in wireNames if w in allWires]
                 if len(connected) > 0:
                     msg = 'Mirroring refused because {} is connected to wires {}'.format(
                         item.name, ', '.join(connected))
                     setStatus(msg)
-                else:
+                elif isinstance(item, SchInst):
                     t = item.transform()
                     t.scale(-1, 1)
                     item.setTransform(t)
-
                     p = item.paramText
                     tp = p.transform()
                     tp.scale(-1, 1)
                     tp.translate(-p.boundingRect().width(), 0)
                     p.setTransform(tp)
+                elif isinstance(item, DesignGroup):
+                    t = item.transform()
+                    t.scale(-1, 1)
+                    item.setTransform(t)
 
     def showNetlist(self):
         self.netlist = createNetlist(self, viewOnly=True)
