@@ -605,12 +605,17 @@ class FoohuEda(QMainWindow):
 
     def rotateSymbol(self):
         item =  self.schScene.cursorSymb
-        if isinstance(item, SchInst):
+        if item is None:
+            self.schScene.rotateSelectedItems()
+        elif isinstance(item, SchInst):
             item.setRotation(item.rotation()+90)
 
     def mirrorSymbol(self):
         item = self.schScene.cursorSymb
-        if isinstance(item, SchInst):
+        if item is None:
+            self.schScene.mirrorSelectedItems()
+
+        elif isinstance(item, SchInst):
             t = item.transform()
             t.scale(-1,1)
             item.setTransform(t)
@@ -620,8 +625,6 @@ class FoohuEda(QMainWindow):
             tp.scale(-1,1)
             tp.translate(-p.boundingRect().width(),0)
             p.setTransform(tp)
-
-            return 
 
         elif isinstance(item, DesignBorder):
             if not item.design.readonly:

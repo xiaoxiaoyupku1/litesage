@@ -551,6 +551,40 @@ class SchScene(QGraphicsScene):
         self.gridOn = not self.gridOn
         self.update()
 
+    def rotateSelectedItems(self):
+        allWires = [wire.getName() for wire in self.wireList.wirelist]
+        for item in self.selectedItems():
+            if isinstance(item, SchInst):
+                wireNames = item.conns.values()
+                connected = [w for w in wireNames if w in allWires]
+                if len(connected) > 0:
+                    msg = 'Rotation refused because {} is connected to wires {}'.format(
+                        item.name, ', '.join(connected))
+                    setStatus(msg)
+                else:
+                    item.setRotation(item.rotation()+90)
+
+    def mirrorSelectedItems(self):
+        allWires = [wire.getName() for wire in self.wireList.wirelist]
+        for item in self.selectedItems():
+            if isinstance(item, SchInst):
+                wireNames = item.conns.values()
+                connected = [w for w in wireNames if w in allWires]
+                if len(connected) > 0:
+                    msg = 'Mirroring refused because {} is connected to wires {}'.format(
+                        item.name, ', '.join(connected))
+                    setStatus(msg)
+                else:
+                    t = item.transform()
+                    t.scale(-1, 1)
+                    item.setTransform(t)
+
+                    p = item.paramText
+                    tp = p.transform()
+                    tp.scale(-1, 1)
+                    tp.translate(-p.boundingRect().width(), 0)
+                    p.setTransform(tp)
+
     def showNetlist(self):
         self.netlist = createNetlist(self, viewOnly=True)
         dialog = NetlistDialog(None, self.netlist)
