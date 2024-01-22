@@ -66,6 +66,8 @@ class SchScene(QGraphicsScene):
         self.wavWin = None
         self.layWin = None
 
+        self.schFile = None  # schematic file save path
+
         self.simTrackThread = SimTrackThread()
         self.sigTrackThread = SigTrackThread()
         self.gdsTrackThread = GdsTrackThread()

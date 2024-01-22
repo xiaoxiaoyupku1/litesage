@@ -427,13 +427,14 @@ class FoohuEda(QMainWindow):
             msgBox.exec()
             return
 
-        dialog = DesignFileDialog(self, 'Save Schematic as ...', mode='save', directory='./project/', type='sch')
-        result = dialog.exec()
-        if result != dialog.accepted:
-            return False
-        schFile = dialog.selectedFiles()[0]
-        self.schScene.dumpSch(schFile)
-        setStatus('Save Schematic to {}'.format(schFile))
+        if self.schScene.schFile is None:
+            dialog = DesignFileDialog(self, 'Save Schematic as ...', mode='save', directory='./project/', type='sch')
+            result = dialog.exec()
+            if result != dialog.accepted:
+                return False
+            self.schScene.schFile = dialog.selectedFiles()[0]
+        self.schScene.dumpSch(self.schScene.schFile)
+        setStatus('Save Schematic to {}'.format(self.schScene.schFile))
 
 
     def loadSch(self):
@@ -456,6 +457,7 @@ class FoohuEda(QMainWindow):
         self.initSchScene()
         self.schScene.makeSch([line for line in readFile(schFile)])
         self.schView.fit(self.schScene)
+        self.schScene.schFile = schFile
         setStatus('Load Schematic from {}'.format(schFile))
 
     def drawDesign(self, model):
