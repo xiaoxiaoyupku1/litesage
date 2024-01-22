@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (QApplication, QDockWidget, QFrame, QGraphicsView,
     QStatusBar, QToolBar, QVBoxLayout, QWidget)
 from src.layout import logo_resource_rc
 from src.layout.layout_view import LayoutView
+from src.tool.config import PRODUCT_NAME
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -193,7 +195,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Foohu Technology", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", PRODUCT_NAME, None))
         self.actionopen.setText(QCoreApplication.translate("MainWindow", u"open", None))
         self.actionOpen.setText(QCoreApplication.translate("MainWindow", u"Open", None))
         self.actionSave.setText(QCoreApplication.translate("MainWindow", u"Save", None))
