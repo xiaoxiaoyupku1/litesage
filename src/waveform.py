@@ -28,6 +28,7 @@ class WaveformViewer(QMainWindow):
         super().__init__()
         self.menuBar = None
         self.menuFile = None
+        self.menuView = None
         self.actLoad = None
         self.actSaveAs = None
 
@@ -123,6 +124,18 @@ class WaveformViewer(QMainWindow):
         self.menuFile.addAction(self.actSaveAs)
         self.menuBar.addAction(self.menuFile.menuAction())
 
+        self.actZoomIn = QAction(text='Zoom In')
+        self.actZoomIn.setShortcut('ctrl++')
+        self.actZoomIn.triggered.connect(self.zoom)
+        self.actZoomOut = QAction(text='Zoom Out')
+        self.actZoomOut.setShortcut('ctrl+-')
+        self.actZoomOut.triggered.connect(self.zoomOut)
+        self.menuView = QMenu(self.menuBar)
+        self.menuView.setTitle('View')
+        self.menuView.addAction(self.actZoomIn)
+        self.menuView.addAction(self.actZoomOut)
+        self.menuBar.addAction(self.menuView.menuAction())
+
         # Left side: wave name list
         if self.listView is None:
             self.listView = WaveListWidget(self)
@@ -200,6 +213,15 @@ class WaveformViewer(QMainWindow):
         with open(waveFile, 'wb') as fport:
             dump(self.waveInfo, fport)
         setStatus('Save wave to {}'.format(waveFile))
+
+    def zoom(self, out=False):
+        if self.chartView is None:
+            return
+        factor = 0.8 if out else 1.2
+        self.chartView.scale(factor, factor)
+
+    def zoomOut(self):
+        self.zoom(out=True)
 
 class ChartView(QGraphicsView):
     def __init__(self, wavWin):
