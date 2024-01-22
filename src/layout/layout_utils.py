@@ -111,6 +111,8 @@ class LayoutTextItem(QGraphicsTextItem):
         self.text_instance = None
         self.is_edit = True
         self.text_type = ''
+        self.origin_x = 0
+        self.origin_y = 0
 
     def delete(self):
         if self.text_instance:
