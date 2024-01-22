@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from numpy import array as NDArray
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QMenuBar, QMenu, QListWidget, QGridLayout, QGraphicsScene, 
@@ -229,7 +230,6 @@ class ChartView(QGraphicsView):
         x, y = self.scene().sceneRect().bottomRight().toTuple()
         self.delta.setPos(x - 100, y - 100)
         self.delta.setZValue(15)
-        self.yCoeff = 1.
         
         self.setRenderHint(QPainter.Antialiasing)
         self.setMouseTracking(True)
@@ -258,21 +258,25 @@ class ChartView(QGraphicsView):
         self.axisMinY = None
         self.axisMaxY = None
 
+        xData = deepcopy(self.wavWin.sigValues[0])
+        self.axisMaxX = max(xData)
+        if self.axisMaxX <= 1 and self.axisMaxX > 1e-3:
+            xData *= 1e3
+            self.axisX.setLabelFormat('%.3gm')
+        elif self.axisMaxX <= 1e-3 and self.axisMaxX > 1e-6:
+            xData *= 1e6
+            self.axisX.setLabelFormat('%.3gu')
+        elif self.axisMaxX <= 1e-6:
+            xData *= 1e9
+            self.axisX.setLabelFormat('%.3gn')
+
         for sigName in sigNames:
             index = self.wavWin.sigNames.index(sigName)
             series = QLineSeries()
             series.setName(sigName)
 
-            xData = self.wavWin.sigValues[0]
             yData = self.wavWin.sigValues[index]
-            # if sigName.lower().startswith(('is(', 'ib(')):
-            #     yData = np.where(yData < 0, 0, yData)
-
-            # self.axisMinX = min(xData) if self.axisMinX is None else min(self.axisMinX, min(xData)) 
-            # self.axisMaxX = max(xData) if self.axisMaxX is None else max(self.axisMaxX, max(xData))
-
             yData = np.where(np.abs(yData) < 1e-14, 0, yData)
-            # yData = np.where(yData > -1e-14, 0, yData)
             self.axisMinY = min(yData) if self.axisMinY is None else min(self.axisMinY, min(yData))
             self.axisMaxY = max(yData) if self.axisMaxY is None else max(self.axisMaxY, max(yData))
 
@@ -280,18 +284,6 @@ class ChartView(QGraphicsView):
             self.chart.addSeries(series)
             series.attachAxis(self.axisX)
             series.attachAxis(self.axisY)
-
-            # if math.isclose(self.axisY.min(), self.axisY.max()): # to fix no wave if min == max,
-            #     if math.isclose(self.axisY.min(), 0.0):
-            #         half = 1.0
-            #     else:
-            #         half = abs(self.axisY.max())
-            #     self.axisY.setRange(self.axisY.max() - half, self.axisY.max()+half)
-
-            # # need update, not good
-            # if self.axisY.max() - self.axisY.min() < 1.5e-12: # to fix no y-axis if max -  min  too small
-            #     self.axisY.setRange(self.axisY.min(), self.axisY.min() + 1.5e-12)
-
             series.clicked.connect(self.wave_point_selected)
             series.hovered.connect(lambda p, s, name=series.name(): self.wave_hovered(p, s, name))
 
@@ -299,7 +291,6 @@ class ChartView(QGraphicsView):
             self.chart.legend().show()
         else:
             self.chart.legend().hide()
-        # self.chart.createDefaultAxes()
         self.setAxesRange()
 
         for callout in self.callouts:
@@ -350,7 +341,6 @@ class ChartView(QGraphicsView):
             maxy = miny + 1.5e-12
 
         self.axisY.setRange(miny, maxy)
-
 
     def showCalculator(self):
         x0, y0 = self.callouts[0].x, self.callouts[0].y
@@ -432,16 +422,18 @@ class ChartView(QGraphicsView):
         yTitle = ''
         for series in self.chart.series():
             if series.name().startswith('V'):
-                yTitle = 'Value (V)' if len(yTitle) == 0 else yTitle + ' (V)'
+                if len(yTitle) == 0:
+                    yTitle = 'Value (V)'
+                elif ' (V)' not in yTitle:
+                    yTitle += ' (V)'
             elif series.name().startswith('I'):
-                yTitle = 'Value (A)' if len(yTitle) == 0 else yTitle + ' (A)'
-
-        if self.yCoeff != 1.:
-            yTitle += ' * {:.1e}'.format(self.yCoeff)
+                if len(yTitle) == 0:
+                    yTitle = 'Value (A)'
+                elif ' (A)' not in yTitle:
+                    yTitle += ' (A)'
 
         self.axisX.setTitleText(xTitle)
         self.axisY.setTitleText(yTitle)
-        self.yCoeff = 1.
 
     def wheelEvent(self, event) -> None:
         delta = event.angleDelta().y() / 120
