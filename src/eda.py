@@ -87,9 +87,8 @@ class FoohuEda(QMainWindow):
         # Menu Run
         self.actNetlist = None
         self.actRunSim = None
-        self.actStopSim = None
         self.actRunLay = None
-        self.actStopLay = None
+        self.actStopSimLay = None
 
         # Menu User Account
         self.actLogin = None
@@ -241,17 +240,13 @@ class FoohuEda(QMainWindow):
         self.actRunSim.setShortcut(QKeySequence('ctrl+r'))
         self.actRunSim.triggered.connect(self.runSim)
 
-        self.actStopSim = QAction(text='Stop Simulation')
-        self.actStopSim.setShortcut(QKeySequence('ctrl+h'))
-        self.actStopSim.triggered.connect(self.stopSim)
-
         self.actRunLay = QAction(text='Run Auto Layout')
         self.actRunLay.setShortcut(QKeySequence('ctrl+y'))
         self.actRunLay.triggered.connect(self.runLay)
 
-        self.actStopLay = QAction(text='Stop Auto Layout')
-        self.actStopLay.setShortcut(QKeySequence('ctrl+j'))
-        self.actStopLay.triggered.connect(self.stopLay)
+        self.actStopSimLay = QAction(text='Stop')
+        self.actStopSimLay.setShortcut(QKeySequence('ctrl+h'))
+        self.actStopSimLay.triggered.connect(self.stopSimLay)
 
         self.actNetlist = QAction(getIcon('netlist'), '&', self,
                                   text='View Netlist')
@@ -326,10 +321,8 @@ class FoohuEda(QMainWindow):
         self.menuRun.addAction(self.actNetlist)
         self.menuRun.addSeparator()
         self.menuRun.addAction(self.actRunSim)
-        self.menuRun.addAction(self.actStopSim)
-        # self.menuRun.addSeparator()
-        # self.menuRun.addAction(self.actRunLay)
-        # self.menuRun.addAction(self.actStopLay)
+        self.menuRun.addAction(self.actRunLay)
+        self.menuRun.addAction(self.actStopSimLay)
 
         self.menuUser = QMenu(self.menuBar)
         self.menuUser.setTitle('Guest (Lvl1)')
@@ -601,13 +594,10 @@ class FoohuEda(QMainWindow):
     def runSim(self):
         self.schScene.runSim()
 
-    def stopSim(self):
-        self.schScene.cutGateway()
-
     def runLay(self):
         self.schScene.runLay()
 
-    def stopLay(self):
+    def stopSimLay(self):
         self.schScene.cutGateway()
 
     def showNetlist(self):

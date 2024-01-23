@@ -74,7 +74,6 @@ class SchScene(QGraphicsScene):
         self.gateway = None
         self.remoteNetlistPath = None
         self.setSimTrack = False
-        self.genGdsFlag = None
 
     def initBasicDevices(self):
         if self.basicSymbols is None or self.basicDevInfo is None:
@@ -619,7 +618,6 @@ class SchScene(QGraphicsScene):
         # check used models and user rights
         bannedModels = []
         found = []
-        self.genGdsFlag = None
         if self.user.getLevel() == 3:
             # no need to check
             pass
@@ -628,18 +626,13 @@ class SchScene(QGraphicsScene):
         elif self.user.getLevel() == 1:
             bannedModels = list(self.pdkSymbols.keys()) + list(self.ipSymbols.keys())
         
-        allBasic = True
         for model in getAllUsedModels():
             if model in bannedModels:
                 found.append(model)
-            if model in list(self.pdkSymbols.keys()) or \
-                    model in list(self.ipSymbols.keys()):
-                allBasic = False
-        self.genGdsFlag = False if self.user.getLevel() == 1 or allBasic else True
         
         if len(found) > 0:
             setStatus('Cannot run simulation with {}, '.format(' '.join(found)) +
-                      'please update your account')
+                      'please upgrade your account')
             return False
 
         # check simulation analysis
@@ -652,10 +645,6 @@ class SchScene(QGraphicsScene):
             setStatus('Multiple analyses found, please use only one')
             return False
         return True
-
-    def runSim_test(self):
-        self.wavWin = WaveformViewer()
-        self.wavWin.showWindowAndOpenWave('test.raw')
 
     def runSim(self):
         self.initPdkDevices()
@@ -712,6 +701,8 @@ class SchScene(QGraphicsScene):
 
             dataFile = getSigResult(self.gateway, self.remoteNetlistPath)
             self.wavWin.showWindowAndOpenWave(dataFile, 'full')
+            setStatus('Open simulation waveform')
+            return
 
             if self.genGdsFlag:
                 setStatus('Generating layout...')
@@ -721,6 +712,61 @@ class SchScene(QGraphicsScene):
             else:
                 setStatus('Waveform opened')
             return
+
+    def checkPreLay(self):
+        bannedModels = []
+        found = []
+        if self.user.getLevel() == 3:
+            pass
+        elif self.user.getLevel() == 2:
+            bannedModels = list(self.ipSymbols.keys())
+        elif self.user.getLevel() == 1:
+            bannedModels = list(self.pdkSymbols.keys()) + list(self.ipSymbols.keys())
+        allBasic = True
+        for model in getAllUsedModels():
+            if model in bannedModels:
+                found.append(model)
+            if model in list(self.pdkSymbols.keys()) or \
+                    model in list(self.ipSymbols.keys()):
+                allBasic = False
+        self.genGdsFlag = False if self.user.getLevel() == 1 or allBasic else True
+
+        if len(found) > 0:
+            setStatus('Cannot run auto-layout with {}, '.format(' '.join(found)) +
+                      'please upgrade your account')
+            return False
+
+        if self.user.getLevel() == 1:
+            setStatus('No access to auto-layout for level-1 user, please upgrade your account')
+            return False
+
+        if allBasic:
+            setStatus('No PDK devices or IP devices detected for auto-layout')
+            return False
+
+        return True
+
+    def runLay(self):
+        return
+        self.initPdkDevices()
+        self.initIpDevices()
+        self.netlist = createNetlist(self)
+
+        if not self.checkPreLay():
+            return
+        try:
+            if self.gateway is None:
+                self.gateway = Gateway()
+            else:
+                self.gateway.reconnect()
+            # TODO
+        except:
+            setStatus('FTP connection error!')
+            return
+        setStatus('Generating layout...')
+        self.layTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
+        self.layTrackThread.layprep.connect(self.showLayResult)
+        self.layTrackThread.start()
 
     def showGdsResult(self, gdsprep):
         if gdsprep == 0:
