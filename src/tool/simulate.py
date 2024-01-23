@@ -46,8 +46,8 @@ class SigTrackThread(QThread):
         self.sigprep.emit(resp)
 
 
-class GdsTrackThread(QThread):
-    gdsprep = Signal(int)
+class LayTrackThread(QThread):
+    layprep = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -59,8 +59,8 @@ class GdsTrackThread(QThread):
         self.remoteNetlistPath = remoteNetlistPath
 
     def run(self):
-        resp = checkGdsResult(self.gateway, self.remoteNetlistPath)
-        self.gdsprep.emit(resp)
+        resp = checkLayResult(self.gateway, self.remoteNetlistPath)
+        self.layprep.emit(resp)
 
 
 def runSimulation(gateway, netlist):
@@ -91,13 +91,11 @@ def runSimulation(gateway, netlist):
                                           getIpAddr(public=True), 
                                           getIpAddr(public=False))
         remotePath = os.path.join('/netlists', remotePath)
-
         gateway.uploadFile(localPath, remotePath)
     finally:
         fp.close()
         if os.path.isfile(localPath):
             os.remove(localPath)
-
     return remotePath
 
 def checkSimStatus(gateway, remoteNetlistPath):
@@ -166,7 +164,7 @@ def getSigResult(gateway, remoteNetlistPath):
         data = load(fport)
     return data
 
-def checkGdsResult(gateway, remoteNetlistPath):
+def checkLayResult(gateway, remoteNetlistPath):
     # 0:success, -1: failure
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
     sigFile = os.path.join(r'/LaGen/gdsS1', baseName + '.gds')
@@ -182,7 +180,7 @@ def checkGdsResult(gateway, remoteNetlistPath):
     except:
         return -1
 
-def getGdsResult(gateway, remoteNetlistPath):
+def getLayResult(gateway, remoteNetlistPath):
     baseName = os.path.splitext(os.path.basename(remoteNetlistPath))[0]
     remoteGdsPath = os.path.join(r'/LaGen/gdsS1', baseName + '.gds')
     localGds = NamedTemporaryFile(delete=False, suffix='.gds')
@@ -192,3 +190,22 @@ def getGdsResult(gateway, remoteNetlistPath):
     assert os.path.isfile(localGdsPath)
     assert os.access(localGdsPath, os.R_OK)
     return localGdsPath
+
+def runAutoLayout(gateway, netlist):
+    localPath = ''
+    timeTag = getCurrentTime()
+    fp = NamedTemporaryFile(delete=False)
+    try:
+        fp.write(bytes('\n'.join(netlist), encoding='utf-8'))
+        fp.seek(0)
+        localPath = fp.name
+        remotePath = '{}_{}_{}.sp'.format(timeTag,
+                                          getIpAddr(public=True),
+                                          getIpAddr(public=False))
+        remotePath = os.path.join('/LaGen/netlists', remotePath)
+        gateway.uploadFile(localPath, remotePath)
+    finally:
+        fp.close()
+        if os.path.isfile(localPath):
+            os.remove(localPath)
+    return remotePath

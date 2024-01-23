@@ -9,6 +9,11 @@ from src.tool.config import (
     FTP_SIM_NETLIST_DIR, FTP_SIM_PASS_DIR, FTP_SIM_FAIL_DIR,
     FH_SIM_PROC_DIR, FH_SIM_WAVE_DIR, FTP_SIM_WAVE_DIR,
 )
+from src.tool.config import (
+    FTP_LAY_NETLIST_DIR, FTP_LAY_PASS_DIR, FH_LAY_PROC_DIR,
+    FH_LAY_GDS_S1_DIR, FTP_LAY_GDS_S1_DIR,
+    FTP_LAY_GDS_S2_DIR, FH_LAY_GDS_S2_DIR,
+)
 
 
 class GatewayHandler():
@@ -20,8 +25,19 @@ class GatewayHandler():
         self.simFhWaveDir = FH_SIM_WAVE_DIR
         self.simFtpWaveDir = FTP_SIM_WAVE_DIR
 
+        self.layFtpNetlistDir = FTP_LAY_NETLIST_DIR
+        self.layFtpPassDir = FTP_LAY_PASS_DIR
+        self.layFhProcDir = FH_LAY_PROC_DIR
+        self.layFhGdsS1Dir = FH_LAY_GDS_S1_DIR
+        self.layFtpGdsS1Dir = FTP_LAY_GDS_S1_DIR
+        self.layFtpGdsS2Dir = FTP_LAY_GDS_S2_DIR
+        self.layFhGdsS2Dir = FH_LAY_GDS_S2_DIR
+
         self.doneWaves = []
         self.doneStatus = []
+        self.doneLayouts = []
+        self.doneGdsS1s = []
+        self.doneGdsS2s = []
 
         self.initDirs()
 
@@ -30,6 +46,12 @@ class GatewayHandler():
                           self.simFtpPassDir,
                           self.simFtpFailDir,
                           self.simFtpWaveDir):
+            os.makedirs(directory, exist_ok=True)
+        for directory in (os.path.dirname(self.layFtpNetlistDir),
+                          self.layFtpNetlistDir,
+                          self.layFtpPassDir,
+                          self.layFtpGdsS1Dir,
+                          self.layFtpGdsS2Dir):
             os.makedirs(directory, exist_ok=True)
 
     def checkReadPerm(self, filePath):
@@ -47,11 +69,17 @@ class GatewayHandler():
             sleep(0.5)
             self.checkSimStatus()
             self.checkSigResults()
+            self.checkLayNetlist()
+            self.checkGdsS1()
+            self.checkGdsS2()
             count += 1 
             if count % 100000 == 0:
                 count = 0
-                self.doneWaves = []
-                self.doneStatus = []
+                self.doneWaves.clear()
+                self.doneStatus.clear()
+                self.doneLayouts.clear()
+                self.doneGdsS1s.clear()
+                self.doneGdsS2s.clear()
 
     def checkSimStatus(self):
         for baseName in os.listdir(self.simFtpNetlistDir):
@@ -121,6 +149,51 @@ class GatewayHandler():
                     if os.access(fhWave, os.W_OK):
                         os.remove(fhWave)
                     self.doneWaves.append(baseName)
+
+    def checkLayNetlist(self):
+        for baseName in os.listdir(self.layFtpNetlistDir):
+            if baseName.endswith('.sp'):
+                ftpSp = os.path.join(self.layFtpNetlistDir, baseName)
+                self.checkReadPerm(ftpSp)
+                if baseName not in self.doneWaves:
+                    fhSp = os.path.join(self.layFhProcDir, baseName)
+                    copy(ftpSp, fhSp)
+                    ftpPassSp = os.path.join(self.layFtpPassDir, baseName)
+                    copy(ftpSp, ftpPassSp)
+                    now = getCurrentTime()
+                    print(f'{now} netlist passed for auto-layout: {fhSp}')
+                    if os.access(ftpSp, os.W_OK):
+                        os.remove(ftpSp)
+                    self.doneLayouts.append(baseName)
+
+    def checkGdsS1(self):
+        for baseName in os.listdir(self.layFhGdsS1Dir):
+            if baseName.endswith('.gds'):
+                fhGds = os.path.join(self.layFhGdsS1Dir, baseName)
+                self.checkReadPerm(fhGds)
+                if baseName not in self.doneGdsS1s:
+                    ftpGds = os.path.join(self.layFtpGdsS1Dir, baseName)
+                    copy(fhGds, ftpGds)
+                    if os.access(fhGds, os.W_OK):
+                        os.remove(fhGds)
+                    now = getCurrentTime()
+                    print(f'{now} gds s1 passed for auto-layout: {ftpGds}')
+                    self.doneGdsS1s.append(baseName)
+
+    def checkGdsS2(self):
+        for baseName in os.listdir(self.layFtpGdsS2Dir):
+            if baseName.endswith('.gds'):
+                ftpGds = os.path.join(self.layFtpGdsS2Dir, baseName)
+                self.checkReadPerm(ftpGds)
+                if baseName not in self.doneGdsS2s:
+                    fhGds = os.path.join(self.layFhGdsS2Dir, baseName)
+                    copy(ftpGds, fhGds)
+                    if os.access(ftpGds, os.W_OK):
+                        os.remove(ftpGds)
+                    now = getCurrentTime()
+                    print(f'{now} gds s2 passed for auto-layout: {fhGds}')
+                    self.doneGdsS2s.append(baseName)
+
         
 def run():
     handler = GatewayHandler()

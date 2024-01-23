@@ -16,10 +16,10 @@ from src.tool.device import getDeviceInfos
 from src.tool.netlist import createNetlist, getAllUsedModels
 from src.tool.design import Design
 from src.tool.status import setStatus
-from src.tool.simulate import SimTrackThread, SigTrackThread, GdsTrackThread
-from src.tool.simulate import runSimulation, getSigResult, getGdsResult
+from src.tool.simulate import SimTrackThread, SigTrackThread, LayTrackThread
+from src.tool.simulate import runSimulation, getSigResult
+from src.tool.simulate import runAutoLayout, getLayResult
 from src.tool.network import Gateway
-from src.waveform import WaveformViewer
 
 
 class SchScene(QGraphicsScene):
@@ -70,9 +70,10 @@ class SchScene(QGraphicsScene):
 
         self.simTrackThread = SimTrackThread()
         self.sigTrackThread = SigTrackThread()
-        self.gdsTrackThread = GdsTrackThread()
+        self.layTrackThread = LayTrackThread()
         self.gateway = None
-        self.remoteNetlistPath = None
+        self.remoteSimNetlistPath = None
+        self.remoteLayNetlistPath = None
         self.setSimTrack = False
 
     def initBasicDevices(self):
@@ -661,12 +662,12 @@ class SchScene(QGraphicsScene):
                 self.gateway = Gateway()
             else:
                 self.gateway.reconnect()
-            self.remoteNetlistPath = runSimulation(self.gateway, self.netlist)
+            self.remoteSimNetlistPath = runSimulation(self.gateway, self.netlist)
         except:
             setStatus('FTP connection error!')
             return
         setStatus('Running simulation...')
-        self.simTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
+        self.simTrackThread.setTrack(self.gateway, self.remoteSimNetlistPath)
         self.simTrackThread.simprep.connect(self.showSimResult)
         self.simTrackThread.start()
 
@@ -675,18 +676,24 @@ class SchScene(QGraphicsScene):
                         flags=re.IGNORECASE)
         if simprep == 0:
             # success
-            self.simTrackThread.simprep.disconnect()
-            self.simTrackThread.quit()
+            try:
+                self.simTrackThread.simprep.disconnect()
+                self.simTrackThread.quit()
+            except:
+                pass
 
             setStatus('Reading simulation waveform...')
-            self.sigTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
+            self.sigTrackThread.setTrack(self.gateway, self.remoteSimNetlistPath)
             self.sigTrackThread.sigprep.connect(self.showSigResult)
             self.sigTrackThread.start()
 
         elif simprep == -1:
             setStatus(simMsg)
-            self.simTrackThread.simprep.disconnect()
-            self.simTrackThread.quit()
+            try:
+                self.simTrackThread.simprep.disconnect()
+                self.simTrackThread.quit()
+            except:
+                pass
             # fail
         elif simprep == 1:
             # on-going
@@ -696,21 +703,15 @@ class SchScene(QGraphicsScene):
 
     def showSigResult(self, sigprep):
         if sigprep == 0:
-            self.sigTrackThread.sigprep.disconnect()
-            self.sigTrackThread.quit()
+            try:
+                self.sigTrackThread.sigprep.disconnect()
+                self.sigTrackThread.quit()
+            except:
+                pass
 
-            dataFile = getSigResult(self.gateway, self.remoteNetlistPath)
+            dataFile = getSigResult(self.gateway, self.remoteSimNetlistPath)
             self.wavWin.showWindowAndOpenWave(dataFile, 'full')
             setStatus('Open simulation waveform')
-            return
-
-            if self.genGdsFlag:
-                setStatus('Generating layout...')
-                self.gdsTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
-                self.gdsTrackThread.gdsprep.connect(self.showGdsResult)
-                self.gdsTrackThread.start()
-            else:
-                setStatus('Waveform opened')
             return
 
     def checkPreLay(self):
@@ -729,17 +730,14 @@ class SchScene(QGraphicsScene):
             if model in list(self.pdkSymbols.keys()) or \
                     model in list(self.ipSymbols.keys()):
                 allBasic = False
-        self.genGdsFlag = False if self.user.getLevel() == 1 or allBasic else True
 
         if len(found) > 0:
             setStatus('Cannot run auto-layout with {}, '.format(' '.join(found)) +
                       'please upgrade your account')
             return False
-
         if self.user.getLevel() == 1:
             setStatus('No access to auto-layout for level-1 user, please upgrade your account')
             return False
-
         if allBasic:
             setStatus('No PDK devices or IP devices detected for auto-layout')
             return False
@@ -747,7 +745,6 @@ class SchScene(QGraphicsScene):
         return True
 
     def runLay(self):
-        return
         self.initPdkDevices()
         self.initIpDevices()
         self.netlist = createNetlist(self)
@@ -759,21 +756,24 @@ class SchScene(QGraphicsScene):
                 self.gateway = Gateway()
             else:
                 self.gateway.reconnect()
-            # TODO
+            self.remoteLayNetlistPath = runAutoLayout(self.gateway, self.netlist)
         except:
             setStatus('FTP connection error!')
             return
         setStatus('Generating layout...')
-        self.layTrackThread.setTrack(self.gateway, self.remoteNetlistPath)
+        self.layTrackThread.setTrack(self.gateway, self.remoteLayNetlistPath)
         self.layTrackThread.layprep.connect(self.showLayResult)
         self.layTrackThread.start()
 
-    def showGdsResult(self, gdsprep):
-        if gdsprep == 0:
-            self.gdsTrackThread.gdsprep.disconnect()
-            self.gdsTrackThread.quit
+    def showLayResult(self, layprep):
+        if layprep == 0:
+            try:
+                self.layTrackThread.layprep.disconnect()
+                self.layTrackThread.quit()
+            except:
+                pass
 
-            dataFile = getGdsResult(self.gateway, self.remoteNetlistPath)
+            dataFile = getLayResult(self.gateway, self.remoteLayNetlistPath)
             self.layWin.show_window_and_open_gds(dataFile)
             setStatus('Layout generation succeeded')
 

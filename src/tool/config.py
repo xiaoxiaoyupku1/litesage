@@ -20,12 +20,10 @@ FH_SIM_WAVE_DIR = r'H:\\wave\\Results\\'
 FTP_SIM_WAVE_DIR = r'F:\\waves\\'
 
 # - auto-layout flow
-# FTP_LAY_NETLIST_DIR = r'F:\\LaGen\\netlists\\'
-# 
-# FTP_LAGEN_PATH = r'F:\\LaGen\\'
-# FTP_LAGEN_S1_PATH = r'F:\\LaGen\\gdsS1\\'
-# FTP_LAGEN_S2_PATH = r'F:\\LaGen\\gdsS2\\'
-# 
-# FH_LAY_NETLIST_PATH = r'H:\\LaGen\\netlists\\'
-# FH_GDS_S1_PATH = r'H:\\LaGen\\gds_files\\gds_s1\\metal\\to_client\\'
-# FH_GDS_S2_PATH = r'H:\\LaGen\\gds_files\\gds_s2\\metal\\'
+FTP_LAY_NETLIST_DIR = r'F:\\LaGen\\netlists\\'
+FTP_LAY_PASS_DIR = r'F:\\LaGen\\Processed\\'
+FH_LAY_PROC_DIR = r'H:\\LaGen\\netlists\\'
+FH_LAY_GDS_S1_DIR = r'H:\\LaGen\\gds_files\\gds_s1\\metal\\to_client\\'
+FTP_LAY_GDS_S1_DIR = r'F:\\LaGen\\gdsS1\\'
+FH_LAY_GDS_S2_DIR = r'H:\\LaGen\\gds_files\\gds_s2\\metal\\'
+FTP_LAY_GDS_S2_DIR = r'F:\\LaGen\\gdsS2\\'
